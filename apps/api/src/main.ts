@@ -6,12 +6,16 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module.js';
 import { configureApplication } from './app.setup.js';
+import { LocalExceptionFilter } from './local-exception.filter.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const config = app.get(ConfigService);
   const logger = new Logger('Bootstrap');
 
+  if (process.env.E2E_DIAGNOSTICS === 'true' && process.env.NODE_ENV !== 'production') {
+    app.useGlobalFilters(new LocalExceptionFilter());
+  }
   app.use(helmet());
   app.enableCors({
     origin: (origin: string | undefined, callback: (error: Error | null, allow?: boolean) => void) => {
