@@ -10,6 +10,9 @@ export const isSupabaseConfigured = Boolean(
     !supabaseKey.startsWith('your-'),
 );
 
+export const isGoogleAuthEnabled = isSupabaseConfigured &&
+  import.meta.env.VITE_GOOGLE_AUTH_ENABLED === 'true';
+
 let client: SupabaseClient | undefined;
 
 export function getSupabaseClient(): SupabaseClient {

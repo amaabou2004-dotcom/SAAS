@@ -54,6 +54,18 @@ export async function signInWithPassword(email: string, password: string) {
   return data;
 }
 
+export async function signInWithGoogle() {
+  const { data, error } = await getSupabaseClient().auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: `${window.location.origin}/auth/callback`,
+    },
+  });
+
+  if (error) throw error;
+  return data;
+}
+
 export async function requestPasswordReset(email: string) {
   const { error } = await getSupabaseClient().auth.resetPasswordForEmail(
     email.trim().toLowerCase(),

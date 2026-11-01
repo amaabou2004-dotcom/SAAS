@@ -8,7 +8,8 @@ Plateforme multi-entreprises de gestion commerciale, de stock et de boutiques en
 ## Parcours disponible dans le code
 
 - inscription par e-mail et mot de passe ;
-- vérification par code OTP à 8 chiffres ;
+- vérification par code OTP à 8 chiffres ou lien de confirmation ;
+- connexion Google OAuth sans OTP, après activation du fournisseur ;
 - connexion et récupération du mot de passe ;
 - création transactionnelle d’une entreprise ;
 - attribution du rôle propriétaire et de ses permissions ;
@@ -58,7 +59,9 @@ SUPABASE_URL=http://127.0.0.1:54321
 SUPABASE_PUBLISHABLE_KEY=...
 ```
 
-Ne placez jamais une clé `service_role`, une clé secrète ou une clé Resend dans une variable `VITE_`.
+Ne placez jamais une clé `service_role`, une clé secrète, un client secret Google ou une clé Resend dans une variable `VITE_`.
+
+Pour activer la connexion Google, suivez [le guide OAuth sécurisé](./docs/security/google-oauth.md), puis définissez `VITE_GOOGLE_AUTH_ENABLED=true` uniquement après activation du fournisseur Supabase.
 
 ## Développement
 

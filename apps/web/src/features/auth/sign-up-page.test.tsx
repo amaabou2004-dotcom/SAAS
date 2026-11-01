@@ -4,6 +4,7 @@ import { SignUpPage } from './sign-up-page';
 
 vi.mock('../../lib/supabase', () => ({
   isSupabaseConfigured: false,
+  isGoogleAuthEnabled: false,
   getSupabaseClient: vi.fn(),
 }));
 

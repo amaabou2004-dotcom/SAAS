@@ -25,6 +25,7 @@ enabled = true
 site_url = "http://localhost:5173"
 additional_redirect_urls = [
   "http://localhost:5173/auth/verification",
+  "http://localhost:5173/auth/callback",
   "http://localhost:5173/auth/reinitialisation",
 ]
 jwt_expiry = 3600

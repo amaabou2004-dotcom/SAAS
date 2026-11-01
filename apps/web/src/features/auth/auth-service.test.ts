@@ -1,6 +1,7 @@
 const mocks = vi.hoisted(() => ({
   verifyOtp: vi.fn(),
   signUp: vi.fn(),
+  signInWithOAuth: vi.fn(),
   signOut: vi.fn(),
 }));
 
@@ -9,12 +10,13 @@ vi.mock('../../lib/supabase', () => ({
     auth: {
       verifyOtp: mocks.verifyOtp,
       signUp: mocks.signUp,
+      signInWithOAuth: mocks.signInWithOAuth,
       signOut: mocks.signOut,
     },
   }),
 }));
 
-import { signUpWithPassword, verifyEmailCode } from './auth-service';
+import { signInWithGoogle, signUpWithPassword, verifyEmailCode } from './auth-service';
 
 describe('auth service', () => {
   beforeEach(() => {
@@ -45,6 +47,19 @@ describe('auth service', () => {
     });
 
     await expect(verifyEmailCode('commercant@example.com', '12345678')).rejects.toThrow();
+  });
+
+  it('starts Google OAuth with the application callback', async () => {
+    mocks.signInWithOAuth.mockResolvedValue({
+      data: { provider: 'google', url: 'https://accounts.google.com/o/oauth2/v2/auth' },
+      error: null,
+    });
+
+    await expect(signInWithGoogle()).resolves.toBeDefined();
+    expect(mocks.signInWithOAuth).toHaveBeenCalledWith({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
   });
 
   it('signs out an unconfirmed auto-session created by a misconfigured project', async () => {

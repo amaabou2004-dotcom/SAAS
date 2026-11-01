@@ -12,6 +12,7 @@ import { signUpWithPassword } from './auth-service';
 import { signUpSchema, type SignUpValues } from './auth-schemas';
 import { ConfigurationNotice } from './configuration-notice';
 import { FormField } from './form-field';
+import { GoogleAuthButton } from './google-auth-button';
 import { savePendingEmail } from './pending-email';
 
 export function SignUpPage() {
@@ -64,6 +65,7 @@ export function SignUpPage() {
     >
       <ConfigurationNotice />
       {serverError ? <Alert tone="error" className="mb-5">{serverError}</Alert> : null}
+      <GoogleAuthButton onError={setServerError} disabled={isSubmitting} />
 
       <form onSubmit={(event) => { void onSubmit(event); }} noValidate className="space-y-5">
         <FormField

@@ -11,6 +11,10 @@
 - [ ] URL du site et liste des redirections limitées aux environnements connus.
 - [ ] Rotation des refresh tokens activée.
 - [ ] Notifications de sécurité activées.
+- [ ] Client Google OAuth limité à `openid`, `email` et `profile`.
+- [ ] Secret Google enregistré uniquement dans Supabase Auth.
+- [ ] Callback applicatif `/auth/callback` limité aux origines connues.
+- [x] Aucun contournement manuel de la confirmation e-mail pour OAuth.
 
 ## API et navigateur
 

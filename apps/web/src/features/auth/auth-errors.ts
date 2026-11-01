@@ -6,6 +6,12 @@ export function getAuthErrorMessage(error: unknown): string {
   const normalized = error.message.toLowerCase();
 
   if (normalized.includes('configuration requise')) return error.message;
+  if (normalized.includes('provider is not enabled') || normalized.includes('provider_disabled')) {
+    return 'La connexion Google n’est pas encore activée pour ce projet.';
+  }
+  if (normalized.includes('access_denied')) {
+    return 'La connexion Google a été annulée. Vous pouvez réessayer.';
+  }
   if (normalized.includes('invalid login credentials')) {
     return 'Adresse e-mail ou mot de passe incorrect.';
   }

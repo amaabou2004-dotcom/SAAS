@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { BrowserRouter, Link, Navigate, Route, Routes } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { useAuth } from '../features/auth/auth-context';
+import { AuthCallbackPage } from '../features/auth/auth-callback-page';
 import { ForgotPasswordPage } from '../features/auth/forgot-password-page';
 import { ResetPasswordPage } from '../features/auth/reset-password-page';
 import { SignInPage } from '../features/auth/sign-in-page';
@@ -55,6 +56,7 @@ export function App() {
         <Route path="/auth/connexion" element={<SignInPage />} />
         <Route path="/auth/inscription" element={<SignUpPage />} />
         <Route path="/auth/verification" element={<VerifyEmailPage />} />
+        <Route path="/auth/callback" element={<AuthCallbackPage />} />
         <Route path="/auth/mot-de-passe-oublie" element={<ForgotPasswordPage />} />
         <Route path="/auth/reinitialisation" element={<ResetPasswordPage />} />
         <Route
