@@ -22,13 +22,33 @@ function GoogleIcon() {
 
 export function GoogleAuthButton({ disabled = false, onError }: GoogleAuthButtonProps) {
   const [loading, setLoading] = useState(false);
+  const [openedInNewTab, setOpenedInNewTab] = useState(false);
 
   const connect = async () => {
     onError(null);
+    setOpenedInNewTab(false);
+
+    // Google refuses to render its sign-in page inside the embedded preview iframe.
+    // Open the tab synchronously so the browser still treats it as a user gesture.
+    const embedded = window.self !== window.top;
+    const oauthWindow = embedded ? window.open('about:blank', '_blank') : null;
+    if (embedded && !oauthWindow) {
+      onError('Autorisez l’ouverture d’un nouvel onglet pour vous connecter avec Google, puis réessayez.');
+      return;
+    }
+    if (oauthWindow) oauthWindow.opener = null;
+
     setLoading(true);
     try {
-      await signInWithGoogle();
+      const data = await signInWithGoogle({ skipBrowserRedirect: embedded });
+      if (embedded && oauthWindow) {
+        if (!data.url) throw new Error('Google OAuth redirect URL is missing.');
+        oauthWindow.location.replace(data.url);
+        setOpenedInNewTab(true);
+        setLoading(false);
+      }
     } catch (error) {
+      oauthWindow?.close();
       onError(getAuthErrorMessage(error));
       setLoading(false);
     }
@@ -50,9 +70,11 @@ export function GoogleAuthButton({ disabled = false, onError }: GoogleAuthButton
         Continuer avec Google
       </Button>
       <p className="mt-2.5 text-center text-xs leading-5 text-slate-500">
-        {isGoogleAuthEnabled
-          ? 'Connexion directe avec Google, sans code OTP.'
-          : 'Disponible après activation sécurisée du fournisseur Google.'}
+        {openedInNewTab
+          ? 'Terminez la connexion dans le nouvel onglet Google.'
+          : isGoogleAuthEnabled
+            ? 'Connexion directe avec Google, sans code OTP.'
+            : 'Disponible après activation sécurisée du fournisseur Google.'}
       </p>
       <div className="mt-6 flex items-center gap-3" role="separator">
         <span className="h-px flex-1 bg-slate-200" aria-hidden="true" />

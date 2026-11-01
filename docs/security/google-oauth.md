@@ -48,7 +48,11 @@ VITE_GOOGLE_AUTH_ENABLED=true
 
 Redémarrer ensuite le serveur Web. Cette variable ne contient aucun identifiant secret : elle empêche seulement d’afficher une action active lorsque le fournisseur n’est pas prêt.
 
-## 4. Test d’acceptation
+## 4. Aperçu intégré dans une iframe
+
+Google peut refuser d’afficher sa page de connexion dans une iframe et produire une page blanche. Dans un aperçu intégré, le bouton ouvre donc Google dans un nouvel onglet avec PKCE, puis le callback revient dans cet onglet. Hors iframe, la redirection normale reste utilisée. Le navigateur doit autoriser cette ouverture depuis le geste de l’utilisateur.
+
+## 5. Test d’acceptation
 
 Avec un compte autorisé par l’écran de consentement :
 

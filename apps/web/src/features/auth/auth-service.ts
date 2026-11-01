@@ -54,11 +54,16 @@ export async function signInWithPassword(email: string, password: string) {
   return data;
 }
 
-export async function signInWithGoogle() {
+interface GoogleSignInOptions {
+  skipBrowserRedirect?: boolean;
+}
+
+export async function signInWithGoogle({ skipBrowserRedirect = false }: GoogleSignInOptions = {}) {
   const { data, error } = await getSupabaseClient().auth.signInWithOAuth({
     provider: 'google',
     options: {
       redirectTo: `${window.location.origin}/auth/callback`,
+      ...(skipBrowserRedirect ? { skipBrowserRedirect: true } : {}),
     },
   });
 

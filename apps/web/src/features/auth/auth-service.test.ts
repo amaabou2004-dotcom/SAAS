@@ -62,6 +62,24 @@ describe('auth service', () => {
     });
   });
 
+  it('can return the OAuth URL for a top-level preview tab', async () => {
+    mocks.signInWithOAuth.mockResolvedValue({
+      data: { provider: 'google', url: 'https://accounts.google.com/o/oauth2/v2/auth' },
+      error: null,
+    });
+
+    await expect(signInWithGoogle({ skipBrowserRedirect: true })).resolves.toMatchObject({
+      url: 'https://accounts.google.com/o/oauth2/v2/auth',
+    });
+    expect(mocks.signInWithOAuth).toHaveBeenCalledWith({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        skipBrowserRedirect: true,
+      },
+    });
+  });
+
   it('signs out an unconfirmed auto-session created by a misconfigured project', async () => {
     mocks.signUp.mockResolvedValue({
       data: {
