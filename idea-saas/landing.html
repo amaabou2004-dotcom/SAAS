@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Boutiki — la boutique qui répond toute seule sur WhatsApp</title>
+<meta name="description" content="Boutiki transforme le WhatsApp d'une vendeuse en boutique automatique : catalogue, commandes, paiement mobile money et relances. Sans application à installer." />
+<style>
+  :root{
+    --ink:#14231f; --ink-2:#3c4f49; --muted:#6a7d77;
+    --cream:#fbf7f0; --card:#ffffff; --line:#e7ded0;
+    --green:#0f7a5a; --green-2:#0b5c45; --amber:#f4a63a; --amber-soft:#fdf0d8;
+    --radius:18px; --shadow:0 10px 30px rgba(20,35,31,.08);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--cream); color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+  header{position:sticky;top:0;z-index:20;background:rgba(251,247,240,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .bar{display:flex;align-items:center;justify-content:space-between;height:64px}
+  .logo{display:flex;align-items:center;gap:9px;font-weight:800;letter-spacing:-.02em;font-size:19px}
+  .dot{width:30px;height:30px;border-radius:10px;background:var(--green);display:grid;place-items:center;color:#fff;font-size:15px}
+  nav{display:none;gap:26px;font-size:14.5px;color:var(--ink-2)}
+  nav a{text-decoration:none}
+  nav a:hover{color:var(--green)}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:12px 20px;border-radius:999px;font-weight:700;font-size:15px;
+    text-decoration:none;border:1px solid transparent;transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--green);color:#fff;box-shadow:0 8px 20px rgba(15,122,90,.25)}
+  .btn-primary:hover{background:var(--green-2)}
+  .btn-ghost{border-color:var(--line);background:#fff;color:var(--ink)}
+  .btn-sm{padding:10px 16px;font-size:14px}
+
+  /* HERO */
+  .hero{padding:56px 0 40px;display:grid;gap:44px}
+  .tag{display:inline-flex;align-items:center;gap:8px;background:var(--amber-soft);color:#8a5a07;border:1px solid #f3dfb8;
+       padding:6px 12px;border-radius:999px;font-size:13px;font-weight:600}
+  h1{font-size:clamp(32px,6.2vw,54px);line-height:1.05;letter-spacing:-.03em;margin:18px 0 0;font-weight:820}
+  h1 em{font-style:normal;color:var(--green)}
+  .lede{color:var(--ink-2);font-size:clamp(16px,2.4vw,19px);margin:18px 0 0;max-width:52ch}
+  .cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+  .micro{color:var(--muted);font-size:13px;margin-top:14px}
+  .stats{display:flex;gap:28px;margin-top:34px;flex-wrap:wrap}
+  .stat b{display:block;font-size:24px;letter-spacing:-.02em}
+  .stat span{color:var(--muted);font-size:13px}
+
+  /* PHONE MOCK */
+  .phone{
+    justify-self:center;width:min(340px,100%);background:#0e1b17;border-radius:34px;padding:12px;
+    box-shadow:0 30px 60px rgba(20,35,31,.28);
+  }
+  .screen{background:#eae4d9;border-radius:24px;overflow:hidden;height:520px;display:flex;flex-direction:column}
+  .wa-top{background:#075e54;color:#fff;padding:12px 14px;display:flex;gap:10px;align-items:center;font-size:13px}
+  .wa-av{width:32px;height:32px;border-radius:50%;background:#0f7a5a;display:grid;place-items:center;font-weight:700;font-size:13px}
+  .wa-name{font-weight:600;line-height:1.15}
+  .wa-name small{display:block;font-weight:400;opacity:.75;font-size:11px}
+  .chat{flex:1;padding:14px 12px;display:flex;flex-direction:column;gap:9px;overflow:hidden;
+        background-image:radial-gradient(#dcd5c8 1px, transparent 1px);background-size:16px 16px}
+  .msg{max-width:82%;padding:8px 11px;border-radius:12px;font-size:13px;box-shadow:0 1px 1px rgba(0,0,0,.06)}
+  .in{background:#fff;border-top-left-radius:3px;align-self:flex-start}
+  .out{background:#d9fdd3;border-top-right-radius:3px;align-self:flex-end}
+  .msg time{display:block;text-align:right;font-size:10px;color:#8a9791;margin-top:3px}
+  .card-mini{border:1px solid #e5e0d6;border-radius:10px;padding:8px;margin-top:6px;background:#fdfcf9}
+  .card-mini b{font-size:12.5px}
+  .card-mini span{display:block;color:var(--green);font-weight:700;font-size:12.5px}
+  .pay{margin-top:7px;background:var(--green);color:#fff;text-align:center;border-radius:8px;padding:6px;font-size:12px;font-weight:700}
+
+  /* SECTIONS */
+  section{padding:64px 0}
+  .eyebrow{color:var(--green);font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;margin:0 0 10px}
+  h2{font-size:clamp(25px,4.2vw,36px);line-height:1.15;letter-spacing:-.02em;margin:0 0 14px;font-weight:800}
+  .sub{color:var(--ink-2);max-width:60ch;margin:0 0 36px}
+  .grid{display:grid;gap:18px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow)}
+  .card h3{margin:0 0 8px;font-size:17.5px;letter-spacing:-.01em}
+  .card p{margin:0;color:var(--ink-2);font-size:14.5px}
+  .num{width:30px;height:30px;border-radius:9px;background:var(--green);color:#fff;display:grid;place-items:center;font-weight:800;font-size:14px;margin-bottom:14px}
+  .pain{display:flex;gap:12px;align-items:flex-start;padding:14px 0;border-bottom:1px dashed var(--line);color:var(--ink-2);font-size:15px}
+  .pain:last-child{border:0}
+  .x{color:#c0392b;font-weight:800;line-height:1.4}
+
+  /* PRICING */
+  .price-grid{display:grid;gap:18px}
+  .plan{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:26px;display:flex;flex-direction:column}
+  .plan.best{border:2px solid var(--green);box-shadow:0 16px 40px rgba(15,122,90,.14);position:relative}
+  .badge{position:absolute;top:-13px;left:26px;background:var(--green);color:#fff;font-size:12px;font-weight:700;padding:4px 12px;border-radius:999px}
+  .plan h3{margin:0;font-size:15px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+  .amount{font-size:34px;font-weight:820;letter-spacing:-.03em;margin:10px 0 2px}
+  .amount small{font-size:14px;font-weight:600;color:var(--muted);letter-spacing:0}
+  .plan ul{list-style:none;padding:0;margin:18px 0 22px;display:grid;gap:10px;font-size:14.5px;color:var(--ink-2)}
+  .plan li::before{content:"✓";color:var(--green);font-weight:800;margin-right:9px}
+  .plan .btn{margin-top:auto}
+
+  .final{background:var(--ink);color:#fff;border-radius:26px;padding:44px 26px;text-align:center}
+  .final h2{color:#fff;margin-bottom:10px}
+  .final p{color:#c8d5d0;margin:0 auto 26px;max-width:48ch}
+  .final .btn-primary{background:var(--amber);color:#3b2405;box-shadow:none}
+  .final .btn-primary:hover{background:#ffb951}
+  footer{border-top:1px solid var(--line);padding:28px 0;color:var(--muted);font-size:13px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+
+  @media (min-width:760px){
+    nav{display:flex}
+    .hero{grid-template-columns:1.1fr .9fr;align-items:center;padding:76px 0 56px}
+    .grid.two{grid-template-columns:1fr 1fr}
+    .grid.three{grid-template-columns:repeat(3,1fr)}
+    .price-grid{grid-template-columns:repeat(3,1fr)}
+    .final{padding:64px 48px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap bar">
+    <div class="logo"><span class="dot">B</span>Boutiki</div>
+    <nav>
+      <a href="#probleme">Le problème</a>
+      <a href="#produit">Le produit</a>
+      <a href="#prix">Tarifs</a>
+    </nav>
+    <a class="btn btn-primary btn-sm" href="#prix">Essayer 14 jours</a>
+  </div>
+</header>
+
+<main>
+  <div class="wrap hero">
+    <div>
+      <span class="tag">● Conçu pour les vendeuses de Niamey</span>
+      <h1>Sa boutique WhatsApp devient <em>automatique</em>.</h1>
+      <p class="lede">
+        Boutiki répond aux clientes, prend la commande, encaisse le mobile money et
+        relance les paniers — pendant que la vendeuse dort. Rien à installer côté
+        cliente : elle écrit, c'est tout.
+      </p>
+      <div class="cta">
+        <a class="btn btn-primary" href="#prix">Démarrer gratuitement</a>
+        <a class="btn btn-ghost" href="#produit">Voir comment ça marche</a>
+      </div>
+      <p class="micro">20 minutes pour être en ligne · Sans engagement · En français, haoussa et zarma</p>
+      <div class="stats">
+        <div class="stat"><b>24 h/24</b><span>réponses automatiques</span></div>
+        <div class="stat"><b>0 app</b><span>à installer pour la cliente</span></div>
+        <div class="stat"><b>−70 %</b><span>de questions répétitives</span></div>
+      </div>
+    </div>
+
+    <div class="phone">
+      <div class="screen">
+        <div class="wa-top">
+          <div class="wa-av">N</div>
+          <div class="wa-name">Nadia Style <small>en ligne</small></div>
+        </div>
+        <div class="chat">
+          <div class="msg in">Bonjour, c'est combien le sac rouge ?<time>21:47</time></div>
+          <div class="msg out">Salam 👋 Le sac rouge est à <b>12 500 F</b>, il reste 2 pièces.
+            <div class="card-mini">
+              <b>Sac « Niamey » — rouge</b>
+              <span>12 500 FCFA</span>
+            </div>
+            <div class="pay">Commander · payer par mobile money</div>
+            <time>21:47</time>
+          </div>
+          <div class="msg in">Ok je prends. Livraison à Yantala ?<time>21:48</time></div>
+          <div class="msg out">Parfait ✅ Commande <b>#1042</b> enregistrée.
+            Livraison demain entre 15 h et 18 h, 1 000 F.
+            Paiement à la livraison ou lien mobile money.<time>21:48</time>
+          </div>
+          <div class="msg in">Mobile money 👍<time>21:49</time></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section id="probleme">
+    <div class="wrap">
+      <p class="eyebrow">Le quotidien</p>
+      <h2>Vendre sur WhatsApp, c'est gérer un commerce<br/>avec une seule main.</h2>
+      <p class="sub">On n'a rien réinventé : on a écouté les vendeuses du Petit Marché et de Wadata.</p>
+      <div class="grid two">
+        <div class="card">
+          <div class="pain"><span class="x">✕</span><span>Répondre 50 fois par jour aux mêmes questions de prix et de taille.</span></div>
+          <div class="pain"><span class="x">✕</span><span>Des commandes qui se perdent au milieu de 200 conversations.</span></div>
+          <div class="pain"><span class="x">✕</span><span>Le stock « dans la tête » : on vend un article déjà épuisé.</span></div>
+          <div class="pain"><span class="x">✕</span><span>Impossible de savoir combien on a réellement gagné ce mois-ci.</span></div>
+          <div class="pain"><span class="x">✕</span><span>Les clientes de 23 h ne reçoivent jamais de réponse.</span></div>
+        </div>
+        <div class="card" style="background:linear-gradient(160deg,#f0f8f4,#ffffff)">
+          <h3>Et les outils existants ?</h3>
+          <p>Shopify et les catalogues PDF sont trop chers, en anglais, pensés pour le web.
+             Leurs clientes, elles, ne veulent ni installer une app, ni remplir six écrans :
+             <b>elles veulent écrire un message et recevoir leur colis.</b></p>
+          <p style="margin-top:14px">Boutiki part de là. Pas d'un site. Du message.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="produit" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+    <div class="wrap">
+      <p class="eyebrow">Le produit</p>
+      <h2>Trois briques. Zéro formation.</h2>
+      <p class="sub">Une vendeuse est opérationnelle en 20 minutes, avec son téléphone et son numéro WhatsApp actuel.</p>
+      <div class="grid three">
+        <div class="card">
+          <div class="num">1</div>
+          <h3>Le catalogue qui répond</h3>
+          <p>Photos, prix, tailles, stock envoyés une seule fois. Ensuite le bot répond aux questions, de jour comme de nuit.</p>
+        </div>
+        <div class="card">
+          <div class="num">2</div>
+          <h3>La commande capturée</h3>
+          <p>Article, taille, quartier, créneau → une commande numérotée, un lien mobile money ou un paiement à la livraison.</p>
+        </div>
+        <div class="card">
+          <div class="num">3</div>
+          <h3>Le tableau de bord</h3>
+          <p>Commandes du jour, liste de livraison par quartier, stock décrémenté, relances automatiques et CA du mois.</p>
+        </div>
+      </div>
+      <div class="grid two" style="margin-top:18px">
+        <div class="card">
+          <h3>Ce que la vendeuse voit le matin</h3>
+          <p>« 7 commandes à livrer · 41 500 F à encaisser · 2 articles bientôt épuisés · 3 clientes à relancer. »</p>
+        </div>
+        <div class="card">
+          <h3>Ce que la cliente ressent</h3>
+          <p>Une réponse immédiate, un prix clair, un lien de paiement qui marche, et un message quand le colis part.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="prix">
+    <div class="wrap">
+      <p class="eyebrow">Tarifs</p>
+      <h2>Des prix en FCFA, sans surprise.</h2>
+      <p class="sub">14 jours d'essai. Puis un abonnement mensuel, ou 10 mois payés pour 12.</p>
+      <div class="price-grid">
+        <div class="plan">
+          <h3>Starter</h3>
+          <div class="amount">5 000 <small>FCFA / mois</small></div>
+          <ul>
+            <li>1 numéro WhatsApp</li>
+            <li>Catalogue + réponses auto</li>
+            <li>150 commandes / mois</li>
+            <li>Tableau de bord</li>
+          </ul>
+          <a class="btn btn-ghost" href="#contact">Choisir Starter</a>
+        </div>
+        <div class="plan best">
+          <span class="badge">Le plus choisi</span>
+          <h3>Pro</h3>
+          <div class="amount">12 000 <small>FCFA / mois</small></div>
+          <ul>
+            <li>3 numéros WhatsApp</li>
+            <li>Paiement mobile money</li>
+            <li>Relances automatiques</li>
+            <li>Gestion du stock + alertes</li>
+            <li>Liste de livraison par quartier</li>
+          </ul>
+          <a class="btn btn-primary" href="#contact">Choisir Pro</a>
+        </div>
+        <div class="plan">
+          <h3>Business</h3>
+          <div class="amount">25 000 <small>FCFA / mois</small></div>
+          <ul>
+            <li>Boutiques multiples</li>
+            <li>Comptes livreurs</li>
+            <li>Campagnes ciblées</li>
+            <li>Export comptable + API</li>
+          </ul>
+          <a class="btn btn-ghost" href="#contact">Nous parler</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact" style="padding-top:0">
+    <div class="wrap">
+      <div class="final">
+        <h2>Votre première commande automatique, ce soir.</h2>
+        <p>Envoyez « Bonjour » au +227 00 00 00 00 : on met votre boutique en ligne avec vous, en 20 minutes.</p>
+        <a class="btn btn-primary" href="#">Réserver ma mise en route</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap" style="display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;width:100%">
+    <span>© 2026 Boutiki — Niamey, Niger</span>
+    <span>Fait pour WhatsApp · Prix en FCFA · Support en français, haoussa, zarma</span>
+  </div>
+</footer>
+
+</body>
+</html>
