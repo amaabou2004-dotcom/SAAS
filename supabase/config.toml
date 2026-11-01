@@ -15,11 +15,10 @@ major_version = 17
 enabled = true
 port = 54323
 
-[inbucket]
+[local_smtp]
 enabled = true
 port = 54324
-smtp_port = 54325
-pop3_port = 54326
+admin_email = "admin@example.test"
 
 [auth]
 enabled = true
@@ -45,28 +44,15 @@ otp_expiry = 600
 
 [auth.email.template.confirmation]
 subject = "Votre code de vérification SaaS Commerce"
-content = """
-<h2>Bienvenue sur SaaS Commerce</h2>
-<p>Saisissez ce code pour vérifier votre adresse e-mail :</p>
-<p style="font-size:28px;font-weight:bold;letter-spacing:6px">{{ .Token }}</p>
-<p>Ce code expire dans 10 minutes. Ne le communiquez à personne.</p>
-"""
+content_path = "./supabase/templates/confirmation.html"
 
 [auth.email.template.recovery]
 subject = "Réinitialisation de votre mot de passe"
-content = """
-<h2>Réinitialisation du mot de passe</h2>
-<p><a href="{{ .ConfirmationURL }}">Choisir un nouveau mot de passe</a></p>
-<p>Si vous n’êtes pas à l’origine de cette demande, ignorez ce message.</p>
-"""
+content_path = "./supabase/templates/recovery.html"
 
 [auth.email.template.email_change]
 subject = "Vérifiez votre nouvelle adresse e-mail"
-content = """
-<h2>Changement d’adresse e-mail</h2>
-<p>Saisissez ce code pour confirmer votre nouvelle adresse :</p>
-<p style="font-size:28px;font-weight:bold;letter-spacing:6px">{{ .Token }}</p>
-"""
+content_path = "./supabase/templates/email-change.html"
 
 [edge_runtime]
 enabled = true
