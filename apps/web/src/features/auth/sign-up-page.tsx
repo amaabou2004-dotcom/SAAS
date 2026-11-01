@@ -128,7 +128,7 @@ export function SignUpPage() {
           loading={isSubmitting}
           disabled={!isSupabaseConfigured}
         >
-          {isSubmitting ? 'Création en cours…' : 'Recevoir mon code de vérification'}
+          {isSubmitting ? 'Création en cours…' : 'Recevoir mon e-mail de vérification'}
         </Button>
       </form>
     </AuthLayout>

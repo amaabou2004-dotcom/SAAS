@@ -39,6 +39,12 @@ export function VerifyEmailPage() {
   }, [email]);
 
   useEffect(() => {
+    if (!user?.email_confirmed_at) return;
+    clearPendingEmail();
+    void navigate('/onboarding', { replace: true });
+  }, [navigate, user]);
+
+  useEffect(() => {
     if (cooldown <= 0) return;
     const timer = window.setInterval(() => {
       setCooldown((seconds) => Math.max(0, seconds - 1));
@@ -64,7 +70,7 @@ export function VerifyEmailPage() {
     setResending(true);
     try {
       await resendVerificationCode(email);
-      setNotice('Un nouveau code vient d’être demandé. Consultez votre boîte e-mail.');
+      setNotice('Un nouvel e-mail de vérification vient d’être demandé. Consultez votre boîte de réception.');
       setCooldown(60);
     } catch (error) {
       setServerError(getAuthErrorMessage(error));
@@ -77,14 +83,14 @@ export function VerifyEmailPage() {
     <AuthLayout
       eyebrow="Vérification de sécurité"
       title="Consultez votre boîte e-mail"
-      description="Saisissez le code à 8 chiffres reçu pour activer votre compte."
+      description="Utilisez le lien de confirmation ou saisissez le code à 8 chiffres reçu pour activer votre compte."
     >
       <div className="mb-7 flex items-center gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
         <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-white text-mint shadow-sm">
           <MailCheck className="size-5" aria-hidden="true" />
         </span>
         <div className="min-w-0 text-sm">
-          <p className="text-slate-500">Code destiné à</p>
+          <p className="text-slate-500">Vérification destinée à</p>
           <p className="truncate font-semibold text-ink">{email || 'adresse e-mail non renseignée'}</p>
         </div>
       </div>
@@ -132,7 +138,7 @@ export function VerifyEmailPage() {
           loading={resending}
           disabled={!isSupabaseConfigured || !email || cooldown > 0}
         >
-          {cooldown > 0 ? `Renvoyer un code dans ${cooldown} s` : 'Renvoyer un code'}
+          {cooldown > 0 ? `Renvoyer l’e-mail dans ${cooldown} s` : 'Renvoyer l’e-mail de vérification'}
         </Button>
       </div>
 

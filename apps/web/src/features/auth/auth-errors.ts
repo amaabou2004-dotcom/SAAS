@@ -12,6 +12,9 @@ export function getAuthErrorMessage(error: unknown): string {
   if (normalized.includes('email not confirmed')) {
     return 'Votre adresse e-mail n’est pas encore vérifiée.';
   }
+  if (normalized.includes('over_email_send_rate_limit')) {
+    return 'Le quota d’envoi d’e-mails est atteint. Patientez avant de demander un nouveau message.';
+  }
   if (
     normalized.includes('token has expired') ||
     normalized.includes('token_expired') ||

@@ -16,7 +16,7 @@ describe('SignUpPage', () => {
     );
 
     expect(screen.getByText('Connexion au service à configurer')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Recevoir mon code de vérification' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Recevoir mon e-mail de vérification' })).toBeDisabled();
     expect(screen.queryByText(/utilisateur/i)).not.toBeInTheDocument();
   });
 });
