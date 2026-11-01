@@ -104,7 +104,7 @@ try {
   await first.query(
     `insert into public.product_variants(id, tenant_id, product_id, sku)
      values ($1, $2, $3, $4)`,
-    [fixture.variantId, fixture.tenantId, fixture.productId, `CONC-${fixture.userId.replaceAll('-', '').slice(0, 20)}`],
+    [fixture.variantId, fixture.tenantId, fixture.productId, `CONC-${fixture.userId.replaceAll('-', '').slice(0, 20).toUpperCase()}`],
   );
   const location = await first.query(
     "select id from public.stock_locations where tenant_id = $1 and code = 'PRINCIPAL'",
