@@ -36,7 +36,7 @@ async function bootstrap() {
     const document = SwaggerModule.createDocument(
       app,
       new DocumentBuilder()
-        .setTitle('SaaS Commerce API')
+        .setTitle('Stokari API')
         .setDescription('API REST de gestion commerciale multi-entreprises.')
         .setVersion('0.1.0')
         .addBearerAuth()

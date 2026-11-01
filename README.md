@@ -1,4 +1,4 @@
-# SaaS Commerce
+# Stokari
 
 Plateforme multi-entreprises de gestion commerciale, de stock et de boutiques en ligne.
 
