@@ -85,7 +85,20 @@ async function waitForOnboardingForm(page) {
     await page.getByLabel('Nom de l’entreprise').waitFor({ state: 'visible' });
   } catch (error) {
     const body = await page.locator('body').innerText().catch(() => '(page illisible)');
-    throw new Error(`Le formulaire d’onboarding n’est pas visible à ${page.url()}. Contenu: ${body.slice(0, 2500)}`, { cause: error });
+    let diagnostic = '';
+    try {
+      const token = await accessToken(page);
+      const supabaseUrl = process.env.E2E_SUPABASE_URL ?? 'http://127.0.0.1:54321';
+      const publishableKey = process.env.E2E_SUPABASE_PUBLISHABLE_KEY;
+      if (!publishableKey) throw new Error('clé publishable locale absente');
+      const response = await page.request.get(`${supabaseUrl}/rest/v1/tenants?select=id,name,slug,currency_code,timezone,status,created_at&order=created_at.asc`, {
+        headers: { apikey: publishableKey, Authorization: `Bearer ${token}` },
+      });
+      diagnostic = ` Lecture REST directe: HTTP ${response.status()} ${(await response.text()).slice(0, 1800)}`;
+    } catch (diagnosticError) {
+      diagnostic = ` Diagnostic REST indisponible: ${diagnosticError instanceof Error ? diagnosticError.message : String(diagnosticError)}`;
+    }
+    throw new Error(`Le formulaire d’onboarding n’est pas visible à ${page.url()}. Contenu: ${body.slice(0, 1800)}.${diagnostic}`, { cause: error });
   }
 }
 
