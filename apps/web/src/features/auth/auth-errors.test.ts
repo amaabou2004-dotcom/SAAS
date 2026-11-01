@@ -7,6 +7,12 @@ describe('getAuthErrorMessage', () => {
     );
   });
 
+  it('guides an already registered address towards sign-in', () => {
+    expect(getAuthErrorMessage(new Error('user already registered'))).toBe(
+      'Un compte existe déjà avec cette adresse e-mail.',
+    );
+  });
+
   it('reports a disabled OAuth provider honestly', () => {
     expect(getAuthErrorMessage(new Error('provider is not enabled'))).toBe(
       'La connexion Google n’est pas encore activée pour ce projet.',

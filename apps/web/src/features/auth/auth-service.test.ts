@@ -80,6 +80,20 @@ describe('auth service', () => {
     });
   });
 
+  it('does not send an existing account to the verification waiting page', async () => {
+    mocks.signUp.mockResolvedValue({
+      data: {
+        session: null,
+        user: { identities: [], email_confirmed_at: '2026-11-01T12:00:00Z' },
+      },
+      error: null,
+    });
+
+    await expect(signUpWithPassword('commercant@example.com', 'MotDePasse2026')).rejects.toThrow(
+      'user already registered',
+    );
+  });
+
   it('signs out an unconfirmed auto-session created by a misconfigured project', async () => {
     mocks.signUp.mockResolvedValue({
       data: {

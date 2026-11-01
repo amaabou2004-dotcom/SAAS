@@ -12,6 +12,12 @@ export async function signUpWithPassword(email: string, password: string) {
 
   if (error) throw error;
 
+  // Supabase can intentionally hide an existing-account response behind a
+  // successful-looking signup with no identities, without sending a new email.
+  if (data.user?.identities?.length === 0) {
+    throw new Error('user already registered');
+  }
+
   if (data.session && !data.user?.email_confirmed_at) {
     await supabase.auth.signOut();
     throw new Error('La confirmation par e-mail doit être activée pour sécuriser les comptes.');
