@@ -2,8 +2,8 @@
 
 Plateforme multi-entreprises de gestion commerciale, de stock et de boutiques en ligne.
 
-> **État actuel : itération 1 — identité et création d’entreprise.**
-> Les modules produits, stock, ventes, boutiques publiques et rapports ne sont pas encore implémentés. L’interface ne présente aucune donnée commerciale fictive.
+> **État actuel : itération 2 — identité, entreprise, catalogue et stock.**
+> Les ventes, réservations, boutiques publiques et rapports ne sont pas encore implémentés. L’interface ne présente aucune donnée commerciale fictive.
 
 ## Parcours disponible dans le code
 
@@ -14,6 +14,9 @@ Plateforme multi-entreprises de gestion commerciale, de stock et de boutiques en
 - création transactionnelle d’une entreprise ;
 - attribution du rôle propriétaire et de ses permissions ;
 - isolation des tenants par PostgreSQL RLS ;
+- catégories, produits/variantes et emplacements tenant-scopés ;
+- stock physique, réservé et disponible calculé, avec réceptions, ajustements et transferts transactionnels ;
+- historique immuable et contre-passations avec motif et idempotence ;
 - API NestJS documentée avec Swagger en développement.
 
 Une instance Supabase configurée est indispensable pour exécuter réellement ces parcours. Sans elle, les formulaires d’authentification restent désactivés et affichent un message de configuration explicite.
@@ -90,10 +93,11 @@ Avec Supabase local démarré :
 
 ```bash
 pnpm test:db
+pnpm test:db:concurrency
 pnpm db:lint
 ```
 
-Les tests SQL couvrent la structure, les contraintes, les privilèges et l’isolation de deux tenants. Ils nécessitent un vrai PostgreSQL/Supabase et ne sont pas remplacés par les tests unitaires JavaScript.
+Les tests SQL couvrent la structure, les contraintes, les privilèges, l’isolation de deux tenants, les transferts et les contre-passations. Le script de concurrence utilise deux connexions PostgreSQL indépendantes pour vérifier l’absence de survente et de doublon. Ils nécessitent un vrai PostgreSQL/Supabase et ne sont pas remplacés par les tests unitaires JavaScript.
 
 ## Structure
 
@@ -115,6 +119,8 @@ docs/                  Décisions et consignes de sécurité
 - La création d’entreprise exige un utilisateur authentifié avec e-mail confirmé.
 - Le rôle `authenticated` ne peut pas insérer directement dans `tenants`, `roles` ou `memberships`.
 - La fonction `create_tenant` vérifie son appelant et réalise toutes les écritures dans une seule transaction.
+- Les écritures catalogue et stock passent par des RPC transactionnelles ; les soldes et mouvements ne sont pas modifiables directement par le rôle `authenticated`.
+- Les transferts conservent les quantités, les retraits verrouillent les soldes et les clés d’idempotence sont liées à une empreinte du payload.
 - Les helpers `SECURITY DEFINER` fixent `search_path` et exposent uniquement les opérations nécessaires.
 - L’API utilise le jeton de l’utilisateur et une clé publiable, pas une clé secrète contournant la RLS.
 - Les erreurs de base sensibles ne sont pas renvoyées au navigateur.

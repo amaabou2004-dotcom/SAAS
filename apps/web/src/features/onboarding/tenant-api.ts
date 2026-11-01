@@ -29,7 +29,7 @@ async function readError(response: Response) {
   return message ?? 'Le serveur n’a pas pu traiter la demande.';
 }
 
-async function apiFetch<T>(path: string, accessToken: string, init?: RequestInit): Promise<T> {
+export async function apiFetch<T>(path: string, accessToken: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`/api/v1${path}`, {
     ...init,
     headers: {

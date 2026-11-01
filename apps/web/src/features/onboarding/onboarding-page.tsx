@@ -46,7 +46,10 @@ export function OnboardingPage() {
   });
   const createMutation = useMutation({
     mutationFn: (values: TenantFormValues) => createTenant(accessToken ?? '', values),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tenants', user?.id] }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['tenants', user?.id] });
+      void navigate('/workspace');
+    },
   });
   const {
     register,
@@ -153,8 +156,11 @@ export function OnboardingPage() {
                 <PackagePlus className="mb-5 size-7 text-teal-300" aria-hidden="true" />
                 <h2 className="text-lg font-bold">Prochaine étape : votre catalogue</h2>
                 <p className="mt-3 text-sm leading-6 text-slate-300">
-                  Les modules produits, catégories, emplacements et mouvements de stock seront construits lors de la prochaine itération.
+                  Votre catalogue et vos emplacements sont prêts à être configurés. Les mouvements de stock seront enregistrés avec leur auteur et leur motif.
                 </p>
+                <Button type="button" variant="mint" className="mt-6 w-full" onClick={() => { void navigate('/workspace'); }}>
+                  Ouvrir mon catalogue <ArrowRight className="size-4" aria-hidden="true" />
+                </Button>
                 <div className="mt-6 flex items-center gap-2 border-t border-white/10 pt-5 text-xs text-slate-300">
                   <ShieldCheck className="size-4 text-teal-300" aria-hidden="true" />
                   Accès propriétaire attribué

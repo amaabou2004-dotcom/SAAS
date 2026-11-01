@@ -17,6 +17,7 @@
     "test": "pnpm -r test",
     "test:coverage": "pnpm -r test:coverage",
     "test:db": "supabase test db",
+    "test:db:concurrency": "node supabase/tests/stock-concurrency.mjs",
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
     "db:start": "supabase db start",
@@ -36,6 +37,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
+    "pg": "^8.23.1",
     "supabase": "^2.58.5",
     "typescript-eslint": "^8.48.0"
   }

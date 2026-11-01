@@ -42,3 +42,4 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec supabase start
       - run: pnpm test:db
+      - run: pnpm test:db:concurrency

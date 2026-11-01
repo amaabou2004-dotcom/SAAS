@@ -10,6 +10,12 @@ import { SignInPage } from '../features/auth/sign-in-page';
 import { SignUpPage } from '../features/auth/sign-up-page';
 import { VerifyEmailPage } from '../features/auth/verify-email-page';
 import { OnboardingPage } from '../features/onboarding/onboarding-page';
+import { CategoriesPage } from '../features/workspace/categories-page';
+import { LocationsPage } from '../features/workspace/locations-page';
+import { MovementsPage } from '../features/workspace/movements-page';
+import { ProductsPage } from '../features/workspace/products-page';
+import { StockPage } from '../features/workspace/stock-page';
+import { WorkspaceLayout } from '../features/workspace/workspace-layout';
 
 function FullPageLoader() {
   return (
@@ -22,7 +28,7 @@ function FullPageLoader() {
 function HomeRedirect() {
   const { session, loading } = useAuth();
   if (loading) return <FullPageLoader />;
-  return <Navigate to={session ? '/onboarding' : '/auth/connexion'} replace />;
+  return <Navigate to={session ? '/workspace' : '/auth/connexion'} replace />;
 }
 
 function RequireVerifiedUser({ children }: { children: ReactNode }) {
@@ -67,6 +73,21 @@ export function App() {
             </RequireVerifiedUser>
           }
         />
+        <Route
+          path="/workspace"
+          element={
+            <RequireVerifiedUser>
+              <WorkspaceLayout />
+            </RequireVerifiedUser>
+          }
+        >
+          <Route index element={<Navigate to="produits" replace />} />
+          <Route path="produits" element={<ProductsPage />} />
+          <Route path="categories" element={<CategoriesPage />} />
+          <Route path="emplacements" element={<LocationsPage />} />
+          <Route path="stock" element={<StockPage />} />
+          <Route path="mouvements" element={<MovementsPage />} />
+        </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>

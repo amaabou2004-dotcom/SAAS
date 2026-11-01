@@ -29,3 +29,10 @@ Acceptée après la validation explicite de l’architecture Catalogue & Stock p
 - Tests pgTAP de structure, RLS, isolation, idempotence, transferts et contre-passations.
 - Test de concurrence avec deux connexions PostgreSQL indépendantes.
 - Tests API et Web, lint, typecheck et builds avant application distante.
+
+## Implémentation et durcissement
+
+- Les endpoints NestJS sont exposés sous `/tenants/:tenantId/catalog` et `/tenants/:tenantId/inventory`; le navigateur utilise uniquement ces endpoints avec le jeton de l’utilisateur.
+- Les pages React `/workspace/produits`, `/workspace/categories`, `/workspace/emplacements`, `/workspace/stock` et `/workspace/mouvements` affichent les états de chargement, d’erreur et de catalogue vide sans créer de fixtures commerciales.
+- La migration `202611010003_stock_operation_idempotency.sql` réserve la clé avant le verrouillage de l’opération source d’une contre-passation. Deux requêtes simultanées avec la même clé et le même payload récupèrent donc le même identifiant; une clé différente ne peut pas contre-passer deux fois la même opération.
+- `pnpm test:db:concurrency` exécute le scénario avec deux clients PostgreSQL distincts : retraits concurrents, retry identique et retry de contre-passation. La CI l’exécute après les tests pgTAP.

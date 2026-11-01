@@ -12,6 +12,7 @@ export default tseslint.config(
       '**/node_modules/**',
       'supabase/.temp/**',
       '**/*.js',
+      '**/*.mjs',
     ],
   },
   js.configs.recommended,
