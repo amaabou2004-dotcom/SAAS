@@ -50,7 +50,7 @@ Redémarrer ensuite le serveur Web. Cette variable ne contient aucun identifiant
 
 ## 4. Aperçu intégré dans une iframe
 
-Google peut refuser d’afficher sa page de connexion dans une iframe et produire une page blanche. Dans un aperçu intégré, le bouton ouvre donc Google dans un nouvel onglet avec PKCE, puis le callback revient dans cet onglet. Hors iframe, la redirection normale reste utilisée. Le navigateur doit autoriser cette ouverture depuis le geste de l’utilisateur.
+Google peut refuser d’afficher sa page de connexion dans une iframe et produire une page blanche. Dans un aperçu intégré, le bouton prépare l’URL PKCE puis utilise un vrai lien de navigation vers la fenêtre principale, sans `window.open`. Un lien de secours permet aussi d’ouvrir Google dans un nouvel onglet. Hors iframe, la redirection normale reste utilisée.
 
 ## 5. Test d’acceptation
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '../../components/ui/button';
 import { isGoogleAuthEnabled } from '../../lib/supabase';
 import { getAuthErrorMessage } from './auth-errors';
@@ -20,62 +20,93 @@ function GoogleIcon() {
   );
 }
 
+function GoogleLabel() {
+  return <><GoogleIcon />Continuer avec Google</>;
+}
+
 export function GoogleAuthButton({ disabled = false, onError }: GoogleAuthButtonProps) {
   const [loading, setLoading] = useState(false);
-  const [openedInNewTab, setOpenedInNewTab] = useState(false);
+  const [oauthUrl, setOauthUrl] = useState<string | null>(null);
+  const embedded = window.self !== window.top;
+  const canConnect = !disabled && isGoogleAuthEnabled;
+
+  useEffect(() => {
+    if (!embedded || !isGoogleAuthEnabled) return;
+    let active = true;
+
+    // Prepare PKCE without a network redirect. A native link click can then
+    // navigate the top window directly, without depending on popup permission.
+    void signInWithGoogle({ skipBrowserRedirect: true })
+      .then((data) => {
+        if (!data.url) throw new Error('Google OAuth redirect URL is missing.');
+        if (active) setOauthUrl(data.url);
+      })
+      .catch((error: unknown) => {
+        if (active) onError(getAuthErrorMessage(error));
+      });
+
+    return () => { active = false; };
+  }, [embedded, onError]);
 
   const connect = async () => {
     onError(null);
-    setOpenedInNewTab(false);
-
-    // Google refuses to render its sign-in page inside the embedded preview iframe.
-    // Open the tab synchronously so the browser still treats it as a user gesture.
-    const embedded = window.self !== window.top;
-    const oauthWindow = embedded ? window.open('about:blank', '_blank') : null;
-    if (embedded && !oauthWindow) {
-      onError('Autorisez l’ouverture d’un nouvel onglet pour vous connecter avec Google, puis réessayez.');
-      return;
-    }
-    if (oauthWindow) oauthWindow.opener = null;
-
     setLoading(true);
     try {
-      const data = await signInWithGoogle({ skipBrowserRedirect: embedded });
-      if (embedded && oauthWindow) {
-        if (!data.url) throw new Error('Google OAuth redirect URL is missing.');
-        oauthWindow.location.replace(data.url);
-        setOpenedInNewTab(true);
-        setLoading(false);
-      }
+      await signInWithGoogle();
     } catch (error) {
-      oauthWindow?.close();
       onError(getAuthErrorMessage(error));
       setLoading(false);
     }
   };
 
+  const unavailableTitle = isGoogleAuthEnabled
+    ? undefined
+    : 'Activez le fournisseur Google dans Supabase pour utiliser cette connexion.';
+
   return (
     <div className="mb-6">
-      <Button
-        type="button"
-        variant="outline"
-        size="lg"
-        className="w-full"
-        onClick={() => { void connect(); }}
-        loading={loading}
-        disabled={disabled || !isGoogleAuthEnabled}
-        title={isGoogleAuthEnabled ? undefined : 'Activez le fournisseur Google dans Supabase pour utiliser cette connexion.'}
-      >
-        <GoogleIcon />
-        Continuer avec Google
-      </Button>
+      {embedded ? (
+        canConnect && oauthUrl ? (
+          <Button asChild variant="outline" size="lg" className="w-full" title={unavailableTitle}>
+            <a href={oauthUrl} target="_top" onClick={() => onError(null)}>
+              <GoogleLabel />
+            </a>
+          </Button>
+        ) : (
+          <Button type="button" variant="outline" size="lg" className="w-full" disabled title={unavailableTitle}>
+            <GoogleLabel />
+          </Button>
+        )
+      ) : (
+        <Button
+          type="button"
+          variant="outline"
+          size="lg"
+          className="w-full"
+          onClick={() => { void connect(); }}
+          loading={loading}
+          disabled={!canConnect}
+          title={unavailableTitle}
+        >
+          <GoogleLabel />
+        </Button>
+      )}
       <p className="mt-2.5 text-center text-xs leading-5 text-slate-500">
-        {openedInNewTab
-          ? 'Terminez la connexion dans le nouvel onglet Google.'
-          : isGoogleAuthEnabled
-            ? 'Connexion directe avec Google, sans code OTP.'
-            : 'Disponible après activation sécurisée du fournisseur Google.'}
+        {isGoogleAuthEnabled
+          ? 'Connexion directe avec Google, sans code OTP.'
+          : 'Disponible après activation sécurisée du fournisseur Google.'}
       </p>
+      {embedded && canConnect && oauthUrl ? (
+        <a
+          href={oauthUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => onError(null)}
+          className="mt-2 block text-center text-xs font-semibold text-mint-dark underline-offset-4 hover:underline"
+        >
+          Si la redirection est bloquée, ouvrir Google dans un nouvel onglet
+        </a>
+      ) : null}
       <div className="mt-6 flex items-center gap-3" role="separator">
         <span className="h-px flex-1 bg-slate-200" aria-hidden="true" />
         <span className="text-xs font-medium text-slate-400">ou avec une adresse e-mail</span>
