@@ -2,6 +2,11 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { SignUpPage } from './sign-up-page';
 
+vi.mock('../../lib/supabase', () => ({
+  isSupabaseConfigured: false,
+  getSupabaseClient: vi.fn(),
+}));
+
 describe('SignUpPage', () => {
   it('shows an honest configuration state instead of simulating signup', () => {
     render(

@@ -21,11 +21,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let active = true;
     const supabase = getSupabaseClient();
 
-    void supabase.auth.getSession().then(({ data }) => {
-      if (!active) return;
-      setSession(data.session);
-      setLoading(false);
-    });
+    void supabase.auth.getSession()
+      .then(({ data }) => {
+        if (!active) return;
+        setSession(data.session);
+        setLoading(false);
+      })
+      .catch(() => {
+        if (!active) return;
+        setSession(null);
+        setLoading(false);
+      });
 
     const {
       data: { subscription },

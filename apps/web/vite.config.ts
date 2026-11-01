@@ -16,6 +16,18 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          supabase: ['@supabase/supabase-js'],
+          forms: ['react-hook-form', '@hookform/resolvers', 'zod'],
+          query: ['@tanstack/react-query'],
+        },
+      },
+    },
+  },
   test: {
     globals: true,
     environment: 'jsdom',
