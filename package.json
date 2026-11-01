@@ -1,0 +1,39 @@
+{
+  "name": "kanti-stock",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "lint": "oxlint src",
+    "typecheck": "tsc -b",
+    "test:store": "node scripts/store-test.mjs",
+    "smoke": "node scripts/smoke.mjs",
+    "test": "npm run typecheck && npm run test:store && npm run smoke"
+  },
+  "dependencies": {
+    "lucide-react": "^1.66.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-router-dom": "^7.18.5",
+    "recharts": "^3.10.1",
+    "zustand": "^5.0.16"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "autoprefixer": "^10.6.2",
+    "esbuild": "^0.28.2",
+    "jsdom": "^30.1.3",
+    "oxlint": "^1.89.0",
+    "postcss": "^8.5.32",
+    "tailwindcss": "^3.4.19",
+    "typescript": "~7.0.2",
+    "vite": "^8.3.5"
+  },
+  "description": "Kanti — SaaS de gestion de stock simple et puissant (scan, alertes, bons de commande, rapports)."
+}
