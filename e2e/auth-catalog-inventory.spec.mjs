@@ -125,6 +125,33 @@ async function accessToken(page) {
   return token;
 }
 
+async function createTenantAndOpenWorkspace(page, name, slug) {
+  await page.getByLabel('Nom de l’entreprise').fill(name);
+  await page.getByLabel('Identifiant de l’espace').fill(slug);
+  const responsePromise = page.waitForResponse((response) =>
+    response.url().endsWith('/api/v1/tenants') && response.request().method() === 'POST',
+  );
+  await page.getByRole('button', { name: 'Créer mon entreprise' }).click();
+  let response;
+  try {
+    response = await responsePromise;
+  } catch (error) {
+    const body = await page.locator('body').innerText().catch(() => '(page illisible)');
+    throw new Error(`La création de ${slug} n’a pas envoyé de requête API. Contenu: ${body.slice(0, 1800)}`, { cause: error });
+  }
+  const responseBody = await response.text();
+  if (!response.ok()) {
+    const body = await page.locator('body').innerText().catch(() => '(page illisible)');
+    throw new Error(`Création de ${slug}: HTTP ${response.status()} ${responseBody.slice(0, 1200)}. Contenu: ${body.slice(0, 1800)}`);
+  }
+  try {
+    await expect(page).toHaveURL(/\/workspace\/produits$/);
+  } catch (error) {
+    const body = await page.locator('body').innerText().catch(() => '(page illisible)');
+    throw new Error(`Création de ${slug}: HTTP ${response.status()} ${responseBody.slice(0, 1200)}, mais redirection impossible depuis ${page.url()}. Contenu: ${body.slice(0, 1800)}`, { cause: error });
+  }
+}
+
 async function cleanup() {
   assertLocalDatabase();
   const client = new pg.Client({ connectionString: databaseUrl });
@@ -143,10 +170,7 @@ test('Auth, catalogue, stock et isolation fonctionnent avec Supabase local et Ma
     await signUpAndVerify(page, firstEmail);
     await waitForOnboardingForm(page);
 
-    await page.getByLabel('Nom de l’entreprise').fill(tenantName);
-    await page.getByLabel('Identifiant de l’espace').fill(tenantSlug);
-    await page.getByRole('button', { name: 'Créer mon entreprise' }).click();
-    await expect(page).toHaveURL(/\/workspace\/produits$/);
+    await createTenantAndOpenWorkspace(page, tenantName, tenantSlug);
     await expect(page.getByRole('heading', { name: 'Catalogue produits' })).toBeVisible();
 
     await page.getByRole('link', { name: 'Catégories', exact: true }).click();
@@ -226,10 +250,7 @@ test('Auth, catalogue, stock et isolation fonctionnent avec Supabase local et Ma
     const secondPage = await secondContext.newPage();
     await signUpAndVerify(secondPage, secondEmail);
     await waitForOnboardingForm(secondPage);
-    await secondPage.getByLabel('Nom de l’entreprise').fill(secondTenantName);
-    await secondPage.getByLabel('Identifiant de l’espace').fill(secondTenantSlug);
-    await secondPage.getByRole('button', { name: 'Créer mon entreprise' }).click();
-    await expect(secondPage).toHaveURL(/\/workspace\/produits$/);
+    await createTenantAndOpenWorkspace(secondPage, secondTenantName, secondTenantSlug);
     await expect(secondPage.getByRole('heading', { name: 'Catalogue produits' })).toBeVisible();
     await expect(secondPage.getByText('Aucun produit pour le moment')).toBeVisible();
     const secondToken = await accessToken(secondPage);
