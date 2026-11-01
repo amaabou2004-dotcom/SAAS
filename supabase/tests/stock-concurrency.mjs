@@ -157,6 +157,10 @@ try {
   assert.equal(sourceStatus.rows[0].status, 'reversed');
 
   console.log('Stock concurrency tests passed: no overselling, duplicate retry, or duplicate reversal.');
+} catch (error) {
+  const message = error instanceof Error ? (error.stack ?? error.message) : String(error);
+  console.error(`::error::${message.replaceAll('\r', '%0D').replaceAll('\n', '%0A')}`);
+  process.exitCode = 1;
 } finally {
   await Promise.allSettled([
     first.query('delete from public.tenants where id = $1', [fixture.tenantId]),
