@@ -94,7 +94,10 @@ async function waitForOnboardingForm(page) {
       const response = await page.request.get(`${supabaseUrl}/rest/v1/tenants?select=id,name,slug,currency_code,timezone,status,created_at&order=created_at.asc`, {
         headers: { apikey: publishableKey, Authorization: `Bearer ${token}` },
       });
-      diagnostic = ` Lecture REST directe: HTTP ${response.status()} ${(await response.text()).slice(0, 1800)}`;
+      const apiResponse = await page.request.get(`${apiUrl}/api/v1/tenants/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      diagnostic = ` Lecture REST directe: HTTP ${response.status()} ${(await response.text()).slice(0, 900)}; API NestJS: HTTP ${apiResponse.status()} ${(await apiResponse.text()).slice(0, 1200)}`;
     } catch (diagnosticError) {
       diagnostic = ` Diagnostic REST indisponible: ${diagnosticError instanceof Error ? diagnosticError.message : String(diagnosticError)}`;
     }
