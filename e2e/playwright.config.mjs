@@ -7,7 +7,7 @@ export default defineConfig({
   workers: 1,
   timeout: 240_000,
   expect: { timeout: 20_000 },
-  reporter: 'list',
+  reporter: process.env.CI ? 'github' : 'list',
   use: {
     baseURL: 'http://localhost:5173',
     browserName: 'chromium',
