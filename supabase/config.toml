@@ -1,0 +1,76 @@
+project_id = "saas-commerce"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+major_version = 17
+
+[studio]
+enabled = true
+port = 54323
+
+[inbucket]
+enabled = true
+port = 54324
+smtp_port = 54325
+pop3_port = 54326
+
+[auth]
+enabled = true
+site_url = "http://localhost:5173"
+additional_redirect_urls = [
+  "http://localhost:5173/auth/verification",
+  "http://localhost:5173/auth/reinitialisation",
+]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+enable_signup = true
+minimum_password_length = 12
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = true
+secure_password_change = true
+max_frequency = "1m"
+otp_length = 8
+otp_expiry = 600
+
+[auth.email.template.confirmation]
+subject = "Votre code de vérification SaaS Commerce"
+content = """
+<h2>Bienvenue sur SaaS Commerce</h2>
+<p>Saisissez ce code pour vérifier votre adresse e-mail :</p>
+<p style="font-size:28px;font-weight:bold;letter-spacing:6px">{{ .Token }}</p>
+<p>Ce code expire dans 10 minutes. Ne le communiquez à personne.</p>
+"""
+
+[auth.email.template.recovery]
+subject = "Réinitialisation de votre mot de passe"
+content = """
+<h2>Réinitialisation du mot de passe</h2>
+<p><a href="{{ .ConfirmationURL }}">Choisir un nouveau mot de passe</a></p>
+<p>Si vous n’êtes pas à l’origine de cette demande, ignorez ce message.</p>
+"""
+
+[auth.email.template.email_change]
+subject = "Vérifiez votre nouvelle adresse e-mail"
+content = """
+<h2>Changement d’adresse e-mail</h2>
+<p>Saisissez ce code pour confirmer votre nouvelle adresse :</p>
+<p style="font-size:28px;font-weight:bold;letter-spacing:6px">{{ .Token }}</p>
+"""
+
+[edge_runtime]
+enabled = true
+policy = "per_worker"
+
+[analytics]
+enabled = false
