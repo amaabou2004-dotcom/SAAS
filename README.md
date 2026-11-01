@@ -76,7 +76,20 @@ pnpm dev
 - API : `http://localhost:3001/api/v1`
 - Swagger : `http://localhost:3001/api/docs`
 - Studio Supabase local : `http://localhost:54323`
-- Boîte e-mail de test : `http://localhost:54324`
+- Boîte e-mail de test Mailpit : `http://localhost:54324`
+
+## Test E2E réel (Supabase local + Mailpit)
+
+Ce parcours utilise de vrais comptes jetables, lit le code OTP dans Mailpit, puis exerce les formulaires d’entreprise, de catalogue et de stock. Il vérifie aussi l’isolation d’un second compte et supprime ses données de test à la fin.
+
+Avec Docker et Supabase local démarrés, et après avoir arrêté les serveurs Web/API qui utiliseraient déjà les ports 5173 et 3001 :
+
+```bash
+pnpm exec playwright install chromium
+pnpm test:e2e
+```
+
+Le lanceur récupère uniquement les clés locales affichées par `supabase status`, démarre les serveurs Web/API et refuse une base de données distante. Aucun e-mail réel n’est envoyé et aucune clé `service_role` n’est utilisée.
 
 Le navigateur appelle uniquement des URL relatives `/api`. Vite transmet ces requêtes à NestJS ; aucun code frontend ne dépend d’un `localhost` pour atteindre l’API.
 
