@@ -46,8 +46,8 @@ export function OnboardingPage() {
   });
   const createMutation = useMutation({
     mutationFn: (values: TenantFormValues) => createTenant(accessToken ?? '', values),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['tenants', user?.id] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['tenants', user?.id] });
       void navigate('/workspace');
     },
   });
