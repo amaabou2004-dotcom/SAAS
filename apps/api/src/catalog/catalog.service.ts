@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { Inject, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { SupabaseService } from '../auth/supabase.service.js';
 import { toDatabaseHttpException, type DatabaseError } from '../database/database-error.js';
 import type { CreateCategoryDto, UpdateCategoryDto } from './category.dto.js';
@@ -48,7 +48,7 @@ const variantColumns = 'id, tenant_id, product_id, sku, barcode, attributes, act
 export class CatalogService {
   private readonly logger = new Logger(CatalogService.name);
 
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(@Inject(SupabaseService) private readonly supabase: SupabaseService) {}
 
   private fail(error: DatabaseError, fallback: string): never {
     const exception = toDatabaseHttpException(error, fallback);

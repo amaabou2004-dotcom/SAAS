@@ -41,7 +41,6 @@ if (!publishableKey) throw new Error('Aucune clé publishable/anon locale n’a 
 const env = {
   ...process.env,
   NODE_ENV: 'development',
-  E2E_DIAGNOSTICS: 'true',
   PORT: '3001',
   WEB_APP_URL: 'http://localhost:5173',
   CORS_ORIGINS: 'http://localhost:5173',

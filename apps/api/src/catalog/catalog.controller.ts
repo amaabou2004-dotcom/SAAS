@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Param, ParseUUIDPipe, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentAuth } from '../auth/current-auth.decorator.js';
 import { SupabaseAuthGuard } from '../auth/supabase-auth.guard.js';
@@ -11,7 +11,7 @@ import { CreateProductDto, UpdateProductDto } from './product.dto.js';
 @UseGuards(SupabaseAuthGuard)
 @Controller('tenants/:tenantId/catalog')
 export class CatalogController {
-  constructor(private readonly catalog: CatalogService) {}
+  constructor(@Inject(CatalogService) private readonly catalog: CatalogService) {}
 
   @Get('categories')
   listCategories(

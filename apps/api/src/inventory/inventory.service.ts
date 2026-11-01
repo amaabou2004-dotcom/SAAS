@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { SupabaseService } from '../auth/supabase.service.js';
 import { toDatabaseHttpException, type DatabaseError } from '../database/database-error.js';
 import type { CreateLocationDto, UpdateLocationDto } from './location.dto.js';
@@ -60,7 +60,7 @@ const movementColumns = 'id, tenant_id, operation_id, operation_type, operation_
 export class InventoryService {
   private readonly logger = new Logger(InventoryService.name);
 
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(@Inject(SupabaseService) private readonly supabase: SupabaseService) {}
 
   private fail(error: DatabaseError, fallback: string): never {
     const exception = toDatabaseHttpException(error, fallback);

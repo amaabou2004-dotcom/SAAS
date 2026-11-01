@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Inject, Param, ParseUUIDPipe, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiTags } from '@nestjs/swagger';
 import { CurrentAuth } from '../auth/current-auth.decorator.js';
 import { SupabaseAuthGuard } from '../auth/supabase-auth.guard.js';
@@ -11,7 +11,7 @@ import { PostStockOperationDto, ReverseStockOperationDto } from './stock-operati
 @UseGuards(SupabaseAuthGuard)
 @Controller('tenants/:tenantId/inventory')
 export class InventoryController {
-  constructor(private readonly inventory: InventoryService) {}
+  constructor(@Inject(InventoryService) private readonly inventory: InventoryService) {}
 
   @Get('locations')
   listLocations(

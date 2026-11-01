@@ -1,11 +1,11 @@
-import { Injectable, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, type SupabaseClient, type User } from '@supabase/supabase-js';
 import type { Database } from '../database/database.types.js';
 
 @Injectable()
 export class SupabaseService {
-  constructor(private readonly config: ConfigService) {}
+  constructor(@Inject(ConfigService) private readonly config: ConfigService) {}
 
   private configuration() {
     const url = this.config.get<string>('SUPABASE_URL')?.trim();

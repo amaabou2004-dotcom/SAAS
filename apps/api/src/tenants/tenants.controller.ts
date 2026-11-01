@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentAuth } from '../auth/current-auth.decorator.js';
 import { SupabaseAuthGuard } from '../auth/supabase-auth.guard.js';
@@ -10,7 +10,7 @@ import { TenantsService } from './tenants.service.js';
 @UseGuards(SupabaseAuthGuard)
 @Controller('tenants')
 export class TenantsController {
-  constructor(private readonly tenants: TenantsService) {}
+  constructor(@Inject(TenantsService) private readonly tenants: TenantsService) {}
 
   @Post()
   @ApiCreatedResponse({ description: 'Entreprise créée avec son rôle propriétaire.' })
