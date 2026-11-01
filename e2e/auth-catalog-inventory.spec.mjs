@@ -80,6 +80,15 @@ async function signUpAndVerify(page, email) {
   await expect(page).toHaveURL(/\/onboarding$/);
 }
 
+async function waitForOnboardingForm(page) {
+  try {
+    await page.getByLabel('Nom de l’entreprise').waitFor({ state: 'visible' });
+  } catch (error) {
+    const body = await page.locator('body').innerText().catch(() => '(page illisible)');
+    throw new Error(`Le formulaire d’onboarding n’est pas visible à ${page.url()}. Contenu: ${body.slice(0, 2500)}`, { cause: error });
+  }
+}
+
 async function accessToken(page) {
   const token = await page.evaluate(() => {
     for (let index = 0; index < localStorage.length; index += 1) {
@@ -116,6 +125,7 @@ test('Auth, catalogue, stock et isolation fonctionnent avec Supabase local et Ma
   let secondContext;
   try {
     await signUpAndVerify(page, firstEmail);
+    await waitForOnboardingForm(page);
 
     await page.getByLabel('Nom de l’entreprise').fill(tenantName);
     await page.getByLabel('Identifiant de l’espace').fill(tenantSlug);
@@ -199,6 +209,7 @@ test('Auth, catalogue, stock et isolation fonctionnent avec Supabase local et Ma
     secondContext = await browser.newContext({ baseURL: 'http://localhost:5173' });
     const secondPage = await secondContext.newPage();
     await signUpAndVerify(secondPage, secondEmail);
+    await waitForOnboardingForm(secondPage);
     await secondPage.getByLabel('Nom de l’entreprise').fill(secondTenantName);
     await secondPage.getByLabel('Identifiant de l’espace').fill(secondTenantSlug);
     await secondPage.getByRole('button', { name: 'Créer mon entreprise' }).click();
