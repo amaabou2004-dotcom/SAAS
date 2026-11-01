@@ -48,8 +48,9 @@ export class TenantsService {
       .order('created_at', { ascending: true });
 
     if (error) {
-      this.logger.error(`Tenant listing failed with database code ${error.code ?? 'unknown'}`);
-      throw new InternalServerErrorException('Le chargement des entreprises a échoué.');
+      this.logger.error(`Tenant listing failed with database code ${error.code ?? 'unknown'}: ${error.message ?? 'no detail'}`);
+      const detail = process.env.NODE_ENV === 'production' ? '' : ` (${error.code ?? 'unknown'}: ${error.message ?? 'no detail'})`;
+      throw new InternalServerErrorException(`Le chargement des entreprises a échoué${detail}`);
     }
 
     const payload: unknown = data;
