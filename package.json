@@ -1,40 +1,46 @@
 {
-  "name": "kanti-stock",
+  "name": "saas-commerce",
+  "version": "0.1.0",
   "private": true,
-  "version": "1.0.0",
   "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview",
-    "lint": "oxlint src",
-    "typecheck": "tsc -b",
-    "smoke": "node scripts/smoke.mjs",
-    "test": "npm run typecheck && npm run test:logic && npm run smoke",
-    "test:logic": "node scripts/logic-test.mjs"
+  "packageManager": "pnpm@10.22.0",
+  "engines": {
+    "node": ">=22.12.0"
   },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.118.0",
-    "lucide-react": "^1.66.0",
-    "react": "^19.3.1",
-    "react-dom": "^19.3.1",
-    "react-router-dom": "^7.18.5",
-    "recharts": "^3.10.1",
-    "zustand": "^5.0.16"
+  "scripts": {
+    "dev": "pnpm --parallel --filter @saas/web --filter @saas/api dev",
+    "dev:web": "pnpm --filter @saas/web dev",
+    "dev:api": "pnpm --filter @saas/api dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "eslint .",
+    "test": "pnpm -r test",
+    "test:coverage": "pnpm -r test:coverage",
+    "test:db": "supabase test db",
+    "test:db:concurrency": "node supabase/tests/stock-concurrency.mjs",
+    "test:e2e": "node e2e/run.mjs",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "db:start": "supabase db start",
+    "db:reset": "supabase db reset",
+    "db:lint": "supabase db lint"
+  },
+  "pnpm": {
+    "overrides": {
+      "multer": "^2.5.0",
+      "js-yaml": "^5.4.1",
+      "minimatch": "^11.0.1"
+    }
   },
   "devDependencies": {
-    "@types/node": "^24.19.2",
-    "@types/react": "^19.3.0",
-    "@types/react-dom": "^19.3.0",
-    "@vitejs/plugin-react": "^6.1.2",
-    "autoprefixer": "^10.6.2",
-    "esbuild": "^0.28.2",
-    "jsdom": "^30.1.3",
-    "oxlint": "^1.89.0",
-    "postcss": "^8.5.32",
-    "tailwindcss": "^3.4.19",
-    "typescript": "~7.0.2",
-    "vite": "^8.3.5"
-  },
-  "description": "Kanti — SaaS de gestion de stock simple et puissant (scan, alertes, bons de commande, rapports)."
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.64.1",
+    "eslint": "^10.14.0",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.5.0",
+    "pg": "^8.23.1",
+    "supabase": "^2.58.5",
+    "typescript-eslint": "^8.48.0"
+  }
 }

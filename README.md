@@ -1,202 +1,147 @@
-# Kanti — gestion de stock simple et puissante
+# Stokari
 
-Kanti est un SaaS de gestion de stock pensé pour être **utilisé au comptoir, sur un téléphone** :
-une sortie de stock se fait en deux gestes, un scan de code-barres ouvre la vente, et les alertes
-de réapprovisionnement sont calculées à partir des **ventes réelles** et du **délai fournisseur** —
-pas seulement d'un seuil fixe.
+Plateforme multi-entreprises de gestion commerciale, de stock et de boutiques en ligne.
 
-L'application est désormais **multi-entreprises et multi-utilisateurs** : authentification Supabase,
-PostgreSQL avec Row Level Security, rôles et permissions, journal de stock transactionnel
-(idempotence, annulation par contre-écriture).
+> **État actuel : itération 2 — identité, entreprise, catalogue et stock.**
+> Les ventes, réservations, boutiques publiques et rapports ne sont pas encore implémentés. L’interface ne présente aucune donnée commerciale fictive.
 
----
+## Parcours disponible dans le code
 
-## 🔐 Compte de démonstration
+- inscription par e-mail et mot de passe ;
+- vérification par code OTP à 8 chiffres ou lien de confirmation ;
+- connexion Google OAuth sans OTP, après activation du fournisseur ;
+- connexion et récupération du mot de passe ;
+- création transactionnelle d’une entreprise ;
+- attribution du rôle propriétaire et de ses permissions ;
+- isolation des tenants par PostgreSQL RLS ;
+- catégories, produits/variantes et emplacements tenant-scopés ;
+- stock physique, réservé et disponible calculé, avec réceptions, ajustements et transferts transactionnels ;
+- historique immuable et contre-passations avec motif et idempotence ;
+- API NestJS documentée avec Swagger en développement.
 
-| E-mail | Mot de passe |
-| --- | --- |
-| `demo@kanti.app` | `KantiDemo2026!` |
+Une instance Supabase configurée est indispensable pour exécuter réellement ces parcours. Sans elle, les formulaires d’authentification restent désactivés et affichent un message de configuration explicite.
 
-Sur l'écran de connexion, le bouton **« Entrer dans la démo »** ouvre cet espace en un clic (aucun
-identifiant à retenir). L'espace **Kanti Démo SARL** contient 33 produits, 5 fournisseurs et
-~270 mouvements sur 45 jours (valorisation ≈ 4,4 M FCFA). Vous pouvez aussi créer votre propre
-compte : l'espace de travail est provisionné avec un catalogue de démonstration en option.
+## Stack
 
-> **Perdu ?** Le bouton **Aide** (livre, en haut à droite, ou « Comment ça marche ? » dans le menu
-> mobile) ouvre un guide intégré : les 4 étapes du flux, où trouver chaque écran, le vocabulaire
-> (SKU, inventaire, seuil d'alerte…) et les raccourcis.
+- React 19, TypeScript, Vite, Tailwind CSS et TanStack Query ;
+- NestJS, Supabase Auth et PostgreSQL ;
+- Supabase CLI, migrations SQL et tests pgTAP ;
+- Vitest, Testing Library et Supertest ;
+- pnpm workspaces et ESLint.
 
----
+## Prérequis
 
-## ✨ Fonctionnalités
+- Node.js 22.12 ou supérieur ;
+- Corepack/pnpm 10 ;
+- Docker pour exécuter Supabase localement et les tests de base de données.
 
-### Prise en main
-- Bouton **Entrer dans la démo** sur la page de connexion.
-- Guide intégré **« Comment ça marche ? »** : 4 étapes du flux, carte des écrans, glossaire, astuces.
-
-### Authentification & espaces de travail
-- Inscription, connexion, mot de passe oublié/réinitialisation (Supabase Auth, PKCE).
-- Connexion Google (OAuth) configurable.
-- Création d'espaces (tenants), sélection de l'espace actif, plusieurs entreprises par utilisateur.
-- Rôle affiché (Propriétaire, Gestionnaire, Vendeur…) issu des permissions de l'espace.
-
-### Tableau de bord « Aujourd'hui »
-- Valeur du stock, alertes, mouvements du jour, marge potentielle.
-- File « À traiter maintenant » avec **réapprovisionnement en un clic**.
-- Flux entrées/sorties sur 14 jours, meilleures sorties, derniers mouvements.
-- Actions rapides : sortie, entrée, scan, inventaire, nouveau produit, bon de commande.
-
-### Stock
-- Recherche instantanée par nom, SKU ou **code-barres** ; filtres statut/catégorie/fournisseur ; tris.
-- Tableau desktop détaillé, cartes tactiles sur mobile.
-- **Import CSV** (collage Excel/Sheets ou fichier) avec alias d'en-têtes, mises à jour par SKU et rapport.
-- **Export CSV** de la vue filtrée.
-
-### Mouvements
-- Entrée, sortie ou **inventaire** (stock compté, écart calculé) — chaque opération est une
-  `stock_operation` transactionnelle avec clé d'idempotence, lignes et trace utilisateur.
-- Quantités rapides, contrôle de stock insuffisant côté client **et** côté base.
-- **Annulation** par contre-écriture (`reversal`), depuis la notification ou l'historique.
-- Historique filtrable (type, période, produit, texte), valorisation des sorties.
-
-### Alertes intelligentes
-- Regroupement **par fournisseur** et coût estimé.
-- Quantité suggérée = couverture des ventes pendant le délai fournisseur × 1,3 (minimum : quantité de réappro).
-- Couverture en jours, ventes moyennes/jour, réception ligne à ligne ou groupée.
-
-### Bons de commande
-- Générés depuis les alertes, groupés par fournisseur, export CSV, copie presse-papiers
-  (WhatsApp / e-mail) et **réception en un clic** (une opération de stock par ligne).
-
-### Rapports
-- CA des sorties, marge brute, rotation, sorties quotidiennes, valeur par catégorie.
-- Top produits, capital immobilisé, meilleure marge, **produits dormants**.
-
-### Scan & recherche rapide
-- Scan caméra via `BarcodeDetector` (Chrome/Android) avec repli saisie manuelle et douchette USB.
-- Palette de commandes ⌘K / Ctrl+K, raccourcis ⌘I pour une entrée.
-
-### Équipe & rôles
-- Liste des membres avec e-mail, rôle et date d’arrivée ; badge « vous ».
-- **Invitation** par e-mail : la personne est ajoutée immédiatement si elle a déjà un compte, sinon
-  l’invitation l’attend et se rattache **automatiquement** à la création de son compte.
-- Changement de rôle en un clic, retrait d’un membre, annulation d’une invitation, message
-  d’invitation copiable (WhatsApp/e-mail).
-- 5 rôles prêts à l’emploi : **Propriétaire**, **Gestionnaire**, **Magasinier**, **Vendeur**,
-  **Lecture seule** — chacun avec son jeu de permissions affiché en clair.
-- Garde-fou serveur : impossible de retirer ou rétrograder le **dernier propriétaire** ; un
-  Vendeur ne peut ni inviter, ni modifier l’équipe (refusé en base, pas seulement dans l’interface).
-
-### Réglages
-- Entreprise (nom, devise, adresse, téléphone via RPC), profil utilisateur, rôle.
-- Exports CSV, rechargement serveur, chargement du catalogue de démonstration dans un espace vide.
-
----
-
-## 🚀 Démarrage
+## Installation
 
 ```bash
-npm install
-cp .env.example .env.local     # renseigner VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY
-npm run dev                    # http://localhost:5173
+corepack enable pnpm
+pnpm install
+cp apps/web/.env.example apps/web/.env.local
+cp apps/api/.env.example apps/api/.env
 ```
 
-### Scripts
+Démarrez ensuite Supabase :
 
 ```bash
-npm run typecheck   # TypeScript strict
-npm run test:logic  # 18 tests des règles métier pures (alertes, flux, dormants, CSV, formats)
-npm run smoke       # 25 tests de rendu jsdom : écrans, modales, auth, onboarding, contrôle de stock
-npm test            # les trois
-npm run build       # build de production
+pnpm supabase:start
 ```
 
----
+La commande affiche les URL et clés **locales**. Recopiez uniquement la clé publiable/anon dans les deux fichiers `.env` :
 
-## 🧱 Architecture
-
-```
-src/
-├── lib/
-│   ├── supabase.ts        # client Supabase + traduction des erreurs Postgres en français
-│   ├── auth.tsx           # AuthProvider : session, profil, espaces, rôles, inscription/OAuth
-│   ├── store.ts           # cache Zustand (produits, fournisseurs, mouvements) + actions RPC
-│   ├── analytics.ts       # KPI, alertes, flux, rotation, dormants (fonctions pures testées)
-│   ├── csv.ts             # export/import CSV tolérant
-│   ├── format.ts          # monnaie, dates, statuts, unités, devises
-│   └── uiStore.ts         # modales + notifications
-├── components/            # Layout, formulaires produit/mouvement/fournisseur, bon de commande,
-│                          # scanner, palette de recherche, primitives UI
-├── pages/                 # Dashboard, Stock, Movements, Alerts, Reports, Suppliers, Settings,
-│                          # Auth, Onboarding
-└── index.css              # design system Tailwind
-supabase/migrations/       # schéma + RPC (versionnés, appliqués sur le projet)
+```dotenv
+VITE_SUPABASE_URL=http://127.0.0.1:54321
+VITE_SUPABASE_PUBLISHABLE_KEY=...
 ```
 
-**Stack** : React 19 + TypeScript + Vite, Tailwind CSS, Zustand, Recharts, lucide-react,
-Supabase (Auth + Postgres + RLS + RPC).
-
-### Modèle de données (extrait)
-
-```
-tenants ─┬─ memberships ─ roles ─ role_permissions ─ permissions
-         ├─ tenant_invitations
-         ├─ suppliers
-         ├─ categories ─ products ─ product_variants ─┬─ stock_balances
-         │                                            └─ stock_movements ─ stock_operations
-         └─ stock_locations
+```dotenv
+SUPABASE_URL=http://127.0.0.1:54321
+SUPABASE_PUBLISHABLE_KEY=...
 ```
 
-### RPC disponibles
+Ne placez jamais une clé `service_role`, une clé secrète, un client secret Google ou une clé Resend dans une variable `VITE_`.
 
-| Fonction | Rôle |
-| --- | --- |
-| `create_tenant` | Crée l'entreprise, le rôle Propriétaire, ses permissions et le dépôt principal |
-| `upsert_product` | Crée/modifie produit + déclinaison (SKU, code-barres, unité, seuil, réappro, fournisseur) |
-| `post_stock_operation` | Écrit les mouvements d'un coup : `opening`, `receipt`, `issue`, `adjustment`, `inventory`, `transfer`, `reversal` |
-| `save_supplier` / `delete_supplier` | Fournisseurs (suppression détache les produits) |
-| `delete_product` | Supprime, ou archive si l'historique existe |
-| `update_tenant_settings` | Nom, devise, fuseau, adresse, téléphone |
-| `list_tenant_members` / `list_tenant_roles` | Équipe : membres, rôles et permissions |
-| `invite_member` / `revoke_invitation` | Invitations (ajout direct si le compte existe) |
-| `accept_invitations` | Rattache l’utilisateur connecté aux entreprises qui l’ont invité |
-| `update_member_role` / `remove_member` | Rôles et retrait, avec garde-fou sur le dernier propriétaire |
-| `seed_demo_data` / `seed_demo_history` | Catalogue et historique de démonstration |
+Pour activer la connexion Google, suivez [le guide OAuth sécurisé](./docs/security/google-oauth.md), puis définissez `VITE_GOOGLE_AUTH_ENABLED=true` uniquement après activation du fournisseur Supabase.
 
-### Invariants métier
-- Le stock ne change **que** par une opération de stock ; chaque variation est horodatée, attribuée
-  et réversible par contre-écriture.
-- Une sortie supérieure au stock disponible échoue côté base (`Insufficient available stock`).
-- Un ajustement enregistre l'écart (`inventaire`) ; la quantité comptée ne peut pas être négative.
-- La quantité suggérée = `max(qté de réappro, ⌈ventes/jour × délai × 1,3⌉)`.
-- Toute écriture directe en table est refusée : seules les RPC `SECURITY DEFINER` écrivent.
-- L'isolation entre entreprises est garantie par RLS (`has_tenant_permission`, `is_tenant_member`).
+## Développement
 
----
+```bash
+pnpm dev
+```
 
-## 📦 Déploiement
+- Web : `http://localhost:5173`
+- API : `http://localhost:3001/api/v1`
+- Swagger : `http://localhost:3001/api/docs`
+- Studio Supabase local : `http://localhost:54323`
+- Boîte e-mail de test Mailpit : `http://localhost:54324`
 
-SPA statique (`dist/`) + Supabase managé.
+## Test E2E réel (Supabase local + Mailpit)
 
-- `public/_redirects` (Netlify) et `vercel.json` fournissent la réécriture SPA.
-- Variables d'environnement : `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (clé publishable, jamais la `service_role`).
-- Dans Supabase → Authentication → URL Configuration : ajouter le domaine de production à
-  `Site URL` et `Redirect URLs` (`/auth/callback`, `/auth/reinitialisation`).
+Ce parcours utilise de vrais comptes jetables, lit le code OTP dans Mailpit, puis exerce les formulaires d’entreprise, de catalogue et de stock. Il vérifie aussi l’isolation d’un second compte et supprime ses données de test à la fin.
 
----
+Avec Docker et Supabase local démarrés, et après avoir arrêté les serveurs Web/API qui utiliseraient déjà les ports 5173 et 3001 :
 
-## 🗺️ Feuille de route
+```bash
+pnpm exec playwright install chromium
+pnpm test:e2e
+```
 
-1. **Rôles personnalisés** : créer un rôle sur mesure à partir des 15 permissions existantes.
-2. **Multi-entrepôts** : écrans de transfert (`transfer` déjà supporté côté base).
-3. **Mode hors-ligne** : file d'attente de mouvements + réconciliation par clé d'idempotence.
-4. **Caisse** : panier multi-lignes, tickets, encaissement Mobile Money.
-5. **Notifications** : e-mails/WhatsApp d'alerte, rapport quotidien, seuils par produit.
-6. **Facturation SaaS** : abonnement par utilisateurs/entrepôts (Stripe, Mobile Money).
-7. **Import de factures fournisseurs** et rapprochement de prix.
+Le lanceur récupère uniquement les clés locales affichées par `supabase status`, démarre les serveurs Web/API et refuse une base de données distante. Aucun e-mail réel n’est envoyé et aucune clé `service_role` n’est utilisée.
 
----
+Le navigateur appelle uniquement des URL relatives `/api`. Vite transmet ces requêtes à NestJS ; aucun code frontend ne dépend d’un `localhost` pour atteindre l’API.
 
-## 📄 Licence
+## Vérifications
 
-AGPL-3.0 (voir `LICENSE`).
+```bash
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build
+```
+
+Avec Supabase local démarré :
+
+```bash
+pnpm test:db
+pnpm test:db:concurrency
+pnpm db:lint
+```
+
+Les tests SQL couvrent la structure, les contraintes, les privilèges, l’isolation de deux tenants, les transferts et les contre-passations. Le script de concurrence utilise deux connexions PostgreSQL indépendantes pour vérifier l’absence de survente et de doublon. Ils nécessitent un vrai PostgreSQL/Supabase et ne sont pas remplacés par les tests unitaires JavaScript.
+
+## Structure
+
+```text
+apps/
+  web/                 React, authentification et onboarding
+  api/                 API NestJS
+supabase/
+  migrations/          Schéma et fonctions transactionnelles
+  tests/               Tests pgTAP et isolation RLS
+  config.toml          Configuration Auth/OTP locale
+.github/workflows/     CI application et base de données
+docs/                  Décisions et consignes de sécurité
+```
+
+## Règles de sécurité actuelles
+
+- Supabase Auth conserve les mots de passe ; aucune table applicative ne les stocke.
+- La création d’entreprise exige un utilisateur authentifié avec e-mail confirmé.
+- Le rôle `authenticated` ne peut pas insérer directement dans `tenants`, `roles` ou `memberships`.
+- La fonction `create_tenant` vérifie son appelant et réalise toutes les écritures dans une seule transaction.
+- Les écritures catalogue et stock passent par des RPC transactionnelles ; les soldes et mouvements ne sont pas modifiables directement par le rôle `authenticated`.
+- Les transferts conservent les quantités, les retraits verrouillent les soldes et les clés d’idempotence sont liées à une empreinte du payload.
+- Les helpers `SECURITY DEFINER` fixent `search_path` et exposent uniquement les opérations nécessaires.
+- L’API utilise le jeton de l’utilisateur et une clé publiable, pas une clé secrète contournant la RLS.
+- Les erreurs de base sensibles ne sont pas renvoyées au navigateur.
+
+## Avant la production
+
+Cette première tranche ne suffit pas pour une mise en production. Il reste notamment à brancher un SMTP personnalisé, activer le CAPTCHA, tester la restauration, finaliser les durées de session, exécuter les tests E2E avec de vrais e-mails et faire auditer les migrations sur l’environnement cible.
+
+## Licence
+
+GNU AGPL-3.0. Voir [LICENSE](./LICENSE).

@@ -1,24 +1,42 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Builds
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+apps/*/.env
+apps/*/.env.*
+!apps/*/.env.example
+!apps/*/.env.*.example
+
+# Supabase local state
+supabase/.branches/
+supabase/.temp/
+supabase/.env
+
 # Logs
-logs
 *.log
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Test artifacts
+playwright-report/
+test-results/
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# Editors and OS
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+.vscode/
+.idea/
+
+# Native applications
+apps/desktop/src-tauri/target/
+apps/mobile/.expo/
