@@ -157,6 +157,7 @@ const modals = [
   ['bon de commande', () => useUI.getState().openOrder(), 'Générer un bon de commande'],
   ['palette de recherche', () => useScanner.getState().openPalette(), 'À traiter en priorité'],
   ['scanner', () => useScanner.getState().openScanner(), 'Scanner un produit'],
+  ['guide « Comment ça marche »', () => useUI.getState().openHelp(), 'Je crée mes produits'],
 ]
 for (const [label, open, expected] of modals) {
   open()
@@ -168,6 +169,7 @@ for (const [label, open, expected] of modals) {
 useUI.getState().closeProductForm()
 useUI.getState().closeDetail()
 useScanner.getState().closePalette()
+useUI.getState().closeHelp()
 useScanner.getState().closeScanner()
 useUI.getState().closeOrder()
 useUI.getState().openMovementForm({ productId: product.id, type: 'out' })
@@ -199,6 +201,7 @@ for (const [mode, expected] of authCases) {
   const authRoot = renderAuth(mode, node)
   await wait()
   check(`écran auth ${mode}`, (node.textContent || '').includes(expected))
+  if (mode === 'signin') check('bouton « Entrer dans la démo »', (node.textContent || '').includes('Entrer dans la démo'))
   authRoot.unmount()
   node.remove()
 }
@@ -219,3 +222,4 @@ if (errors.length) {
 
 console.log(failures === 0 ? '\nSMOKE OK' : `\n${failures} problème(s)`)
 process.exit(failures === 0 ? 0 : 1)
+

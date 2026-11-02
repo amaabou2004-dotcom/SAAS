@@ -4,6 +4,7 @@ import {
   ArrowLeftRight,
   BarChart3,
   BellRing,
+  BookOpen,
   Boxes,
   Check,
   ChevronDown,
@@ -51,6 +52,7 @@ export default function Layout() {
   const { tenants, activeTenant, selectTenant, roleName, signOut } = useAuth()
   const openMovementForm = useUI((s) => s.openMovementForm)
   const openScanner = useScanner((s) => s.openScanner)
+  const openHelp = useUI((s) => s.openHelp)
   const [mobileMenu, setMobileMenu] = useState(false)
   const [tenantOpen, setTenantOpen] = useState(false)
   const location = useLocation()
@@ -266,6 +268,16 @@ export default function Layout() {
                 <span className="hidden text-[13px] sm:inline">Scanner</span>
               </button>
 
+              <button
+                onClick={openHelp}
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-ink-200 bg-white text-ink-600 hover:border-ink-300 hover:text-ink-900 sm:h-10 sm:w-auto sm:px-3"
+                aria-label="Comment ça marche"
+                title="Comment ça marche ?"
+              >
+                <BookOpen size={17} />
+                <span className="hidden text-[13px] sm:inline">Aide</span>
+              </button>
+
               <NavLink
                 to="/alertes"
                 className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-ink-200 bg-white text-ink-600 hover:border-ink-300 hover:text-ink-900 sm:h-10 sm:w-10"
@@ -445,6 +457,15 @@ function MobileSheet({ onClose }: { onClose: () => void }) {
             className="btn-ghost w-full justify-start"
           >
             <ScanBarcode size={17} /> Scanner un code-barres
+          </button>
+          <button
+            onClick={() => {
+              onClose()
+              useUI.getState().openHelp()
+            }}
+            className="btn-ghost w-full justify-start"
+          >
+            <BookOpen size={17} /> Comment ça marche ?
           </button>
           <button
             onClick={() => {

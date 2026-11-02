@@ -18,6 +18,8 @@ import { cx } from '../components/ui'
 
 type Mode = 'signin' | 'signup' | 'forgot' | 'reset'
 
+const DEMO = { email: 'demo@kanti.app', password: 'KantiDemo2026!' }
+
 const HIGHLIGHTS = [
   'Sorties de stock en 2 gestes, même hors du bureau',
   'Alertes calculées sur vos ventes et vos délais fournisseur',
@@ -111,6 +113,18 @@ export default function AuthPage({ mode }: { mode: Mode }) {
     }
   }
 
+  const demo = async () => {
+    setBusy(true)
+    setError('')
+    try {
+      await signIn(DEMO.email, DEMO.password)
+      navigate('/', { replace: true })
+    } catch (err) {
+      setError((err as Error).message)
+      setBusy(false)
+    }
+  }
+
   const google = async () => {
     setBusy(true)
     setError('')
@@ -176,6 +190,22 @@ export default function AuthPage({ mode }: { mode: Mode }) {
 
           <h2 className="text-2xl font-extrabold tracking-tight text-ink-900">{titles[mode].title}</h2>
           <p className="mt-1.5 text-sm text-ink-500">{titles[mode].subtitle}</p>
+
+          {mode === 'signin' ? (
+            <div className="mt-5 rounded-xl border border-brand-200 bg-brand-50/70 p-3.5">
+              <p className="flex items-center gap-1.5 text-[13px] font-bold text-brand-900">
+                <Sparkles size={14} /> Pas envie de créer un compte ?
+              </p>
+              <p className="mt-1 text-[12px] leading-relaxed text-brand-900/70">
+                Ouvrez l’espace de démonstration <strong>Kanti Démo SARL</strong> : 33 produits, 5 fournisseurs et
+                45 jours d’historique, déjà remplis.
+              </p>
+              <button type="button" onClick={demo} disabled={busy} className="btn-primary mt-2.5 h-10 w-full justify-center">
+                {busy ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
+                Entrer dans la démo
+              </button>
+            </div>
+          ) : null}
 
           <form onSubmit={submit} className="mt-6 space-y-3.5">
             {mode === 'signup' ? (

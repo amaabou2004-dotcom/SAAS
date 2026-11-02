@@ -19,6 +19,7 @@ import SupplierForm from './components/SupplierForm'
 import OrderModal from './components/OrderModal'
 import SearchPalette from './components/SearchPalette'
 import ScannerModal from './components/ScannerModal'
+import HelpGuide from './components/HelpGuide'
 import { Toaster } from './components/ui'
 
 function Splash() {
@@ -102,6 +103,7 @@ export default function App() {
         <OrderModal />
         <SearchPalette />
         <ScannerModal />
+        <HelpGuide />
         <Toaster />
       </BrowserRouter>
     </AuthProvider>

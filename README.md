@@ -17,13 +17,22 @@ PostgreSQL avec Row Level Security, rôles et permissions, journal de stock tran
 | --- | --- |
 | `demo@kanti.app` | `KantiDemo2026!` |
 
-L'espace **Kanti Démo SARL** contient 33 produits, 5 fournisseurs et ~270 mouvements sur 45 jours
-(valorisation ≈ 4,4 M FCFA). Vous pouvez aussi créer votre propre compte : l'espace de travail est
-provisionné avec un catalogue de démonstration en option.
+Sur l'écran de connexion, le bouton **« Entrer dans la démo »** ouvre cet espace en un clic (aucun
+identifiant à retenir). L'espace **Kanti Démo SARL** contient 33 produits, 5 fournisseurs et
+~270 mouvements sur 45 jours (valorisation ≈ 4,4 M FCFA). Vous pouvez aussi créer votre propre
+compte : l'espace de travail est provisionné avec un catalogue de démonstration en option.
+
+> **Perdu ?** Le bouton **Aide** (livre, en haut à droite, ou « Comment ça marche ? » dans le menu
+> mobile) ouvre un guide intégré : les 4 étapes du flux, où trouver chaque écran, le vocabulaire
+> (SKU, inventaire, seuil d'alerte…) et les raccourcis.
 
 ---
 
 ## ✨ Fonctionnalités
+
+### Prise en main
+- Bouton **Entrer dans la démo** sur la page de connexion.
+- Guide intégré **« Comment ça marche ? »** : 4 étapes du flux, carte des écrans, glossaire, astuces.
 
 ### Authentification & espaces de travail
 - Inscription, connexion, mot de passe oublié/réinitialisation (Supabase Auth, PKCE).

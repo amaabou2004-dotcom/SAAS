@@ -32,6 +32,10 @@ type UIState = {
   orderSupplierId: string | null
   openOrder: (supplierId?: string | null) => void
   closeOrder: () => void
+
+  helpOpen: boolean
+  openHelp: () => void
+  closeHelp: () => void
 }
 
 export const useUI = create<UIState>((set) => ({
@@ -67,5 +71,9 @@ export const useUI = create<UIState>((set) => ({
   orderSupplierId: null,
   openOrder: (supplierId = null) => set({ orderOpen: true, orderSupplierId: supplierId }),
   closeOrder: () => set({ orderOpen: false, orderSupplierId: null }),
+
+  helpOpen: false,
+  openHelp: () => set({ helpOpen: true }),
+  closeHelp: () => set({ helpOpen: false }),
 }))
 

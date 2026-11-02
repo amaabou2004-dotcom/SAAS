@@ -18,6 +18,7 @@ import SupplierForm from '../src/components/SupplierForm'
 import OrderModal from '../src/components/OrderModal'
 import SearchPalette from '../src/components/SearchPalette'
 import ScannerModal from '../src/components/ScannerModal'
+import HelpGuide from '../src/components/HelpGuide'
 import { Toaster } from '../src/components/ui'
 
 export function renderAt(path: string, el: HTMLElement): Root {
@@ -43,6 +44,7 @@ export function renderAt(path: string, el: HTMLElement): Root {
         <OrderModal />
         <SearchPalette />
         <ScannerModal />
+        <HelpGuide />
         <Toaster />
       </MemoryRouter>
     </StrictMode>,
