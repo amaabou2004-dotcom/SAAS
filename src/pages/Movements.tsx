@@ -66,8 +66,8 @@ export default function Movements() {
     return { inbound, outbound, count: filtered.length, value }
   }, [filtered])
 
-  const undo = (id: string) => {
-    const res = undoMovement(id)
+  const undo = async (operationId: string) => {
+    const res = await undoMovement(operationId)
     if (res.ok) toast('Mouvement annulé, stock rétabli', 'info')
     else toast(res.error ?? 'Annulation impossible', 'error')
   }
@@ -249,7 +249,7 @@ export default function Movements() {
                     <td className="table-cell text-right text-[13px] font-semibold text-ink-700">{m.stockAfter}</td>
                     <td className="table-cell text-right">
                       <button
-                        onClick={() => undo(m.id)}
+                        onClick={() => undo(m.operationId)}
                         className="btn-subtle h-8 w-8 p-0 opacity-0 transition group-hover:opacity-100"
                         title="Annuler ce mouvement"
                       >
@@ -293,7 +293,7 @@ export default function Movements() {
                     <span>Stock après : {m.stockAfter}</span>
                     <span>·</span>
                     <span>{m.user}</span>
-                    <button onClick={() => undo(m.id)} className="ml-auto flex items-center gap-1 font-semibold text-ink-500 hover:text-rose-600">
+                    <button onClick={() => undo(m.operationId)} className="ml-auto flex items-center gap-1 font-semibold text-ink-500 hover:text-rose-600">
                       <RotateCcw size={11} /> Annuler
                     </button>
                   </div>

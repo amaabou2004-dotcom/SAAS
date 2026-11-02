@@ -9,11 +9,12 @@
     "preview": "vite preview",
     "lint": "oxlint src",
     "typecheck": "tsc -b",
-    "test:store": "node scripts/store-test.mjs",
     "smoke": "node scripts/smoke.mjs",
-    "test": "npm run typecheck && npm run test:store && npm run smoke"
+    "test": "npm run typecheck && npm run test:logic && npm run smoke",
+    "test:logic": "node scripts/logic-test.mjs"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.118.0",
     "lucide-react": "^1.66.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",

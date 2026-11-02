@@ -35,6 +35,7 @@ export default function MovementForm() {
   const [note, setNote] = useState('')
   const [unitCost, setUnitCost] = useState('')
   const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   const selected = useMemo(() => products.find((p) => p.id === selectedId) ?? null, [products, selectedId])
 
@@ -96,7 +97,7 @@ export default function MovementForm() {
 
   const quickQty = type === 'out' ? [1, 5, 10, 25] : type === 'in' ? [selected?.reorderQty ?? 10, 10, 25, 50] : [0, 5, 10, 20]
 
-  const submit = () => {
+  const submit = async () => {
     if (!selected) {
       setError('Choisissez d’abord un produit.')
       return
@@ -109,7 +110,8 @@ export default function MovementForm() {
       setError(`Stock insuffisant : ${selected.stock} ${selected.unit} disponible(s).`)
       return
     }
-    const res = addMovement({
+    setSubmitting(true)
+    const res = await addMovement({
       productId: selected.id,
       type,
       quantity: numericQty,
@@ -117,17 +119,20 @@ export default function MovementForm() {
       note,
       unitCost: type === 'in' ? Number(unitCost.replace(',', '.')) || undefined : undefined,
     })
+    setSubmitting(false)
     if (!res.ok) {
       setError(res.error ?? 'Impossible d’enregistrer le mouvement.')
       return
     }
     const verb = type === 'in' ? 'Entrée' : type === 'out' ? 'Sortie' : 'Ajustement'
-    const movementId = res.movement?.id
+    const movementId = res.operationId
     toast(`${verb} de ${numericQty} ${selected.unit} · ${selected.name} — stock : ${after}`, 'success', {
       label: 'Annuler',
       onClick: () => {
-        if (movementId) undoMovement(movementId)
-        toast('Mouvement annulé, stock rétabli', 'info')
+        if (!movementId) return
+        void undoMovement(movementId).then((undo) => {
+          toast(undo.ok ? 'Mouvement annulé, stock rétabli' : (undo.error ?? 'Annulation impossible'), undo.ok ? 'info' : 'error')
+        })
       },
     })
     close()
@@ -179,8 +184,8 @@ export default function MovementForm() {
             <button onClick={close} className="btn-ghost flex-1 sm:flex-none">
               Annuler
             </button>
-            <button onClick={submit} className="btn-brand flex-1 sm:flex-none" disabled={!selected || insufficient}>
-              <Check size={16} /> Valider {typeLabel.toLowerCase()}
+            <button onClick={submit} className="btn-brand flex-1 sm:flex-none" disabled={!selected || insufficient || submitting}>
+              <Check size={16} /> {submitting ? 'Enregistrement…' : `Valider ${typeLabel.toLowerCase()}`}
             </button>
           </div>
         </div>

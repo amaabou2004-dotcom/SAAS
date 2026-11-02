@@ -178,11 +178,16 @@ export default function ProductDetail() {
         </div>
 
         <button
-          onClick={() => {
-            if (window.confirm(`Supprimer « ${product.name} » et tout son historique ? Cette action est irréversible.`)) {
-              deleteProduct(product.id)
+          onClick={async () => {
+            if (
+              window.confirm(
+                `Supprimer « ${product.name} » ? Un produit déjà mouvementé sera archivé (historique conservé).`,
+              )
+            ) {
+              const res = await deleteProduct(product.id)
               closeDetail()
-              toast('Produit supprimé', 'info')
+              if (!res.ok) toast(res.error ?? 'Suppression impossible', 'error')
+              else toast(res.archived ? 'Produit archivé (historique conservé)' : 'Produit supprimé', 'info')
             }
           }}
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink-400 hover:text-rose-600"

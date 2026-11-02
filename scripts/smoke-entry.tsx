@@ -1,4 +1,4 @@
-import { StrictMode } from 'react'
+import { StrictMode, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import Layout from '../src/components/Layout'
@@ -9,6 +9,8 @@ import Alerts from '../src/pages/Alerts'
 import Reports from '../src/pages/Reports'
 import Suppliers from '../src/pages/Suppliers'
 import Settings from '../src/pages/Settings'
+import AuthPage from '../src/pages/Auth'
+import Onboarding from '../src/pages/Onboarding'
 import ProductForm from '../src/components/ProductForm'
 import MovementForm from '../src/components/MovementForm'
 import ProductDetail from '../src/components/ProductDetail'
@@ -48,6 +50,23 @@ export function renderAt(path: string, el: HTMLElement): Root {
   return root
 }
 
+export function renderStandalone(node: ReactNode, path: string, el: HTMLElement): Root {
+  const root = createRoot(el)
+  root.render(
+    <StrictMode>
+      <MemoryRouter initialEntries={[path]}>{node}</MemoryRouter>
+    </StrictMode>,
+  )
+  return root
+}
+
+export function renderAuth(mode: 'signin' | 'signup' | 'forgot' | 'reset', el: HTMLElement): Root {
+  return renderStandalone(<AuthPage mode={mode} />, `/auth/${mode}`, el)
+}
+
+export function renderOnboarding(el: HTMLElement): Root {
+  return renderStandalone(<Onboarding />, '/', el)
+}
 export { useUI } from '../src/lib/uiStore'
 export { useScanner } from '../src/lib/scannerStore'
 export { useData } from '../src/lib/store'

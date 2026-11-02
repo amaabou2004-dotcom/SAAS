@@ -130,9 +130,9 @@ export default function Suppliers() {
                   <Pencil size={13} />
                 </button>
                 <button
-                  onClick={() => {
-                    if (window.confirm(`Supprimer le fournisseur « ${supplier.name} » ?`)) {
-                      const res = deleteSupplier(supplier.id)
+                  onClick={async () => {
+                    if (window.confirm(`Supprimer le fournisseur « ${supplier.name} » ? Les produits liés seront détachés.`)) {
+                      const res = await deleteSupplier(supplier.id)
                       toast(res.ok ? 'Fournisseur supprimé' : (res.error ?? 'Suppression impossible'), res.ok ? 'info' : 'error')
                     }
                   }}

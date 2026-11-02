@@ -14,6 +14,8 @@ export type Supplier = {
 
 export type Product = {
   id: string
+  variantId: string
+  categoryId: string | null
   sku: string
   barcode: string
   name: string
@@ -33,6 +35,7 @@ export type Product = {
 
 export type Movement = {
   id: string
+  operationId: string
   productId: string
   type: MovementType
   quantity: number

@@ -56,10 +56,10 @@ export default function Dashboard() {
   const recent = movements.slice(0, 6)
   const maxBest = Math.max(1, ...best.map((b) => b.qty))
 
-  const quickReceive = (productId: string, qty: number) => {
+  const quickReceive = async (productId: string, qty: number) => {
     const product = products.find((p) => p.id === productId)
     if (!product) return
-    const res = addMovement({
+    const res = await addMovement({
       productId,
       type: 'in',
       quantity: qty,

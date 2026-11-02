@@ -40,7 +40,7 @@ const EMPTY: Form = {
 export default function ProductForm() {
   const { open, productId, defaults } = useUI((s) => s.productForm)
   const close = useUI((s) => s.closeProductForm)
-  const { products, suppliers, settings, addProduct, updateProduct, addMovement } = useData()
+  const { products, suppliers, settings, addProduct, updateProduct } = useData()
   const toast = useUI((s) => s.toast)
   const openMovementForm = useUI((s) => s.openMovementForm)
   const [form, setForm] = useState<Form>(EMPTY)
@@ -79,7 +79,10 @@ export default function ProductForm() {
   const margin = price > 0 ? ((price - cost) / price) * 100 : 0
   const isValid = form.name.trim().length > 0
 
-  const submit = () => {
+  const [busy, setBusy] = useState(false)
+
+  const submit = async () => {
+    if (busy) return
     if (!isValid) {
       setError('Le nom du produit est obligatoire.')
       return
@@ -99,25 +102,22 @@ export default function ProductForm() {
       active: form.active,
     }
 
-    if (existing) {
-      updateProduct(existing.id, payload)
-      toast('Produit mis à jour')
-    } else {
-      const initialStock = Math.max(0, Number(form.stock) || 0)
-      const created = addProduct({ ...payload, stock: 0 })
-      if (initialStock > 0) {
-        addMovement({
-          productId: created.id,
-          type: 'in',
-          quantity: initialStock,
-          reason: 'Stock initial',
-          unitCost: cost,
-          note: 'Création de la fiche produit',
-        })
+    setBusy(true)
+    try {
+      if (existing) {
+        await updateProduct(existing.id, payload)
+        toast('Produit mis à jour')
+      } else {
+        const initialStock = Math.max(0, Number(form.stock) || 0)
+        await addProduct({ ...payload, stock: initialStock })
+        toast(`${payload.name} ajouté${initialStock > 0 ? ` · stock initial ${initialStock}` : ''}`)
       }
-      toast(`${payload.name} ajouté${initialStock > 0 ? ` · stock initial ${initialStock}` : ''}`)
+      close()
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setBusy(false)
     }
-    close()
   }
 
   const currency = settings.currency
@@ -139,8 +139,8 @@ export default function ProductForm() {
           <button onClick={close} className="btn-ghost flex-1 sm:flex-none">
             Annuler
           </button>
-          <button onClick={submit} className="btn-brand flex-1 sm:flex-none">
-            {existing ? 'Enregistrer' : 'Créer le produit'}
+          <button onClick={submit} disabled={busy} className="btn-brand flex-1 sm:flex-none">
+            {busy ? 'Enregistrement…' : existing ? 'Enregistrer' : 'Créer le produit'}
           </button>
         </>
       }

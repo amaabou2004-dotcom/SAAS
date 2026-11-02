@@ -5,11 +5,15 @@ import {
   BarChart3,
   BellRing,
   Boxes,
+  Check,
+  ChevronDown,
   ChevronRight,
   LayoutDashboard,
+  LogOut,
   Menu,
   Package,
   Plus,
+  RefreshCw,
   ScanBarcode,
   Search,
   Settings as SettingsIcon,
@@ -17,6 +21,7 @@ import {
   X,
 } from 'lucide-react'
 import { useData } from '../lib/store'
+import { useAuth } from '../lib/auth'
 import { useUI } from '../lib/uiStore'
 import { cx } from './ui'
 import { inventoryStats } from '../lib/analytics'
@@ -42,10 +47,12 @@ const TITLES: Record<string, string> = {
 }
 
 export default function Layout() {
-  const { products, settings } = useData()
+  const { products, settings, loading, reload, error, ready } = useData()
+  const { tenants, activeTenant, selectTenant, roleName, signOut } = useAuth()
   const openMovementForm = useUI((s) => s.openMovementForm)
   const openScanner = useScanner((s) => s.openScanner)
   const [mobileMenu, setMobileMenu] = useState(false)
+  const [tenantOpen, setTenantOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -123,17 +130,26 @@ export default function Layout() {
 
         <div className="px-3 pb-3">
           <div className="rounded-2xl bg-gradient-to-br from-ink-900 to-ink-800 p-4 text-white">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-300">Espace démo</p>
-            <p className="mt-1 text-sm font-semibold leading-snug">Données 100 % locales</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-300">Espace de travail</p>
+            <p className="mt-1 truncate text-sm font-semibold leading-snug">{settings.company || 'Mon entreprise'}</p>
             <p className="mt-1 text-[12px] leading-relaxed text-ink-300">
-              Rien ne quitte votre appareil. Exportez une sauvegarde depuis les réglages.
+              {products.length} produits · synchronisé dans le cloud
             </p>
-            <button
-              onClick={() => useScanner.getState().openPalette()}
-              className="mt-3 flex w-full items-center justify-between rounded-lg bg-white/10 px-2.5 py-1.5 text-[12px] font-semibold text-white hover:bg-white/15"
-            >
-              Recherche rapide <span className="kbd border-white/20 bg-white/10 text-white/80">⌘K</span>
-            </button>
+            <div className="mt-3 flex gap-1.5">
+              <button
+                onClick={() => reload()}
+                disabled={loading}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-white/10 px-2 py-1.5 text-[11px] font-semibold text-white hover:bg-white/15 disabled:opacity-60"
+              >
+                <RefreshCw size={12} className={loading ? 'animate-spin' : ''} /> Actualiser
+              </button>
+              <button
+                onClick={() => useScanner.getState().openPalette()}
+                className="flex items-center justify-center gap-1 rounded-lg bg-white/10 px-2 py-1.5 text-[11px] font-semibold text-white hover:bg-white/15"
+              >
+                ⌘K
+              </button>
+            </div>
           </div>
         </div>
 
@@ -150,6 +166,54 @@ export default function Layout() {
             <SettingsIcon size={18} className="text-ink-400" />
             Réglages
           </NavLink>
+
+          <div className="mt-1">
+            <button
+              onClick={() => setTenantOpen((v) => !v)}
+              className="flex w-full items-center gap-2.5 rounded-xl px-2 py-2 text-left hover:bg-ink-100"
+            >
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-ink-900 text-[12px] font-bold text-brand-400">
+                {(settings.company || 'K').slice(0, 1).toUpperCase()}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[13px] font-semibold text-ink-900">{settings.company}</span>
+                <span className="block truncate text-[11px] text-ink-400">{roleName}</span>
+              </span>
+              <ChevronDown size={14} className={cx('text-ink-400 transition', tenantOpen && 'rotate-180')} />
+            </button>
+
+            {tenantOpen ? (
+              <div className="mt-1 space-y-1 rounded-xl border border-ink-200 bg-white p-1.5 shadow-sm">
+                {tenants.map((tenant) => (
+                  <button
+                    key={tenant.id}
+                    onClick={() => {
+                      selectTenant(tenant.id)
+                      setTenantOpen(false)
+                    }}
+                    className={cx(
+                      'flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[12px] font-medium',
+                      tenant.id === activeTenant?.id ? 'bg-ink-100 text-ink-900' : 'text-ink-600 hover:bg-ink-50',
+                    )}
+                  >
+                    <span className="flex h-6 w-6 items-center justify-center rounded-md bg-ink-900/5 text-[10px] font-bold text-ink-600">
+                      {tenant.name.slice(0, 1).toUpperCase()}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate">{tenant.name}</span>
+                    {tenant.id === activeTenant?.id ? <Check size={12} className="text-brand-600" /> : null}
+                  </button>
+                ))}
+                <NavLink
+                  to="/reglages"
+                  onClick={() => setTenantOpen(false)}
+                  className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-[12px] font-semibold text-brand-700 hover:bg-brand-50"
+                >
+                  <Plus size={12} /> Nouvel espace
+                </NavLink>
+              </div>
+            ) : null}
+          </div>
+
           <button
             onClick={() => navigate('/reglages')}
             className="mt-1 flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left hover:bg-ink-100"
@@ -159,9 +223,16 @@ export default function Layout() {
             </span>
             <span className="min-w-0 flex-1">
               <span className="block truncate text-[13px] font-semibold text-ink-900">{settings.userName}</span>
-              <span className="block truncate text-[11px] text-ink-400">{settings.company}</span>
+              <span className="block truncate text-[11px] text-ink-400">Mon compte</span>
             </span>
             <ChevronRight size={15} className="text-ink-400" />
+          </button>
+
+          <button
+            onClick={() => signOut()}
+            className="mt-0.5 flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-[13px] font-semibold text-ink-500 hover:bg-rose-50 hover:text-rose-600"
+          >
+            <LogOut size={16} /> Déconnexion
           </button>
         </div>
       </aside>
@@ -228,6 +299,19 @@ export default function Layout() {
         </header>
 
         <main className="mx-auto max-w-[1400px] px-4 py-5 pb-28 sm:px-6 sm:py-6 lg:px-8 lg:pb-10">
+          {error ? (
+            <div className="mb-4 flex flex-col gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 sm:flex-row sm:items-center">
+              <span className="flex-1">Impossible de charger vos données : {error}</span>
+              <button onClick={() => reload()} className="btn-ghost h-8 shrink-0 border-rose-200 px-2.5 text-xs text-rose-700">
+                <RefreshCw size={13} /> Réessayer
+              </button>
+            </div>
+          ) : null}
+          {!ready && loading ? (
+            <div className="mb-4 flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-4 py-3 text-sm text-ink-500">
+              <RefreshCw size={14} className="animate-spin" /> Chargement de votre stock…
+            </div>
+          ) : null}
           <Outlet />
         </main>
       </div>
@@ -297,6 +381,7 @@ function MobileTab({
 
 function MobileSheet({ onClose }: { onClose: () => void }) {
   const { products, settings } = useData()
+  const { tenants, activeTenant, selectTenant, roleName, signOut } = useAuth()
   const alerts = inventoryStats(products).alerts
   return (
     <div className="fixed inset-0 z-40 lg:hidden">
@@ -333,7 +418,25 @@ function MobileSheet({ onClose }: { onClose: () => void }) {
             </NavLink>
           ))}
         </div>
-        <div className="border-t border-ink-100 p-4">
+        <div className="space-y-2 border-t border-ink-100 p-4">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400">Espace · {roleName}</p>
+          <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+            {tenants.map((tenant) => (
+              <button
+                key={tenant.id}
+                onClick={() => {
+                  selectTenant(tenant.id)
+                  onClose()
+                }}
+                className={cx(
+                  'shrink-0 rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold',
+                  tenant.id === activeTenant?.id ? 'border-ink-900 bg-ink-900 text-white' : 'border-ink-200 text-ink-600',
+                )}
+              >
+                {tenant.name}
+              </button>
+            ))}
+          </div>
           <button
             onClick={() => {
               onClose()
@@ -342,6 +445,15 @@ function MobileSheet({ onClose }: { onClose: () => void }) {
             className="btn-ghost w-full justify-start"
           >
             <ScanBarcode size={17} /> Scanner un code-barres
+          </button>
+          <button
+            onClick={() => {
+              onClose()
+              void signOut()
+            }}
+            className="btn-ghost w-full justify-start text-rose-600"
+          >
+            <LogOut size={16} /> Déconnexion
           </button>
         </div>
       </div>

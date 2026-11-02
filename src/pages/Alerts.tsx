@@ -31,8 +31,8 @@ export default function Alerts() {
   const lowCount = lines.filter((l) => l.status === 'low').length
   const estimated = lines.reduce((sum, l) => sum + l.estimatedCost, 0)
 
-  const receive = (productId: string, qty: number) => {
-    const res = addMovement({
+  const receive = async (productId: string, qty: number) => {
+    const res = await addMovement({
       productId,
       type: 'in',
       quantity: qty,
@@ -42,19 +42,26 @@ export default function Alerts() {
     toast(res.ok ? 'Réapprovisionnement enregistré' : (res.error ?? 'Action impossible'), res.ok ? 'success' : 'error')
   }
 
-  const receiveGroup = (supplierId: string | null) => {
+  const receiveGroup = async (supplierId: string | null) => {
     const group = groups.find((g) => g.supplierId === supplierId)
     if (!group) return
-    group.lines.forEach((line) => {
-      addMovement({
+    let failed = 0
+    for (const line of group.lines) {
+      const res = await addMovement({
         productId: line.product.id,
         type: 'in',
         quantity: line.suggestedQty,
         reason: 'Réception fournisseur',
         note: `Réception groupée · ${group.supplierName}`,
       })
-    })
-    toast(`${group.lines.length} produit(s) réceptionné(s) · ${group.supplierName}`)
+      if (!res.ok) failed += 1
+    }
+    toast(
+      failed === 0
+        ? `${group.lines.length} produit(s) réceptionné(s) · ${group.supplierName}`
+        : `${group.lines.length - failed} réception(s), ${failed} échec(s)`,
+      failed === 0 ? 'success' : 'error',
+    )
   }
 
   const exportAlerts = () => {

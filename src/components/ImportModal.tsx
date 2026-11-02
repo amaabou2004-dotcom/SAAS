@@ -32,6 +32,7 @@ export default function ImportModal({ open, onClose }: { open: boolean; onClose:
   const [text, setText] = useState('')
   const [fileName, setFileName] = useState('')
   const [summary, setSummary] = useState<ImportSummary | null>(null)
+  const [busy, setBusy] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const reset = () => {
@@ -50,13 +51,20 @@ export default function ImportModal({ open, onClose }: { open: boolean; onClose:
 
   const preview = text.trim() ? parseProductsCSV(text, suppliers) : null
 
-  const apply = () => {
+  const apply = async () => {
     if (!text.trim()) return
-    const parsed = parseProductsCSV(text, suppliers)
-    const result = importProducts(parsed.drafts)
-    result.skipped += parsed.skipped
-    setSummary(result)
-    toast(`${result.added} ajouté(s), ${result.updated} mis à jour`)
+    setBusy(true)
+    try {
+      const parsed = parseProductsCSV(text, suppliers)
+      const result = await importProducts(parsed.drafts)
+      result.skipped += parsed.skipped
+      setSummary(result)
+      toast(`${result.added} ajouté(s), ${result.updated} mis à jour`)
+    } catch (err) {
+      toast((err as Error).message, 'error')
+    } finally {
+      setBusy(false)
+    }
   }
 
   const downloadTemplate = () => {
@@ -92,8 +100,8 @@ export default function ImportModal({ open, onClose }: { open: boolean; onClose:
           >
             Fermer
           </button>
-          <button onClick={apply} disabled={!preview || preview.drafts.length === 0} className="btn-brand">
-            Importer {preview?.drafts.length ? `${preview.drafts.length} ligne(s)` : ''}
+          <button onClick={apply} disabled={busy || !preview || preview.drafts.length === 0} className="btn-brand">
+            {busy ? 'Import en cours…' : `Importer ${preview?.drafts.length ? `${preview.drafts.length} ligne(s)` : ''}`}
           </button>
         </>
       }
