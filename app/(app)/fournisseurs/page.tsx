@@ -1,11 +1,11 @@
-import { getDataSource } from "@/lib/data/repository";
+import { getAppContext } from "@/lib/data/server-source";
 import { suggestedOrder } from "@/lib/data/logic";
 import { formatXof } from "@/lib/money";
 
 export const dynamic = "force-dynamic";
 
 export default async function SuppliersPage() {
-  const source = getDataSource();
+  const { source } = await getAppContext();
   const [rows, suppliers, tenant] = await Promise.all([
     source.getRows(),
     source.getSuppliers(),

@@ -1,4 +1,4 @@
-import { getDataSource } from "@/lib/data/repository";
+import { getAppContext } from "@/lib/data/server-source";
 import { computeKpis, OP_LABELS } from "@/lib/data/logic";
 import { formatXof } from "@/lib/money";
 import { Kpi, LinkButton, StatusPill } from "@/components/ui";
@@ -12,7 +12,7 @@ export default async function StockPage({
   searchParams: Promise<{ q?: string; state?: string; cat?: string }>;
 }) {
   const params = await searchParams;
-  const source = getDataSource();
+  const { source } = await getAppContext();
   const [rows, tenant, categories] = await Promise.all([
     source.getRows(),
     source.getTenant(),

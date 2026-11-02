@@ -1,4 +1,4 @@
-import { getDataSource } from "@/lib/data/repository";
+import { getAppContext } from "@/lib/data/server-source";
 import { OP_LABELS } from "@/lib/data/logic";
 import { OperationForm } from "./OperationForm";
 
@@ -14,7 +14,7 @@ const PILL: Record<string, string> = {
 };
 
 export default async function OperationsPage() {
-  const source = getDataSource();
+  const { source } = await getAppContext();
   const [rows, operations] = await Promise.all([source.getRows(), source.getOperations(40)]);
 
   const options = rows.map((row) => ({

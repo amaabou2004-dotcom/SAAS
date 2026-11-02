@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getDataSource } from "@/lib/data/repository";
+import { getAppContext } from "@/lib/data/server-source";
 import { computeKpis, OP_LABELS, suggestedOrder } from "@/lib/data/logic";
 import { formatMoney, formatXof } from "@/lib/money";
 import { FlowBars, Kpi, LinkButton, StatusPill } from "@/components/ui";
@@ -7,7 +7,7 @@ import { FlowBars, Kpi, LinkButton, StatusPill } from "@/components/ui";
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const source = getDataSource();
+  const { source } = await getAppContext();
   const [rows, operations, weekly, tenant] = await Promise.all([
     source.getRows(),
     source.getOperations(6),

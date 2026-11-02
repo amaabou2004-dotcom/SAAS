@@ -47,6 +47,12 @@ export interface OperationResult {
   operation?: StockOperation;
 }
 
+/** Contexte d'authentification fourni par la couche serveur. */
+export interface SessionContext {
+  accessToken: string;
+  tenantId?: string | null;
+}
+
 export interface DataSource {
   readonly kind: "demo" | "supabase";
   getTenant(): Promise<Tenant>;
@@ -235,8 +241,9 @@ class SupabaseSource implements DataSource {
     private url: string,
     private key: string,
     private jwt: string,
+    tenantId: string,
   ) {
-    this.tenantId = process.env.SAAS_TENANT_ID ?? "";
+    this.tenantId = tenantId;
   }
 
   private headers(): HeadersInit {
@@ -276,12 +283,12 @@ class SupabaseSource implements DataSource {
 
   async getTenant(): Promise<Tenant> {
     if (this.tenant) return this.tenant;
+    if (!this.tenantId) throw new Error("Aucune entreprise active sélectionnée");
     const rows = await this.rest<Tenant[]>(
-      `/tenants?select=id,name,slug,currency_code,timezone,status,address,phone&limit=1`,
+      `/tenants?id=eq.${this.tenantId}&select=id,name,slug,currency_code,timezone,status,address,phone&limit=1`,
     );
-    if (!rows[0]) throw new Error("Aucun tenant accessible pour cet utilisateur");
+    if (!rows[0]) throw new Error("Entreprise inaccessible pour cet utilisateur");
     this.tenant = rows[0];
-    this.tenantId = this.tenantId || rows[0].id;
     return rows[0];
   }
 
@@ -526,23 +533,26 @@ function isoMonday(iso: string): string {
 
 /* ------------------------------------------------------------------ */
 
-let cached: DataSource | null = null;
+/**
+ * Sans contexte de session (mode démo, tests, pages publiques), on sert le
+ * snapshot. Avec une session, on parle à Supabase en tant qu'utilisateur :
+ * la RLS décide de ce qui est visible, et `tenantId` borne l'entreprise.
+ */
+export function getDataSource(context?: SessionContext | null): DataSource {
+  if (!context) return new DemoSource();
 
-export function getDataSource(): DataSource {
-  if (cached) return cached;
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  const jwt = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_USER_JWT;
-  if (url && key && jwt) {
-    cached = new SupabaseSource(url.replace(/\/$/, ""), key, jwt);
-  } else {
-    cached = new DemoSource();
-  }
-  return cached;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !anonKey) return new DemoSource();
+  if (!context.tenantId) return new DemoSource();
+
+  return new SupabaseSource(
+    url.replace(/\/$/, ""),
+    anonKey,
+    context.accessToken,
+    context.tenantId,
+  );
 }
 
 export const isSupabaseConfigured = () =>
-  Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      (process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
-  );
+  Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);

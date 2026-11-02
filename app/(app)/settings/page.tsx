@@ -1,4 +1,5 @@
-import { getDataSource, isSupabaseConfigured } from "@/lib/data/repository";
+import { isSupabaseConfigured } from "@/lib/data/repository";
+import { getAppContext } from "@/lib/data/server-source";
 import { TENANT } from "@/lib/data/snapshot";
 
 export const dynamic = "force-dynamic";
@@ -25,7 +26,7 @@ const RPCS = [
 ];
 
 export default async function SettingsPage() {
-  const source = getDataSource();
+  const { source } = await getAppContext();
   const tenant = await source.getTenant();
   const live = isSupabaseConfigured();
 

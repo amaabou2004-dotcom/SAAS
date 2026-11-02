@@ -1,11 +1,11 @@
-import { getDataSource } from "@/lib/data/repository";
+import { getAppContext } from "@/lib/data/server-source";
 import { formatXof } from "@/lib/money";
 import { StatusPill } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
 export default async function CataloguePage() {
-  const source = getDataSource();
+  const { source } = await getAppContext();
   const [rows, suppliers] = await Promise.all([source.getRows(), source.getSuppliers()]);
   const supplierName = new Map(suppliers.map((s) => [s.id, s.name]));
 

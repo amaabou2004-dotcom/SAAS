@@ -1,4 +1,4 @@
-import { getDataSource } from "@/lib/data/repository";
+import { getAppContext } from "@/lib/data/server-source";
 import { PERMISSION_LABELS, ROLES as SNAPSHOT_ROLES } from "@/lib/data/snapshot";
 import type { PermissionCode } from "@/lib/data/types";
 
@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 const ALL_PERMISSIONS = Object.keys(PERMISSION_LABELS) as PermissionCode[];
 
 export default async function TeamPage() {
-  const source = getDataSource();
+  const { source } = await getAppContext();
   const [members, roles] = await Promise.all([source.getMembers(), source.getRoles()]);
   const roleList = roles.length > 0 ? roles : SNAPSHOT_ROLES;
 

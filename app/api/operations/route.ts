@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { getDataSource } from "@/lib/data/repository";
+import { getAppContext } from "@/lib/data/server-source";
 import type { OperationType } from "@/lib/data/types";
 
 const TYPES: OperationType[] = ["opening", "receipt", "issue", "adjustment", "inventory"];
 const NEEDS_REASON: OperationType[] = ["adjustment", "inventory"];
 
 export async function GET() {
-  const source = getDataSource();
+  const { source } = await getAppContext();
   const operations = await source.getOperations(50);
   return NextResponse.json({ operations, kind: source.kind });
 }
@@ -59,7 +59,8 @@ export async function POST(request: Request) {
     quantity_delta: Math.abs(line.quantity_delta) * (type === "issue" ? -1 : 1),
   }));
 
-  const result = await getDataSource().postOperation({
+  const { source } = await getAppContext();
+  const result = await source.postOperation({
     operation_type: type,
     reason: reason || undefined,
     reference: reference || undefined,
