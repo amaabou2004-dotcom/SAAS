@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { isDirectDataMode } from '../../lib/data-mode';
+import { directApiFetch } from './direct-data';
 
 const tenantSchema = z.object({
   id: z.uuid(),
@@ -30,6 +32,11 @@ async function readError(response: Response) {
 }
 
 export async function apiFetch<T>(path: string, accessToken: string, init?: RequestInit): Promise<T> {
+  // Mode direct : le navigateur interroge Supabase (RLS + RPC) sans passer par l'API.
+  if (isDirectDataMode) {
+    return directApiFetch<T>(path, init);
+  }
+
   const response = await fetch(`/api/v1${path}`, {
     ...init,
     headers: {

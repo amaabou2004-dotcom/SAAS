@@ -5,6 +5,22 @@ Plateforme multi-entreprises de gestion commerciale, de stock et de boutiques en
 > **État actuel : itération 2 — identité, entreprise, catalogue et stock.**
 > Les ventes, réservations, boutiques publiques et rapports ne sont pas encore implémentés. L’interface ne présente aucune donnée commerciale fictive.
 
+## Modes d’accès aux données
+
+Le front n’a qu’un seul point d’entrée réseau (`apiFetch`), ce qui permet deux modes :
+
+| Mode | Variable | Chemin | Usage |
+| --- | --- | --- | --- |
+| `api` *(défaut)* | `VITE_DATA_MODE=api` | navigateur → API NestJS (`/api/v1`) → Supabase | production : autorisation et règles métier dans l’API |
+| `direct` | `VITE_DATA_MODE=direct` | navigateur → Supabase (PostgREST + RPC) | aperçu / démonstration quand l’API n’est pas joignable |
+
+En mode `direct`, les garanties ne changent pas de nature : la RLS filtre les lectures
+(`is_tenant_member`, `has_tenant_permission`, vues en `security_invoker`) et **aucune écriture
+directe en table n’est possible** — tout passe par les RPC `security definer`
+(`create_tenant`, `upsert_category`, `upsert_product`, `upsert_stock_location`,
+`post_stock_operation`). Le contrat de données est identique (mêmes formes, validées par zod),
+les deux modes sont donc interchangeables sans toucher aux écrans.
+
 ## Parcours disponible dans le code
 
 - inscription par e-mail et mot de passe ;
