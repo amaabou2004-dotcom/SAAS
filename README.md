@@ -1,68 +1,95 @@
-# Sahel Desk
+# Kanti — gestion de stock multi-dépôts
 
-Outil de facturation SaaS pour l'Afrique de l'Ouest : montants consolidés en **FCFA**, taux
-**BCEAO** réels, échéances qui sautent les week-ends et les jours fériés du Niger.
+Application de gestion de stock pour les commerces d’Afrique de l’Ouest : catalogue et
+déclinaisons (SKU, code-barres, unité), soldes par dépôt, points de commande, valorisation en
+FCFA, journal d’opérations auditable et rôles/permissions.
 
-Next.js 16 (App Router) · React 19 · TypeScript · zéro dépendance UI · **aucune clé API**.
+**Next.js 16 (App Router) · React 19 · TypeScript · zéro dépendance UI · Supabase (Postgres 17)**
 
 ```bash
 npm install
 npm run dev        # http://localhost:3000
-npm test           # tests unitaires du cœur métier
-npm run typecheck  # tsc --noEmit
+npm test           # 9 tests du cœur métier (node:test, TypeScript natif)
+npm run typecheck
 npm run build
 ```
 
-## Ce qui est branché
+## Le produit
 
-| API (`public-apis`) | Usage dans l'app | Où |
-|---|---|---|
-| [Frankfurter](https://frankfurter.dev) | Taux de change, y compris XOF/XAF via la BCEAO + série 30 jours | `lib/integrations/frankfurter.ts` |
-| [Nager.Date](https://date.nager.at) | Jours fériés (Niger couvert) → report des échéances au jour ouvré | `lib/integrations/nager.ts` |
-| [REST Countries](https://restcountries.com) | Sélecteur pays/devise/langue à la création de facture | `lib/integrations/countries.ts` |
-| [Open-Meteo](https://open-meteo.com) | Météo du siège (Niamey par défaut) | `lib/integrations/weather.ts` |
+Le backend existait déjà : le projet Supabase `suuchdahpftxwbvwhbyq` (région `eu-north-1`)
+contient un schéma multi-tenant complet pour **Kanti Démo SARL** (Niamey) — 33 références,
+9 catégories, 5 fournisseurs, 241 opérations sur 45 jours. Cette application en est l’interface.
 
-Le détail du choix d'APIs et les alternatives écartées : [`docs/API-INTEGRATION.md`](docs/API-INTEGRATION.md).
+| Écran | Ce qu’il fait |
+|---|---|
+| `/` Tableau de bord | Valeur du stock, ruptures, réassort à passer, flux hebdomadaires, dernières opérations |
+| `/stock` | 33 lignes triées par urgence, filtres état/catégorie/recherche, couverture en jours |
+| `/operations` | Saisie d’une réception / sortie / ajustement + journal complet |
+| `/catalogue` | Catalogue par catégorie, marges, seuils, fournisseur |
+| `/fournisseurs` | Fiches, délais de livraison, réassort à passer par partenaire |
+| `/equipe` | Membres et matrice des 15 permissions × 5 rôles système |
+| `/settings` | Mode de données actif, tables et RPC exploités, contrat d’erreurs |
 
-## Pages
+## Architecture de données
 
-- `/` — tableau de bord : encaissé / en attente / en retard, courbe EUR→XOF, prochains fériés, météo.
-- `/invoices` — liste des factures consolidées en FCFA.
-- `/invoices/new` — formulaire avec aperçu du calcul HT / TVA / TTC et de l'échéance ajustée.
-- `/invoices/[id]` — détail + changement de statut (envoyée, payée, en retard).
-- `/settings` — état live/fallback de chaque intégration et points d'architecture.
+Une seule interface (`lib/data/repository.ts`), deux implémentations :
 
-## API interne (route handlers)
+- **`SupabaseSource`** (production) — PostgREST + RPC. Lit `stock_overview`,
+  `stock_movement_history`, `products`/`product_variants`, `list_tenant_members`,
+  `list_tenant_roles` ; écrit via `post_stock_operation`.
+- **`DemoSource`** (défaut) — snapshot réel du 2026-11-02 (`lib/data/snapshot.ts`), mutations en
+  mémoire. Utilisé quand les variables d’environnement Supabase sont absentes.
 
-| Route | Méthode | Rôle |
-|---|---|---|
-| `/api/dashboard` | GET | Agrégat de la page d'accueil (1 requête au lieu de 4) |
-| `/api/rates?base=EUR&quote=XOF&days=30` | GET | Taux + série |
-| `/api/holidays?country=NE&year=2026` | GET | Jours fériés |
-| `/api/holidays?country=NE&issueDate=2026-11-01&dueInDays=15` | GET | Échéance ajustée au jour ouvré |
-| `/api/countries` | GET | Pays normalisés |
-| `/api/weather?lat=13.51&lon=2.11` | GET | Météo |
-| `/api/invoices` | GET / POST | Lister / créer (validation serveur, 422 détaillé) |
-| `/api/invoices` | PATCH | `{ id, status }` |
+Le basculement est déterminé côté serveur par `getDataSource()` ; aucune clé n’est exposée au
+navigateur, tous les appels passent par les route handlers.
 
-## Décisions techniques
+```bash
+# .env.local pour passer en live
+NEXT_PUBLIC_SUPABASE_URL=https://suuchdahpftxwbvwhbyq.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=...   # ou SUPABASE_USER_JWT pour respecter la RLS utilisateur
+```
 
-- **Tout appel externe est côté serveur.** Les APIs retenues sont sans clé et limitées par IP :
-  passer par le serveur permet de cacher (ISR Next), d'éviter le CORS et de contrôler le quota.
-- **Repli systématique.** `lib/http.ts#withFallback` coupe au bout de 4 s et renvoie une donnée
-  locale marquée `source: "fallback"` ; l'UI affiche `● live` ou `◐ cache local`, jamais une page
-  d'erreur. Utile hors ligne, en CI, ou si un fournisseur tombe.
-- **La parité EUR/XOF est fixe** (655,957) : le taux est journalier, il n'a pas à bouger dans
-  l'interface, mais il reste lu depuis l'API pour les autres devises.
-- **Le taux est figé à l'émission.** Modifier une facture existante ne la réévalue pas.
-- **Arrondis en francs entiers** : pas de centimes en FCFA, `Math.round` à chaque étape.
-- **Le stockage est en mémoire** (`lib/store.ts`) : la démo survit au hot reload, mais pas à un
-  redémarrage. Prochaine étape : Supabase/Postgres (voir « Suite »).
+## Logique métier (testée)
+
+`lib/data/logic.ts` — aucune I/O, 9 tests dans `tests/stock.test.ts` :
+
+| Fonction | Règle |
+|---|---|
+| `stockStatus` | `0` → rupture, `≤ seuil` → bas, sinon OK (un disponible négatif reste une rupture) |
+| `coverDays` | disponible ÷ (sorties 60 j ÷ 60) — **`null`** si le produit ne bouge pas, jamais d’infini affiché |
+| `suggestedOrder` | au-dessus du seuil → 0 ; sinon `max(lot de réassort, manque)` |
+| `turnover` | rotation annuelle estimée, `null` sans stock |
+| `sortByUrgency` | ruptures, puis couverture croissante, puis nom |
+| `computeKpis` | valeur coût/vente, marge potentielle, nombre et coût du réassort |
+
+## Contrat d’écriture
+
+L’API interne (`POST /api/operations`) valide la forme puis délègue à la base :
+
+| Cas | Réponse |
+|---|---|
+| Ligne manquante, quantité nulle, doublon de produit, motif absent sur ajustement/inventaire | `422` + liste des erreurs |
+| Type inconnu, référence > 120 caractères, > 50 lignes | `422` |
+| Stock disponible insuffisant | `409` avec le message de la base |
+| Succès | `201` + l’opération créée |
+
+Le RPC `post_stock_operation` reste l’autorité : `SECURITY DEFINER`, permission
+`inventory.manage`, idempotence (clé + empreinte SHA-256), verrous `FOR UPDATE` par ligne,
+refus si `on_hand < reserved`, motif obligatoire pour ajustement/inventaire/annulation, et
+mécanisme d’annulation (`reversal`) qui empêche les doubles saisies.
+
+## Vérifications
+
+- `npm run build` ✅ · `npx tsc --noEmit` ✅ · `npm test` **9/9** ✅
+- Les 7 pages répondent 200 ; l’API refuse correctement une sortie de 999 sacs de riz pour 3 en
+  stock, un ajustement sans motif et un doublon de ligne.
 
 ## Suite
 
-1. Persistance réelle (Supabase : `invoices`, `clients`, `settings` + RLS).
-2. Auth et multi-tenant (un workspace = un jeu de factures).
-3. Export PDF de la facture (ou QR de paiement via une API de la liste).
-4. Relances automatiques qui **sautent les jours fériés** — `getDeadline` fait déjà le calcul.
-5. Webhook de paiement (Wave, Orange Money, Stripe) pour passer `sent` → `paid` tout seul.
+1. Auth Supabase (email + mot de passe) et sélection du tenant à la connexion.
+2. Écran d’administration des membres : invitations (`invite_member`), changement de rôle,
+   révocation.
+3. Transferts entre dépôts (`transfer` doit équilibrer chaque variante) et inventaire guidé.
+4. Export CSV/PDF des états de stock et du journal.
+5. Alertes de rupture par email ou WhatsApp à partir du réassort suggéré.

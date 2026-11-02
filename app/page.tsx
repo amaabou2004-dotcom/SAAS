@@ -1,35 +1,30 @@
 import Link from "next/link";
-import { getRate, getSeries } from "@/lib/integrations/frankfurter";
-import { getHolidays } from "@/lib/integrations/nager";
-import { getWeather } from "@/lib/integrations/weather";
-import { listInvoices } from "@/lib/store";
+import { getDataSource } from "@/lib/data/repository";
+import { computeKpis, OP_LABELS, suggestedOrder } from "@/lib/data/logic";
 import { formatMoney, formatXof } from "@/lib/money";
-import { CtaLink, SourceBadge, Sparkline, StatusBadge } from "@/components/ui";
+import { FlowBars, Kpi, LinkButton, StatusPill } from "@/components/ui";
 
-export const revalidate = 900;
+export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const today = new Date().toISOString().slice(0, 10);
-  const [rate, series, holidays, weather] = await Promise.all([
-    getRate("EUR", "XOF"),
-    getSeries("EUR", "XOF", 30),
-    getHolidays(new Date().getFullYear(), "NE"),
-    getWeather(),
+  const source = getDataSource();
+  const [rows, operations, weekly, tenant] = await Promise.all([
+    source.getRows(),
+    source.getOperations(6),
+    source.getWeekly(),
+    source.getTenant(),
   ]);
 
-  const invoices = listInvoices();
-  const kpis = {
-    billed: invoices.reduce((s, i) => s + i.ttcXof, 0),
-    paid: invoices.filter((i) => i.status === "paid").reduce((s, i) => s + i.ttcXof, 0),
-    pending: invoices.filter((i) => i.status === "sent").reduce((s, i) => s + i.ttcXof, 0),
-    overdue: invoices.filter((i) => i.status === "overdue").reduce((s, i) => s + i.ttcXof, 0),
-  };
-  const upcoming = holidays.data.filter((h) => h.date >= today).slice(0, 4);
-  const seriesValues = series.data.map((p) => p.rate);
-  const variation =
-    seriesValues.length > 1
-      ? ((seriesValues[seriesValues.length - 1] - seriesValues[0]) / seriesValues[0]) * 100
-      : 0;
+  const kpis = computeKpis(rows);
+  const last = weekly[weekly.length - 1];
+  const prior = weekly[weekly.length - 2];
+  const inTrend = prior && last ? last.receipts - prior.receipts : 0;
+  const outTrend = prior && last ? last.issues - prior.issues : 0;
+  const alerts = rows.filter((r) => r.status !== "ok").slice(0, 6);
+  const reorder = rows
+    .filter((r) => suggestedOrder(r.available, r.reorder_point, r.reorder_qty) > 0)
+    .sort((a, b) => (a.cover_days ?? 999) - (b.cover_days ?? 999))
+    .slice(0, 5);
 
   return (
     <>
@@ -37,186 +32,178 @@ export default async function DashboardPage() {
         <div>
           <h1>Tableau de bord</h1>
           <p className="sub">
-            Facturation en FCFA · {weather.data.city} · {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+            {tenant.name} · {tenant.address} · {kpis.skus} références · devise {tenant.currency_code}
           </p>
         </div>
-        <CtaLink href="/invoices/new">+ Nouvelle facture</CtaLink>
-      </div>
-
-      <div className="grid k4" style={{ marginBottom: 16 }}>
-        <div className="card">
-          <div className="kpi-label">Encaissé</div>
-          <div className="kpi-value good">{formatXof(kpis.paid)}</div>
-          <div className="kpi-hint">sur {formatXof(kpis.billed)} facturés</div>
-        </div>
-        <div className="card">
-          <div className="kpi-label">En attente</div>
-          <div className="kpi-value warn">{formatXof(kpis.pending)}</div>
-          <div className="kpi-hint">factures envoyées, non réglées</div>
-        </div>
-        <div className="card">
-          <div className="kpi-label">En retard</div>
-          <div className="kpi-value bad">{formatXof(kpis.overdue)}</div>
-          <div className="kpi-hint">à relancer en priorité</div>
-        </div>
-        <div className="card">
-          <div className="kpi-label">Taux EUR → XOF</div>
-          <div className="kpi-value mono">{rate.data.rate.toLocaleString("fr-FR")}</div>
-          <div className="kpi-hint">
-            <SourceBadge source={rate.source} note={rate.note} />{" "}
-            <span className={variation >= 0 ? "muted" : "muted"}>
-              {variation >= 0 ? "+" : ""}
-              {variation.toFixed(2)} % / 30 j
-            </span>
-          </div>
+        <div className="row">
+          <LinkButton href="/operations">Nouvelle opération</LinkButton>
+          <LinkButton href="/stock" primary>
+            Voir le stock
+          </LinkButton>
         </div>
       </div>
 
-      <div className="grid k2" style={{ marginBottom: 16 }}>
+      <div className="grid c4" style={{ marginBottom: 12 }}>
+        <Kpi
+          label="Valeur du stock (coût)"
+          value={formatXof(kpis.value_cost)}
+          hint={`${formatXof(kpis.value_sale)} au prix de vente`}
+        />
+        <Kpi
+          label="Ruptures"
+          value={String(kpis.out)}
+          tone={kpis.out > 0 ? "bad" : "good"}
+          hint={`${kpis.low} référence(s) sous le point de commande`}
+        />
+        <Kpi
+          label="À réapprovisionner"
+          value={String(kpis.to_reorder)}
+          tone={kpis.to_reorder > 0 ? "warn" : "good"}
+          hint={`${formatXof(kpis.reorder_cost)} d’achat estimé`}
+        />
+        <Kpi
+          label="Sorties 60 jours"
+          value={String(kpis.issues_60d)}
+          hint={`${kpis.receipts_60d} entrées · marge potentielle ${formatXof(kpis.potential_margin)}`}
+        />
+      </div>
+
+      <div className="grid c2" style={{ marginBottom: 12, alignItems: "start" }}>
         <section className="card">
-          <div className="row" style={{ marginBottom: 4 }}>
-            <h2 style={{ margin: 0 }}>Parité EUR / XOF</h2>
+          <div className="card-head">
+            <h2>À traiter en priorité</h2>
             <span className="spacer" />
-            <SourceBadge source={series.source} note={series.note} />
+            <Link href="/stock" className="small muted">Tout voir →</Link>
           </div>
-          <p className="muted" style={{ fontSize: 12.5, margin: "0 0 12px" }}>
-            Banque Centrale des États de l&apos;Afrique de l&apos;Ouest, via Frankfurter · 30 derniers jours
-          </p>
-          <Sparkline points={seriesValues} />
-          <div className="row" style={{ justifyContent: "space-between", fontSize: 12.5, marginTop: 6 }}>
-            <span className="muted">{series.data[0]?.date}</span>
-            <span className="mono">
-              min {Math.min(...seriesValues).toFixed(3)} · max {Math.max(...seriesValues).toFixed(3)}
-            </span>
-            <span className="muted">{series.data[series.data.length - 1]?.date}</span>
-          </div>
+          {alerts.length === 0 ? (
+            <div className="empty">Aucune alerte : tous les stocks sont au-dessus du seuil.</div>
+          ) : (
+            <table>
+              <thead>
+                <tr>
+                  <th>Produit</th>
+                  <th>État</th>
+                  <th className="num">Dispo.</th>
+                  <th className="num hide-sm">Couverture</th>
+                  <th className="num">À commander</th>
+                </tr>
+              </thead>
+              <tbody>
+                {alerts.map((row) => (
+                  <tr key={row.variant_id}>
+                    <td>
+                      <div style={{ fontWeight: 550 }}>{row.name}</div>
+                      <div className="muted small mono">{row.sku} · {row.unit}</div>
+                    </td>
+                    <td><StatusPill status={row.status} /></td>
+                    <td className="num">{row.available}</td>
+                    <td className="num hide-sm">
+                      {row.cover_days === null ? <span className="muted">—</span> : `${row.cover_days} j`}
+                    </td>
+                    <td className="num">
+                      {suggestedOrder(row.available, row.reorder_point, row.reorder_qty)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </section>
 
         <section className="card">
-          <div className="row" style={{ marginBottom: 4 }}>
-            <h2 style={{ margin: 0 }}>Jours fériés — Niger</h2>
+          <div className="card-head">
+            <h2>Flux hebdomadaires</h2>
             <span className="spacer" />
-            <SourceBadge source={holidays.source} note={holidays.note} />
+            <span className="tag">8 semaines</span>
           </div>
-          <p className="muted" style={{ fontSize: 12.5, margin: "0 0 8px" }}>
-            Les échéances de facture sont automatiquement reportées au jour ouvré suivant.
+          <FlowBars data={weekly} />
+          <p className="muted small" style={{ marginTop: 10, marginBottom: 0 }}>
+            {prior && last ? (
+              <>
+                Semaine du {last.week} : {last.issues} sorties ({outTrend >= 0 ? "+" : ""}
+                {outTrend} vs semaine précédente) et {last.receipts} entrées ({inTrend >= 0 ? "+" : ""}
+                {inTrend}).{" "}
+                {last.operations < 20 ? "Semaine en cours, donc partielle. " : null}
+                {last.receipts < last.issues
+                  ? `Le stock se vide : ${last.issues - last.receipts} unités de plus sont sorties que rentrées.`
+                  : `Le réassort couvre les sorties (${last.receipts - last.issues} unités d’avance).`}
+              </>
+            ) : (
+              "Pas encore assez d’historique pour comparer les semaines."
+            )}
           </p>
-          {upcoming.length === 0 ? (
-            <p className="muted" style={{ fontSize: 13 }}>Aucun jour férié à venir cette année.</p>
+        </section>
+      </div>
+
+      <div className="grid c2" style={{ alignItems: "start" }}>
+        <section className="card">
+          <div className="card-head">
+            <h2>Réapprovisionnement suggéré</h2>
+            <span className="spacer" />
+            <Link href="/fournisseurs" className="small muted">Fournisseurs →</Link>
+          </div>
+          {reorder.length === 0 ? (
+            <div className="empty">Rien à commander.</div>
           ) : (
             <ul className="list-clean">
-              {upcoming.map((h) => (
-                <li key={`${h.date}-${h.name}`}>
-                  <span>{h.localName}</span>
-                  <span className="mono muted">{h.date}</span>
-                </li>
-              ))}
+              {reorder.map((row) => {
+                const qty = suggestedOrder(row.available, row.reorder_point, row.reorder_qty);
+                return (
+                  <li key={row.variant_id}>
+                    <span>
+                      <strong>{row.name}</strong>
+                      <br />
+                      <span className="muted small">
+                        {row.supplier_name ?? "Sans fournisseur"} · seuil {row.reorder_point} {row.unit}
+                      </span>
+                    </span>
+                    <span className="right">
+                      <span className="mono">{qty} {row.unit}</span>
+                      <br />
+                      <span className="muted small">{formatMoney(qty * row.cost_price, tenant.currency_code)}</span>
+                    </span>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </section>
-      </div>
 
-      <div className="grid k2" style={{ marginBottom: 16 }}>
         <section className="card">
-          <div className="row" style={{ marginBottom: 10 }}>
-            <h2 style={{ margin: 0 }}>Factures récentes</h2>
+          <div className="card-head">
+            <h2>Dernières opérations</h2>
             <span className="spacer" />
-            <Link href="/invoices" className="muted" style={{ fontSize: 12.5 }}>Tout voir →</Link>
+            <Link href="/operations" className="small muted">Journal →</Link>
           </div>
           <table>
             <thead>
               <tr>
-                <th>Client</th>
-                <th>Statut</th>
-                <th className="num">TTC</th>
+                <th>Type</th>
+                <th>Référence</th>
+                <th className="num">Lignes</th>
+                <th className="num hide-sm">Date</th>
               </tr>
             </thead>
             <tbody>
-              {invoices.slice(0, 5).map((invoice) => (
-                <tr key={invoice.id}>
+              {operations.map((op) => (
+                <tr key={op.id}>
                   <td>
-                    <Link href={`/invoices/${invoice.id}`}>
-                      <div style={{ fontWeight: 550 }}>{invoice.client}</div>
-                      <div className="muted" style={{ fontSize: 12 }}>
-                        {invoice.number} · échéance {invoice.dueDate}
-                        {invoice.dueShiftReason ? " (reportée)" : ""}
-                      </div>
-                    </Link>
+                    <span className={`pill ${op.operation_type === "receipt" ? "info" : op.operation_type === "issue" ? "ok" : "neutral"}`}>
+                      {OP_LABELS[op.operation_type] ?? op.operation_type}
+                    </span>
                   </td>
-                  <td><StatusBadge status={invoice.status} /></td>
-                  <td className="num">{formatXof(invoice.ttcXof)}</td>
+                  <td>
+                    <div className="mono">{op.reference ?? "—"}</div>
+                    <div className="muted small">{op.reason ?? ""}</div>
+                  </td>
+                  <td className="num">{op.lines.length}</td>
+                  <td className="num hide-sm muted">{op.created_at.slice(0, 10)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </section>
-
-        <section className="card">
-          <div className="row" style={{ marginBottom: 12 }}>
-            <h2 style={{ margin: 0 }}>Météo {weather.data.city}</h2>
-            <span className="spacer" />
-            <SourceBadge source={weather.source} note={weather.note} />
-          </div>
-          <div className="row" style={{ gap: 18, alignItems: "baseline" }}>
-            <div style={{ fontSize: 34, fontWeight: 650, letterSpacing: -1 }}>
-              {Math.round(weather.data.temperature)}°
-            </div>
-            <div>
-              <div style={{ fontWeight: 550 }}>{weather.data.label}</div>
-              <div className="muted" style={{ fontSize: 12.5 }}>
-                ressenti {Math.round(weather.data.apparent)}° · max {Math.round(weather.data.max)}° / min{" "}
-                {Math.round(weather.data.min)}°
-              </div>
-            </div>
-          </div>
-          <ul className="list-clean" style={{ marginTop: 14 }}>
-            <li><span className="muted">Humidité</span><span className="mono">{weather.data.humidity} %</span></li>
-            <li><span className="muted">Vent</span><span className="mono">{weather.data.wind} km/h</span></li>
-            <li><span className="muted">Précipitations</span><span className="mono">{weather.data.precipitation} mm</span></li>
-          </ul>
-          <p className="muted" style={{ fontSize: 11.5, marginTop: 12, marginBottom: 0 }}>
-            Open-Meteo · tier gratuit non commercial, 10 000 req/jour
-          </p>
-        </section>
       </div>
-
-      <section className="card">
-        <h2>Dernière facture en devise étrangère</h2>
-        {(() => {
-          const foreign = invoices.find((i) => i.currency !== "XOF");
-          if (!foreign) return <p className="muted" style={{ fontSize: 13 }}>Aucune facture en devise étrangère.</p>;
-          return (
-            <div className="row" style={{ gap: 24, flexWrap: "wrap" }}>
-              <div>
-                <div className="kpi-label">Montant facturé</div>
-                <div style={{ fontSize: 18, fontWeight: 600 }}>
-                  {formatMoney(foreign.amount, foreign.currency)}
-                </div>
-              </div>
-              <div>→</div>
-              <div>
-                <div className="kpi-label">Équivalent FCFA</div>
-                <div style={{ fontSize: 18, fontWeight: 600 }}>{formatXof(foreign.htXof)}</div>
-              </div>
-              <div>
-                <div className="kpi-label">TVA</div>
-                <div style={{ fontSize: 18, fontWeight: 600 }}>{formatXof(foreign.vatXof)}</div>
-              </div>
-              <div>
-                <div className="kpi-label">TTC</div>
-                <div style={{ fontSize: 18, fontWeight: 600, color: "var(--accent)" }}>
-                  {formatXof(foreign.ttcXof)}
-                </div>
-              </div>
-              <div className="muted" style={{ fontSize: 12.5 }}>
-                taux appliqué : {foreign.rateToXof.toLocaleString("fr-FR")} XOF / {foreign.currency}
-                <br />
-                <SourceBadge source={foreign.source} />
-              </div>
-            </div>
-          );
-        })()}
-      </section>
     </>
   );
 }

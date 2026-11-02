@@ -1,85 +1,105 @@
-/** Petits composants partagés (serveur). */
 import Link from "next/link";
+import type { StockRow } from "@/lib/data/types";
+import { formatMoney } from "@/lib/money";
 
-export function SourceBadge({
-  source,
-  note,
-}: {
-  source: "live" | "fallback";
-  note?: string;
-}) {
-  return (
-    <span
-      className={`badge-line ${source}`}
-      title={note ?? (source === "live" ? "Donnée récupérée en direct" : "Repli local")}
-    >
-      {source === "live" ? "● live" : "◐ cache local"}
-    </span>
-  );
-}
-
-const LABELS: Record<string, string> = {
-  paid: "Payée",
-  sent: "Envoyée",
-  overdue: "En retard",
-  draft: "Brouillon",
+const STATUS_LABELS: Record<StockRow["status"], string> = {
+  ok: "OK",
+  low: "Bas",
+  out: "Rupture",
 };
 
-export function StatusBadge({ status }: { status: string }) {
-  return <span className={`badge ${status}`}>{LABELS[status] ?? status}</span>;
+export function StatusPill({ status }: { status: StockRow["status"] }) {
+  return <span className={`pill ${status}`}>{STATUS_LABELS[status]}</span>;
 }
 
-/** Mini courbe SVG sans dépendance : parfaite pour un taux ou une tendance. */
-export function Sparkline({
-  points,
-  stroke = "var(--accent)",
+export function Kpi({
+  label,
+  value,
+  hint,
+  tone,
 }: {
-  points: number[];
-  stroke?: string;
+  label: string;
+  value: string;
+  hint?: React.ReactNode;
+  tone?: "good" | "bad" | "warn";
 }) {
-  if (points.length < 2) return null;
-  const width = 320;
-  const height = 90;
-  const min = Math.min(...points);
-  const max = Math.max(...points);
-  const span = max - min || 1;
-  const step = width / (points.length - 1);
-  const coords = points.map((value, index) => {
-    const x = index * step;
-    const y = height - ((value - min) / span) * (height - 12) - 6;
-    return [x, y] as const;
-  });
-  const line = coords.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
-  const area = `${line} L${width},${height} L0,${height} Z`;
-  const id = `grad-${Math.round(min * 1000)}-${points.length}`;
-
   return (
-    <svg className="spark" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" role="img" aria-label="Évolution">
-      <defs>
-        <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={stroke} stopOpacity="0.28" />
-          <stop offset="100%" stopColor={stroke} stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <path d={area} fill={`url(#${id})`} />
-      <path d={line} fill="none" stroke={stroke} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-export function EmptyState({ title, hint }: { title: string; hint: string }) {
-  return (
-    <div className="card" style={{ textAlign: "center", padding: 36 }}>
-      <div style={{ fontSize: 28, marginBottom: 8 }}>◌</div>
-      <div style={{ fontWeight: 600, marginBottom: 4 }}>{title}</div>
-      <div className="muted" style={{ fontSize: 13 }}>{hint}</div>
+    <div className="card">
+      <div className="kpi-label">{label}</div>
+      <div className={`kpi-value${tone ? ` ${tone}` : ""}`}>{value}</div>
+      {hint ? <div className="kpi-hint">{hint}</div> : null}
     </div>
   );
 }
 
-export function CtaLink({ href, children }: { href: string; children: React.ReactNode }) {
+export function Money({ value, currency = "XOF" }: { value: number; currency?: string }) {
+  return <span className="mono">{formatMoney(value, currency)}</span>;
+}
+
+/** Barre empilée sorties (vert) / entrées (bleu) pour un flux hebdomadaire. */
+export function FlowBars({
+  data,
+}: {
+  data: Array<{ week: string; issues: number; receipts: number; operations: number }>;
+}) {
+  const max = Math.max(...data.map((d) => Math.max(d.issues, d.receipts)), 1);
   return (
-    <Link href={href} className="btn primary">
+    <div>
+      {data.map((row) => (
+        <div className="bar-row" key={row.week}>
+          <span className="muted small mono">{row.week.slice(5)}</span>
+          <span className="bar-track">
+            <span className="bar-out" style={{ width: `${(row.issues / max) * 50}%` }} title={`Sorties : ${row.issues}`} />
+            <span className="bar-in" style={{ width: `${(row.receipts / max) * 50}%` }} title={`Entrées : ${row.receipts}`} />
+          </span>
+          <span className="right mono small">{row.operations} op.</span>
+        </div>
+      ))}
+      <div className="legend" style={{ marginTop: 8 }}>
+        <span><i style={{ background: "var(--accent)" }} />Sorties</span>
+        <span><i style={{ background: "var(--info)" }} />Entrées</span>
+      </div>
+    </div>
+  );
+}
+
+/** Courbe SVG sans dépendance. */
+export function Sparkline({ points, height = 64 }: { points: number[]; height?: number }) {
+  if (points.length < 2) return null;
+  const width = 300;
+  const min = Math.min(...points);
+  const max = Math.max(...points);
+  const span = max - min || 1;
+  const step = width / (points.length - 1);
+  const path = points
+    .map((value, index) => {
+      const x = index * step;
+      const y = height - ((value - min) / span) * (height - 10) - 5;
+      return `${index === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} style={{ width: "100%", height }} role="img" aria-label="Évolution">
+      <path d={`${path} L${width},${height} L0,${height} Z`} fill="rgba(15,122,82,0.10)" />
+      <path d={path} fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function Empty({ title, hint, action }: { title: string; hint: string; action?: React.ReactNode }) {
+  return (
+    <div className="empty">
+      <div style={{ fontSize: 22, marginBottom: 6 }}>◌</div>
+      <div style={{ fontWeight: 600, color: "var(--text)", marginBottom: 3 }}>{title}</div>
+      <div>{hint}</div>
+      {action ? <div style={{ marginTop: 14 }}>{action}</div> : null}
+    </div>
+  );
+}
+
+export function LinkButton({ href, children, primary }: { href: string; children: React.ReactNode; primary?: boolean }) {
+  return (
+    <Link href={href} className={`btn${primary ? " primary" : ""}`}>
       {children}
     </Link>
   );
