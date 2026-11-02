@@ -76,6 +76,17 @@ compte : l'espace de travail est provisionné avec un catalogue de démonstratio
 - Scan caméra via `BarcodeDetector` (Chrome/Android) avec repli saisie manuelle et douchette USB.
 - Palette de commandes ⌘K / Ctrl+K, raccourcis ⌘I pour une entrée.
 
+### Équipe & rôles
+- Liste des membres avec e-mail, rôle et date d’arrivée ; badge « vous ».
+- **Invitation** par e-mail : la personne est ajoutée immédiatement si elle a déjà un compte, sinon
+  l’invitation l’attend et se rattache **automatiquement** à la création de son compte.
+- Changement de rôle en un clic, retrait d’un membre, annulation d’une invitation, message
+  d’invitation copiable (WhatsApp/e-mail).
+- 5 rôles prêts à l’emploi : **Propriétaire**, **Gestionnaire**, **Magasinier**, **Vendeur**,
+  **Lecture seule** — chacun avec son jeu de permissions affiché en clair.
+- Garde-fou serveur : impossible de retirer ou rétrograder le **dernier propriétaire** ; un
+  Vendeur ne peut ni inviter, ni modifier l’équipe (refusé en base, pas seulement dans l’interface).
+
 ### Réglages
 - Entreprise (nom, devise, adresse, téléphone via RPC), profil utilisateur, rôle.
 - Exports CSV, rechargement serveur, chargement du catalogue de démonstration dans un espace vide.
@@ -95,7 +106,7 @@ npm run dev                    # http://localhost:5173
 ```bash
 npm run typecheck   # TypeScript strict
 npm run test:logic  # 18 tests des règles métier pures (alertes, flux, dormants, CSV, formats)
-npm run smoke       # 24 tests de rendu jsdom : écrans, modales, auth, onboarding, contrôle de stock
+npm run smoke       # 25 tests de rendu jsdom : écrans, modales, auth, onboarding, contrôle de stock
 npm test            # les trois
 npm run build       # build de production
 ```
@@ -129,6 +140,7 @@ Supabase (Auth + Postgres + RLS + RPC).
 
 ```
 tenants ─┬─ memberships ─ roles ─ role_permissions ─ permissions
+         ├─ tenant_invitations
          ├─ suppliers
          ├─ categories ─ products ─ product_variants ─┬─ stock_balances
          │                                            └─ stock_movements ─ stock_operations
@@ -145,6 +157,10 @@ tenants ─┬─ memberships ─ roles ─ role_permissions ─ permissions
 | `save_supplier` / `delete_supplier` | Fournisseurs (suppression détache les produits) |
 | `delete_product` | Supprime, ou archive si l'historique existe |
 | `update_tenant_settings` | Nom, devise, fuseau, adresse, téléphone |
+| `list_tenant_members` / `list_tenant_roles` | Équipe : membres, rôles et permissions |
+| `invite_member` / `revoke_invitation` | Invitations (ajout direct si le compte existe) |
+| `accept_invitations` | Rattache l’utilisateur connecté aux entreprises qui l’ont invité |
+| `update_member_role` / `remove_member` | Rôles et retrait, avec garde-fou sur le dernier propriétaire |
 | `seed_demo_data` / `seed_demo_history` | Catalogue et historique de démonstration |
 
 ### Invariants métier
@@ -171,7 +187,7 @@ SPA statique (`dist/`) + Supabase managé.
 
 ## 🗺️ Feuille de route
 
-1. **Invitations d'équipe** : `invite_member`, rôles personnalisés (Vendeur limité aux sorties).
+1. **Rôles personnalisés** : créer un rôle sur mesure à partir des 15 permissions existantes.
 2. **Multi-entrepôts** : écrans de transfert (`transfer` déjà supporté côté base).
 3. **Mode hors-ligne** : file d'attente de mouvements + réconciliation par clé d'idempotence.
 4. **Caisse** : panier multi-lignes, tickets, encaissement Mobile Money.

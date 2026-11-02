@@ -129,6 +129,7 @@ const cases = [
   ['/rapports', 'Rapports'],
   ['/fournisseurs', 'Grand Marché Distribution'],
   ['/reglages', 'Réglages'],
+  ['/equipe', 'Inviter'],
 ]
 for (const [route, expected] of cases) {
   const el = document.createElement('div')

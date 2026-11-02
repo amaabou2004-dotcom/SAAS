@@ -8,6 +8,7 @@ import Movements from '../src/pages/Movements'
 import Alerts from '../src/pages/Alerts'
 import Reports from '../src/pages/Reports'
 import Suppliers from '../src/pages/Suppliers'
+import Team from '../src/pages/Team'
 import Settings from '../src/pages/Settings'
 import AuthPage from '../src/pages/Auth'
 import Onboarding from '../src/pages/Onboarding'
@@ -34,6 +35,7 @@ export function renderAt(path: string, el: HTMLElement): Root {
             <Route path="alertes" element={<Alerts />} />
             <Route path="rapports" element={<Reports />} />
             <Route path="fournisseurs" element={<Suppliers />} />
+            <Route path="equipe" element={<Team />} />
             <Route path="reglages" element={<Settings />} />
           </Route>
         </Routes>

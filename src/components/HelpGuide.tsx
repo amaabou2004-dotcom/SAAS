@@ -13,6 +13,7 @@ import {
   Search,
   Sparkles,
   Truck,
+  Users,
 } from 'lucide-react'
 import { Modal } from './ui'
 import { useUI } from '../lib/uiStore'
@@ -51,6 +52,7 @@ const SCREENS = [
   { icon: BellRing, label: 'Alertes', text: 'Ce qu’il faut commander, groupé par fournisseur.', to: '/alertes' },
   { icon: BarChart3, label: 'Rapports', text: 'Ventes, marge, rotation, produits qui dorment.', to: '/rapports' },
   { icon: Truck, label: 'Fournisseurs', text: 'Contacts et délais de livraison.', to: '/fournisseurs' },
+  { icon: Users, label: 'Équipe', text: 'Invitez vos collaborateurs et choisissez leur rôle.', to: '/equipe' },
 ]
 
 const GLOSSARY: [string, string][] = [

@@ -8,6 +8,8 @@ Le schéma est versionné dans `migrations/` et déjà appliqué au projet
 | Fichier | Contenu |
 | --- | --- |
 | `20261102120000_kanti_inventory_core.sql` | Fournisseurs, colonnes produit (unité, seuil, réappro, emplacement, fournisseur), types d'opération `issue`/`inventory`, RPC `upsert_product`, `post_stock_operation`, `save_supplier`, `delete_supplier`, `delete_product`, `update_tenant_settings` |
+| `20261102130000_kanti_team_members.sql` | Rôles standard (`ensure_tenant_roles`), table `tenant_invitations`, lecture de l'équipe (`list_tenant_members`, `list_tenant_roles`, `list_tenant_invitations`) |
+| `20261102131000_kanti_team_invitations.sql` | `invite_member`, `revoke_invitation`, `accept_invitations`, `update_member_role`, `remove_member` |
 | `20261102121000_kanti_demo_seed.sql` | `seed_demo_data` (33 produits, 5 fournisseurs, stock d'ouverture) et `seed_demo_history` (historique de ventes/réceptions) |
 
 Le socle d'origine (tenants, memberships, rôles, permissions, catégories, produits, variantes,
@@ -32,6 +34,16 @@ RLS et RPC `create_tenant`, `upsert_category`, `upsert_stock_location`) est cons
 - fournisseur (création/suppression), produit (création/mise à jour/suppression), réglages entreprise ;
 - écriture directe en table refusée ;
 - isolation : un second compte ne voit **aucune** ligne de l'entreprise (0 produit, 0 mouvement, 0 fournisseur).
+
+## Équipe
+
+Tests exécutés en impersonnant un utilisateur `authenticated` (17 contrôles) :
+
+- 5 rôles standard créés à la demande, chacun avec ses permissions ;
+- invitation d'un e-mail sans compte → invitation en attente ; avec compte → ajouté immédiatement ;
+- acceptation par le nouvel utilisateur (`accept_invitations`) → adhésion avec le bon rôle et accès aux données ;
+- changement de rôle, retrait d'un membre, annulation d'invitation ;
+- refus : dernier propriétaire (rétrogradation/retrait), Vendeur qui tente d'inviter ou de retirer quelqu'un.
 
 ## Prérequis Auth
 

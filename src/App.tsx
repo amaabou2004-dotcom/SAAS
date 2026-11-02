@@ -9,6 +9,7 @@ import Movements from './pages/Movements'
 import Alerts from './pages/Alerts'
 import Reports from './pages/Reports'
 import Suppliers from './pages/Suppliers'
+import Team from './pages/Team'
 import Settings from './pages/Settings'
 import AuthPage, { AuthCallback } from './pages/Auth'
 import Onboarding from './pages/Onboarding'
@@ -88,6 +89,7 @@ export default function App() {
               <Route path="alertes" element={<Alerts />} />
               <Route path="rapports" element={<Reports />} />
               <Route path="fournisseurs" element={<Suppliers />} />
+              <Route path="equipe" element={<Team />} />
               <Route path="reglages" element={<Settings />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>

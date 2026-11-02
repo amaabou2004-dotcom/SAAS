@@ -19,6 +19,7 @@ import {
   Search,
   Settings as SettingsIcon,
   Truck,
+  Users,
   X,
 } from 'lucide-react'
 import { useData } from '../lib/store'
@@ -35,6 +36,7 @@ const NAV = [
   { to: '/alertes', label: 'Alertes', icon: BellRing },
   { to: '/rapports', label: 'Rapports', icon: BarChart3 },
   { to: '/fournisseurs', label: 'Fournisseurs', icon: Truck },
+  { to: '/equipe', label: 'Équipe', icon: Users },
 ]
 
 const TITLES: Record<string, string> = {
@@ -45,6 +47,7 @@ const TITLES: Record<string, string> = {
   '/rapports': 'Rapports',
   '/fournisseurs': 'Fournisseurs',
   '/reglages': 'Réglages',
+  '/equipe': 'Équipe',
 }
 
 export default function Layout() {

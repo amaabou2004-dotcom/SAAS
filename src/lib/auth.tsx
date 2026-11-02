@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 import { supabase, frenchError } from './supabase'
+import { acceptPendingInvitations } from './team'
 import { uid } from './format'
 
 export type Tenant = {
@@ -136,6 +137,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  /** Charge le profil et les entreprises ; rattache d'abord les invitations en attente. */
+  const hydrate = async (user: User) => {
+    try {
+      await acceptPendingInvitations()
+    } catch {
+      // Aucune invitation à accepter, ou réseau indisponible : on continue.
+    }
+    await Promise.all([loadProfile(user), loadTenants(user)])
+  }
+
   useEffect(() => {
     let mounted = true
 
@@ -143,7 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!mounted) return
       setSession(data.session)
       if (data.session?.user) {
-        await Promise.all([loadProfile(data.session.user), loadTenants(data.session.user)])
+        await hydrate(data.session.user)
       }
       if (mounted) setReady(true)
     })
@@ -157,8 +168,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return
       }
       if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
-        void loadProfile(nextSession.user)
-        void loadTenants(nextSession.user)
+        void hydrate(nextSession.user)
       }
     })
 
