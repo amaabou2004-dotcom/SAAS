@@ -508,8 +508,8 @@ export function StorefrontPage() {
 
   return (
     <WorkspaceSection
-      title="Commandes en ligne"
-      description="Votre boutique publique, le lien à partager et les commandes envoyées par vos clients. Confirmer une commande crée une vente et retire le stock."
+      title="Ma boutique"
+      description="Votre boutique en ligne : le lien à partager et les commandes de vos clients. Confirmer une commande crée une vente et retire le stock."
     >
       {settingsQuery.isLoading ? (
         <div className="flex items-center gap-2 text-sm text-slate-500" role="status">

@@ -71,7 +71,7 @@ export function MovementsPage() {
   };
 
   return (
-    <WorkspaceSection title="Historique des mouvements" description="Les écritures sont immuables. Pour corriger une opération, créez son mouvement inverse avec un motif : l’original et la correction restent tous deux consultables.">
+    <WorkspaceSection title="Historique" description="Toutes les entrées et sorties, dans l’ordre. Pour corriger une erreur, annulez l’opération : l’original et la correction restent visibles.">
       {error ? <Alert tone="error" className="mb-5">{error}</Alert> : null}
       {success ? <Alert tone="success" className="mb-5">{success}</Alert> : null}
       {movementsQuery.isLoading ? <div className="grid min-h-64 place-items-center" role="status"><LoaderCircle className="size-7 animate-spin text-mint" aria-label="Chargement des mouvements" /></div>

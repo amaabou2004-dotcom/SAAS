@@ -41,7 +41,7 @@ export function LocationsPage() {
 
   const locations = locationsQuery.data ?? [];
   return (
-    <WorkspaceSection title="Emplacements de stock" description="Chaque variante possède un solde distinct par emplacement. Un dépôt principal est créé avec l’entreprise ; ajoutez ici vos autres lieux réels.">
+    <WorkspaceSection title="Dépôts" description="Vos lieux de stockage : boutique, réserve, magasin. Un dépôt principal est créé avec l’entreprise ; ajoutez les autres ici.">
       <div className="grid gap-7 lg:grid-cols-[0.7fr_1.3fr]">
         <div className="h-fit rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <h2 className="mb-5 flex items-center gap-2 font-bold text-ink"><Plus className="size-5 text-mint-dark" aria-hidden="true" />Nouvel emplacement</h2>
