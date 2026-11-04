@@ -112,6 +112,49 @@ type StockMovementHistoryRow = StockMovementRow & {
   location_code: string;
 }
 
+type SaleRow = {
+  id: string;
+  tenant_id: string;
+  seq: number;
+  status: string;
+  location_id: string;
+  operation_id: string | null;
+  reversal_operation_id: string | null;
+  payment_method: string;
+  payment_reference: string | null;
+  customer_name: string | null;
+  note: string | null;
+  subtotal: number;
+  total: number;
+  total_cost: number;
+  item_count: number;
+  idempotency_key: string;
+  request_fingerprint: string;
+  actor_user_id: string;
+  created_at: string;
+  voided_at: string | null;
+}
+
+type SaleItemRow = {
+  id: string;
+  tenant_id: string;
+  sale_id: string;
+  variant_id: string;
+  product_name: string;
+  sku: string;
+  unit_price: number;
+  unit_cost: number;
+  quantity: number;
+  line_total: number;
+  created_at: string;
+}
+
+type SaleOverviewRow = SaleRow & {
+  number: string;
+  location_name: string;
+  margin: number;
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -132,10 +175,13 @@ export interface Database {
       stock_balances: Table<StockBalanceRow>;
       stock_operations: Table<StockOperationRow>;
       stock_movements: Table<StockMovementRow>;
+      sales: Table<SaleRow>;
+      sale_items: Table<SaleItemRow>;
     };
     Views: {
       stock_overview: View<StockOverviewRow>;
       stock_movement_history: View<StockMovementHistoryRow>;
+      sales_overview: View<SaleOverviewRow>;
     };
     Functions: {
       create_tenant: {
@@ -196,6 +242,32 @@ export interface Database {
             quantity_delta: number | string;
           }>;
           p_reverses_operation_id: string | null;
+        };
+        Returns: string;
+      };
+      post_sale: {
+        Args: {
+          p_tenant_id: string;
+          p_idempotency_key: string;
+          p_location_id: string;
+          p_payment_method: string;
+          p_payment_reference: string | null;
+          p_customer_name: string | null;
+          p_note: string | null;
+          p_items: Array<{
+            variant_id: string;
+            quantity: number;
+            unit_price?: number;
+          }>;
+        };
+        Returns: string;
+      };
+      void_sale: {
+        Args: {
+          p_tenant_id: string;
+          p_sale_id: string;
+          p_reason: string;
+          p_idempotency_key: string;
         };
         Returns: string;
       };

@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module.js';
 import { CatalogModule } from './catalog/catalog.module.js';
 import { HealthModule } from './health/health.module.js';
 import { InventoryModule } from './inventory/inventory.module.js';
+import { SalesModule } from './sales/sales.module.js';
 import { TenantsModule } from './tenants/tenants.module.js';
 
 @Module({
@@ -28,6 +29,7 @@ import { TenantsModule } from './tenants/tenants.module.js';
     TenantsModule,
     CatalogModule,
     InventoryModule,
+    SalesModule,
   ],
   controllers: [AppController],
   providers: [

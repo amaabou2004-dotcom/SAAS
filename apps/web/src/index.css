@@ -57,6 +57,30 @@ a {
   mask-image: linear-gradient(to bottom, black, transparent 88%);
 }
 
+/* Impression du ticket de caisse : seule la carte [data-print="ticket"] sort. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  [data-print="ticket"],
+  [data-print="ticket"] * {
+    visibility: visible;
+  }
+
+  [data-print="ticket"] {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    border: 0;
+    box-shadow: none;
+  }
+
+  [data-print="hide"] {
+    display: none !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

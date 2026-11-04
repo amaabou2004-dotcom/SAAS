@@ -16,6 +16,8 @@ import { MovementsPage } from '../features/workspace/movements-page';
 import { ProductsPage } from '../features/workspace/products-page';
 import { StockPage } from '../features/workspace/stock-page';
 import { WorkspaceLayout } from '../features/workspace/workspace-layout';
+import { NewSalePage } from '../features/sales/new-sale-page';
+import { SalesPage } from '../features/sales/sales-page';
 
 function FullPageLoader() {
   return (
@@ -81,7 +83,9 @@ export function App() {
             </RequireVerifiedUser>
           }
         >
-          <Route index element={<Navigate to="produits" replace />} />
+          <Route index element={<Navigate to="ventes" replace />} />
+          <Route path="ventes" element={<SalesPage />} />
+          <Route path="ventes/nouvelle" element={<NewSalePage />} />
           <Route path="produits" element={<ProductsPage />} />
           <Route path="categories" element={<CategoriesPage />} />
           <Route path="emplacements" element={<LocationsPage />} />

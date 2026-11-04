@@ -269,3 +269,109 @@ describe('mode direct — stock', () => {
     });
   });
 });
+
+describe('mode direct — ventes', () => {
+  const SALE_ID = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+  const saleRow = {
+    id: SALE_ID,
+    tenant_id: TENANT_ID,
+    number: 'VTE-000001',
+    status: 'completed',
+    location_id: LOCATION_ID,
+    location_name: 'Boutique',
+    payment_method: 'cash',
+    payment_reference: null,
+    customer_name: null,
+    note: null,
+    subtotal: '2400.0000',
+    total: '2400.0000',
+    total_cost: '1000.0000',
+    margin: '1400.0000',
+    item_count: 1,
+    created_at: '2026-11-03T10:00:00Z',
+    voided_at: null,
+  };
+  const itemRow = {
+    id: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+    sale_id: SALE_ID,
+    variant_id: VARIANT_ID,
+    product_name: 'Eau minérale',
+    sku: 'EAU-001',
+    unit_price: '1200.0000',
+    unit_cost: '500.0000',
+    quantity: '2.0000',
+    line_total: '2400.0000',
+  };
+
+  it('reconnaît les routes de vente', () => {
+    expect(isDirectRoute(`/tenants/${TENANT_ID}/sales`)).toBe(true);
+    expect(isDirectRoute(`/tenants/${TENANT_ID}/sales/${SALE_ID}`)).toBe(true);
+    expect(isDirectRoute(`/tenants/${TENANT_ID}/sales/${SALE_ID}/void`)).toBe(true);
+    expect(isDirectRoute(`/tenants/${TENANT_ID}/sales/${SALE_ID}/void/plus`)).toBe(false);
+  });
+
+  it('liste les ventes avec des montants numériques', async () => {
+    const { client } = makeClient({ sales_overview: [saleRow] });
+
+    const sales = await directApiFetch<Array<{ number: string; total: number; status: string }>>(
+      `/tenants/${TENANT_ID}/sales`,
+      undefined,
+      client,
+    );
+
+    expect(sales[0]).toMatchObject({ number: 'VTE-000001', total: 2400, status: 'completed' });
+  });
+
+  it('encaisse via la RPC post_sale puis relit le ticket', async () => {
+    const { client, rpcCalls } = makeClient({ sales_overview: [saleRow], sale_items: [itemRow] }, SALE_ID);
+
+    const sale = await directApiFetch<{ number: string; items: Array<{ sku: string; quantity: number }> }>(
+      `/tenants/${TENANT_ID}/sales`,
+      {
+        method: 'POST',
+        headers: { 'Idempotency-Key': 'vente-cle-0001' },
+        body: JSON.stringify({
+          location_id: LOCATION_ID,
+          payment_method: 'mobile_money',
+          payment_reference: 'MM-778899',
+          customer_name: '  Aïcha  ',
+          note: null,
+          items: [{ variant_id: VARIANT_ID, quantity: '2', unit_price: '1200' }],
+        }),
+      },
+      client,
+    );
+
+    expect(rpcCalls[0]!.name).toBe('post_sale');
+    expect(rpcCalls[0]!.args).toMatchObject({
+      p_tenant_id: TENANT_ID,
+      p_idempotency_key: 'vente-cle-0001',
+      p_location_id: LOCATION_ID,
+      p_payment_method: 'mobile_money',
+      p_payment_reference: 'MM-778899',
+      p_customer_name: 'Aïcha',
+      p_items: [{ variant_id: VARIANT_ID, quantity: 2, unit_price: 1200 }],
+    });
+    expect(sale.number).toBe('VTE-000001');
+    expect(sale.items[0]).toMatchObject({ sku: 'EAU-001', quantity: 2 });
+  });
+
+  it('annule via la RPC void_sale et renvoie le ticket à jour', async () => {
+    const { client, rpcCalls } = makeClient({ sales_overview: [saleRow], sale_items: [itemRow] }, SALE_ID);
+
+    const sale = await directApiFetch<{ status: string }>(
+      `/tenants/${TENANT_ID}/sales/${SALE_ID}/void`,
+      { method: 'POST', headers: { 'Idempotency-Key': 'annulation-cle-1' }, body: JSON.stringify({ reason: 'Retour client' }) },
+      client,
+    );
+
+    expect(rpcCalls[0]!.name).toBe('void_sale');
+    expect(rpcCalls[0]!.args).toMatchObject({
+      p_tenant_id: TENANT_ID,
+      p_sale_id: SALE_ID,
+      p_reason: 'Retour client',
+      p_idempotency_key: 'annulation-cle-1',
+    });
+    expect(sale.status).toBe('completed');
+  });
+});

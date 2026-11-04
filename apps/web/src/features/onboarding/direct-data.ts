@@ -147,6 +147,50 @@ function toMovement(row: Payload) {
   };
 }
 
+const SALE_COLUMNS = [
+  'id, tenant_id, number, status, location_id, location_name, payment_method, payment_reference,',
+  'customer_name, note, subtotal, total, total_cost, margin, item_count, created_at, voided_at',
+].join(' ');
+
+const SALE_ITEM_COLUMNS =
+  'id, sale_id, variant_id, product_name, sku, unit_price, unit_cost, quantity, line_total';
+
+function toSale(row: Payload) {
+  return {
+    id: row.id as string,
+    tenant_id: row.tenant_id as string,
+    number: row.number as string,
+    status: row.status as string,
+    location_id: row.location_id as string,
+    location_name: row.location_name as string,
+    payment_method: row.payment_method as string,
+    payment_reference: (row.payment_reference as string | null) ?? null,
+    customer_name: (row.customer_name as string | null) ?? null,
+    note: (row.note as string | null) ?? null,
+    subtotal: asNumber(row.subtotal),
+    total: asNumber(row.total),
+    total_cost: asNumber(row.total_cost),
+    margin: asNumber(row.margin),
+    item_count: asNumber(row.item_count),
+    created_at: row.created_at as string,
+    voided_at: (row.voided_at as string | null) ?? null,
+  };
+}
+
+function toSaleItem(row: Payload) {
+  return {
+    id: row.id as string,
+    sale_id: row.sale_id as string,
+    variant_id: row.variant_id as string,
+    product_name: row.product_name as string,
+    sku: row.sku as string,
+    unit_price: asNumber(row.unit_price),
+    unit_cost: asNumber(row.unit_cost),
+    quantity: asNumber(row.quantity),
+    line_total: asNumber(row.line_total),
+  };
+}
+
 async function listTenants({ client }: RouteContext) {
   const { data, error } = await client
     .from('tenants')
@@ -357,6 +401,91 @@ async function postReversal({ client, body, idempotencyKey }: RouteContext, tena
   return { id: asText(data) };
 }
 
+async function readSale(client: DirectClient, tenantId: string, saleId: string) {
+  const [saleRes, itemsRes] = await Promise.all([
+    client
+      .from('sales_overview')
+      .select(SALE_COLUMNS)
+      .eq('tenant_id', tenantId)
+      .eq('id', saleId)
+      .limit(1),
+    client
+      .from('sale_items')
+      .select(SALE_ITEM_COLUMNS)
+      .eq('tenant_id', tenantId)
+      .eq('sale_id', saleId)
+      .order('created_at', { ascending: true }),
+  ]);
+
+  const error = saleRes.error ?? itemsRes.error;
+  if (error) fail(error.message, 'Impossible de charger la vente.');
+
+  const sale = asRows(saleRes.data)[0];
+  if (!sale) fail(undefined, 'Cette vente est introuvable.');
+
+  return { ...toSale(sale), items: asRows(itemsRes.data).map(toSaleItem) };
+}
+
+async function listSales({ client }: RouteContext, tenantId: string) {
+  const { data, error } = await client
+    .from('sales_overview')
+    .select(SALE_COLUMNS)
+    .eq('tenant_id', tenantId)
+    .order('created_at', { ascending: false })
+    .limit(100);
+
+  if (error) fail(error.message, 'Impossible de charger les ventes.');
+  return asRows(data).map(toSale);
+}
+
+function saleLines(body: Payload) {
+  const items = Array.isArray(body.items) ? body.items : [];
+  return items.map((line) => {
+    const row = line as Payload;
+    const quantity = asNumber(row.quantity);
+    const unitPrice = row.unit_price === null || row.unit_price === undefined || row.unit_price === ''
+      ? undefined
+      : asNumber(row.unit_price);
+    return {
+      variant_id: row.variant_id,
+      quantity,
+      ...(unitPrice === undefined ? {} : { unit_price: unitPrice }),
+    };
+  });
+}
+
+async function createSale({ client, body, idempotencyKey }: RouteContext, tenantId: string) {
+  const { data, error } = await client.rpc('post_sale', {
+    p_tenant_id: tenantId,
+    p_idempotency_key: idempotencyKey ?? `direct-vente-${crypto.randomUUID()}`,
+    p_location_id: body.location_id,
+    p_payment_method: body.payment_method,
+    p_payment_reference: typeof body.payment_reference === 'string' && body.payment_reference.trim()
+      ? body.payment_reference.trim()
+      : null,
+    p_customer_name: typeof body.customer_name === 'string' && body.customer_name.trim()
+      ? body.customer_name.trim()
+      : null,
+    p_note: typeof body.note === 'string' && body.note.trim() ? body.note.trim() : null,
+    p_items: saleLines(body),
+  });
+
+  if (error) fail(error.message, 'La vente n’a pas pu être enregistrée.');
+  return readSale(client, tenantId, asText(data));
+}
+
+async function voidSale({ client, body, idempotencyKey }: RouteContext, tenantId: string, saleId: string) {
+  const { error } = await client.rpc('void_sale', {
+    p_tenant_id: tenantId,
+    p_sale_id: saleId,
+    p_reason: typeof body.reason === 'string' ? body.reason.trim() : '',
+    p_idempotency_key: idempotencyKey ?? `direct-annulation-${crypto.randomUUID()}`,
+  });
+
+  if (error) fail(error.message, 'L’annulation de la vente a échoué.');
+  return readSale(client, tenantId, saleId);
+}
+
 /** `true` quand la route est gérée par le mode direct (sinon on garde l'API). */
 export function isDirectRoute(path: string): boolean {
   return new RegExp(
@@ -370,6 +499,9 @@ export function isDirectRoute(path: string): boolean {
       '^/tenants/[0-9a-f-]{36}/inventory/movements$',
       '^/tenants/[0-9a-f-]{36}/inventory/operations$',
       '^/tenants/[0-9a-f-]{36}/inventory/operations/[0-9a-f-]{36}/reversal$',
+      '^/tenants/[0-9a-f-]{36}/sales$',
+      '^/tenants/[0-9a-f-]{36}/sales/[0-9a-f-]{36}$',
+      '^/tenants/[0-9a-f-]{36}/sales/[0-9a-f-]{36}/void$',
     ].join('|'),
     'i',
   ).test(path);
@@ -436,6 +568,18 @@ export async function directApiFetch<T>(
       return (await postReversal(context, tenantId, resourceId)) as T;
     }
     return (await postOperation(context, tenantId)) as T;
+  }
+
+  if (scope === 'sales') {
+    if (!resource) {
+      return (method === 'POST' ? await createSale(context, tenantId) : await listSales(context, tenantId)) as T;
+    }
+    // `/tenants/{id}/sales/{saleId}/void` : le 5e segment est l'action.
+    if (resourceId === 'void') {
+      return (await voidSale(context, tenantId, resource)) as T;
+    }
+    if (resourceId) throw new Error(`Route inconnue : ${path}`);
+    return (await readSale(context.client, tenantId, resource)) as T;
   }
 
   throw new Error(`Route inconnue : ${path}`);
