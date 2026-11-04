@@ -1,6 +1,6 @@
 import { friendlyError } from '../../lib/friendly-error';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeftRight, BarChart3, Building2, ChevronDown, History, LayoutDashboard, LoaderCircle, LogOut, MapPin, Package, Receipt, Store, Tags, Users, Warehouse } from 'lucide-react';
+import { ArrowLeftRight, BarChart3, Building2, ChevronDown, HandCoins, History, LayoutDashboard, LoaderCircle, LogOut, MapPin, Package, Receipt, Store, Tags, Users, Warehouse } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Brand } from '../../components/brand';
@@ -27,6 +27,7 @@ const navigation = [
 ];
 
 const moreNavigation = [
+  { to: '/workspace/credits', label: 'Crédits', icon: HandCoins, hint: 'Qui doit encore payer' },
   { to: '/workspace/stock', label: 'Stock', icon: ArrowLeftRight, hint: 'Ce qu’il reste, par dépôt' },
   { to: '/workspace/mouvements', label: 'Historique', icon: History, hint: 'Toutes les entrées et sorties' },
   { to: '/workspace/emplacements', label: 'Dépôts', icon: MapPin, hint: 'Boutique, réserve, magasin' },

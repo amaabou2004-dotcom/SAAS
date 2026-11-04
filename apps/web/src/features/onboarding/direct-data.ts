@@ -736,6 +736,33 @@ async function saveStorefrontSettings({ client, body }: RouteContext, tenantId: 
   return asRow(data);
 }
 
+async function listCreditSales({ client }: RouteContext, tenantId: string) {
+  const { data, error } = await client.rpc('credit_sales_list', { p_tenant_id: tenantId });
+  if (error) fail(error.message, 'Les ventes à crédit n’ont pas pu être chargées.');
+  return asRows(data).map((row) => ({
+    id: row.id as string,
+    number: asText(row.number),
+    customer_name: (row.customer_name as string | null) ?? null,
+    total: asNumber(row.total),
+    paid: asNumber(row.paid),
+    remaining: asNumber(row.remaining),
+    created_at: asText(row.created_at),
+  }));
+}
+
+async function addCreditPayment({ client, body }: RouteContext, tenantId: string, saleId: string) {
+  const method = body.method === 'mobile_money' ? 'mobile_money' : 'cash';
+  const { data, error } = await client.rpc('add_sale_payment', {
+    p_tenant_id: tenantId,
+    p_sale_id: saleId,
+    p_amount: asNumber(body.amount),
+    p_method: method,
+    p_reference: typeof body.reference === 'string' && body.reference.trim() ? body.reference.trim() : null,
+  });
+  if (error) fail(error.message, 'Le règlement n’a pas pu être enregistré.');
+  return asRow(data);
+}
+
 async function listStorefrontOrders({ client }: RouteContext, tenantId: string) {
   const { data, error } = await client.rpc('storefront_orders_list', { p_tenant_id: tenantId });
   if (error) fail(error.message, 'Les commandes n’ont pas pu être chargées.');
@@ -801,6 +828,7 @@ export function isDirectRoute(path: string): boolean {
       '^/tenants/[0-9a-f-]{36}/reports([?][^#]*)?$',
       '^/shop/[a-z0-9][a-z0-9-]{1,38}[a-z0-9](/catalog|/orders|/track/[A-Za-z0-9%.-]{3,20})?$',
       '^/tenants/[0-9a-f-]{36}/storefront(/orders(/[0-9a-f-]{36}/(confirm|cancel|delivered))?)?$',
+      '^/tenants/[0-9a-f-]{36}/credits(/[0-9a-f-]{36}/payments)?$',
       '^/invitations/accept$',
     ].join('|'),
     'i',
@@ -899,6 +927,12 @@ export async function directApiFetch<T>(
     }
     if (resourceId) throw new Error(`Route inconnue : ${path}`);
     return (await readSale(context.client, tenantId, resource)) as T;
+  }
+
+  if (scope === 'credits') {
+    if (!resource) return (await listCreditSales(context, tenantId)) as T;
+    if (resourceId === 'payments') return (await addCreditPayment(context, tenantId, resource)) as T;
+    throw new Error(`Route inconnue : ${path}`);
   }
 
   if (scope === 'members') {

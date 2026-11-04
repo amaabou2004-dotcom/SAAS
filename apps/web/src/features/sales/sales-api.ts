@@ -44,6 +44,17 @@ const saleItemSchema = z.object({
 
 const saleDetailSchema = saleSummarySchema.extend({ items: z.array(saleItemSchema) });
 
+const creditSaleSchema = z.object({
+  id: z.uuid(),
+  number: z.string(),
+  customer_name: z.string().nullable(),
+  total: z.number(),
+  paid: z.number(),
+  remaining: z.number(),
+  created_at: z.string(),
+});
+
+export type CreditSale = z.infer<typeof creditSaleSchema>;
 export type SaleSummary = z.infer<typeof saleSummarySchema>;
 export type SaleItem = z.infer<typeof saleItemSchema>;
 export type SaleDetail = z.infer<typeof saleDetailSchema>;
@@ -79,6 +90,28 @@ export async function createSale(token: string, tenantId: string, input: SaleInp
     headers: { 'Idempotency-Key': key },
     body: JSON.stringify(input),
   }));
+}
+
+/** Ventes à crédit qui attendent encore un règlement. */
+export async function listCreditSales(token: string, tenantId: string): Promise<CreditSale[]> {
+  return z.array(creditSaleSchema).parse(await apiFetch(`${base(tenantId)}/credits`, token));
+}
+
+/** Encaisse le reste dû sur une vente à crédit. */
+export async function addCreditPayment(
+  token: string,
+  tenantId: string,
+  saleId: string,
+  input: { amount: number; method: 'cash' | 'mobile_money'; reference: string | null },
+): Promise<{ sale_id: string; paid: number; remaining: number }> {
+  return z
+    .object({ sale_id: z.uuid(), paid: z.number(), remaining: z.number() })
+    .parse(
+      await apiFetch(`${base(tenantId)}/credits/${saleId}/payments`, token, {
+        method: 'POST',
+        body: JSON.stringify(input),
+      }),
+    );
 }
 
 export async function voidSale(token: string, tenantId: string, saleId: string, reason: string, key: string) {
