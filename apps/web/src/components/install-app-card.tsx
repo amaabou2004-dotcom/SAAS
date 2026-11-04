@@ -7,6 +7,18 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
+/** L'application tourne-t-elle déjà comme une application installée ? */
+function isRunningInstalled() {
+  if (typeof window === 'undefined') return false;
+  const displayMode = window.matchMedia?.('(display-mode: standalone)').matches === true;
+  const iosStandalone = (navigator as Navigator & { standalone?: boolean }).standalone === true;
+  return displayMode || iosStandalone;
+}
+
+function isIosDevice() {
+  return typeof navigator !== 'undefined' && /iphone|ipad|ipod/i.test(navigator.userAgent);
+}
+
 /**
  * Propose d'installer Stokari sur l'écran d'accueil. Le navigateur décide :
  * quand il ne propose rien (ordinateur, navigateur ancien), la carte
@@ -14,17 +26,11 @@ interface BeforeInstallPromptEvent extends Event {
  */
 export function InstallAppCard() {
   const [promptEvent, setPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
-  const [isIos, setIsIos] = useState(false);
-  const [installed, setInstalled] = useState(false);
+  const isIos = isIosDevice();
+  const [installed, setInstalled] = useState(isRunningInstalled);
   const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
-    const standalone =
-      window.matchMedia?.('(display-mode: standalone)').matches === true ||
-      (navigator as Navigator & { standalone?: boolean }).standalone === true;
-    setInstalled(standalone);
-    setIsIos(/iphone|ipad|ipod/i.test(navigator.userAgent));
-
     const capture = (event: Event) => {
       event.preventDefault();
       setPromptEvent(event as BeforeInstallPromptEvent);
