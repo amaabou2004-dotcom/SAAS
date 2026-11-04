@@ -1,0 +1,19 @@
+# Dépendances et artefacts (Vercel réinstalle et reconstruit)
+node_modules
+.pnpm-store
+**/node_modules
+apps/*/dist
+coverage
+*.tsbuildinfo
+
+# Base locale et secrets (les variables sont configurées dans Vercel)
+.env
+.env.*
+apps/*/.env
+apps/*/.env.*
+supabase/.temp
+supabase/.branches
+
+# Tests et documentation lourde
+playwright-report
+test-results

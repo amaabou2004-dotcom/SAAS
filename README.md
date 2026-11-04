@@ -5,6 +5,20 @@ Plateforme multi-entreprises de gestion commerciale, de stock et de boutiques en
 > **État actuel : itération 2 — identité, entreprise, catalogue et stock.**
 > Les ventes, réservations, boutiques publiques et rapports ne sont pas encore implémentés. L’interface ne présente aucune donnée commerciale fictive.
 
+## Déploiement sur Vercel
+
+Le dépôt est prêt : `vercel.json` décrit le build du front (`apps/web/dist`), la réécriture
+SPA et les en-têtes de cache.
+
+1. <https://vercel.com/new> → import du dépôt `amaabou2004-dotcom/SAAS` ;
+2. Framework **Vite**, Root Directory **vide**, Node **22.x** ;
+3. Variables : `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_DATA_MODE=direct`,
+   `VITE_GOOGLE_AUTH_ENABLED=true` ;
+4. Deploy.
+
+Guide détaillé, vérifications et configuration Google/Supabase :
+[`docs/DEPLOIEMENT-VERCEL.md`](./docs/DEPLOIEMENT-VERCEL.md).
+
 ## Endpoints de service
 
 | Route | Rôle |
