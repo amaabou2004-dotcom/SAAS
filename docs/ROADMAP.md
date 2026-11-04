@@ -1,53 +1,69 @@
 # La suite du projet — feuille de route
 
-> État au dernier commit : socle technique terminé (authentification, entreprises, catalogue,
-> stock, mouvements, historique, sécurité). Ce document décrit **ce qui reste**, dans l'ordre,
-> avec le pourquoi de chaque étape.
+> État au dernier commit : **étape 1 terminée** — la caisse fonctionne (panier, ticket,
+> encaissement, annulation, sortie de stock automatique), en plus du socle technique
+> (authentification, entreprises, catalogue, stock, mouvements, sécurité).
+> Ce document décrit **ce qui reste**, dans l'ordre, avec le pourquoi de chaque étape.
 
 ---
 
 ## Où en est le produit, en une image
 
-Stokari sait aujourd'hui **ranger et compter** : produits, catégories, emplacements, stock,
-mouvements. C'est la fondation — solide, testée (73 tests), isolée par entreprise.
+Stokari sait aujourd'hui **ranger, compter et vendre** : produits, catégories, emplacements,
+stock, mouvements, et la caisse (ticket numéroté, stock qui baisse tout seul, annulation
+tracée). C'est testé (93 tests) et isolé par entreprise.
 
-Ce qui manque, c'est **ce qui se passe au comptoir** : la vente. Et ce qui en découle :
-les rapports, la boutique en ligne, l'équipe, l'abonnement.
+Ce qui manque maintenant, c'est **ce que la vente produit comme information** (les rapports),
+puis **la vente hors du magasin** (la boutique publique), l'équipe et l'abonnement.
 
 ```
-   [FAIT] Catalogue + Stock + Mouvements + Sécurité
+   [FAIT] Catalogue + Stock + Mouvements + Sécurité + VENTES
               │
               ▼
-   [1] VENTES  ──►  [2] RAPPORTS ──►  [3] ABONNEMENT
-        │
-        └──►  [4] BOUTIQUE PUBLIQUE ──►  [5] ÉQUIPE
+   [2] RAPPORTS ──► [3] BOUTIQUE PUBLIQUE ──► [4] ÉQUIPE ──► [5] ABONNEMENT
 ```
 
 ---
 
-## Étape 1 — Les ventes (le cœur du métier)
+## Étape 1 — Les ventes (le cœur du métier) — ✅ TERMINÉE
 
 **Pourquoi d'abord :** sans vente, l'application reste un inventaire. C'est aussi la brique
 dont dépendent les rapports (chiffre d'affaires) et la boutique publique.
 
-**Ce que l'utilisateur voit**
-- Un nouvel onglet **Ventes** : liste des ventes du jour, total encaissé.
-- Un écran **Nouvelle vente** : recherche produit (nom, SKU, code-barres), quantités,
-  remise éventuelle, puis un bouton **Encaisser**.
-- Modes de paiement : **espèces**, **Mobile Money** (saisie de la référence), **crédit** (à recevoir).
-- À l'encaissement : un **ticket** numéroté (`VTE-000123`), imprimable ou copiable.
-- Le **stock baisse automatiquement** — sans double saisie.
+**Ce qui est livré**
 
-**Ce que je construis**
-- Tables `sales`, `sale_items`, `payments` (migration versionnée).
-- Une fonction `post_sale(...)` transactionnelle et idempotente, qui crée la vente **et** les
-  sorties de stock dans la même transaction (réutilise `post_stock_operation`).
-- Refus si le stock disponible est insuffisant, avec un message clair.
-- Annulation d'une vente = contre-passation (le stock revient).
-- Routes API `POST /sales`, `GET /sales`, `POST /sales/:id/void` + le mode direct.
+- Onglet **Ventes** (`/workspace/ventes`) : ventes du jour, total encaissé, marge du jour,
+  liste complète avec le détail de chaque ticket.
+- Écran **Nouvelle vente** (`/workspace/ventes/nouvelle`) : recherche par nom ou SKU,
+  panier, quantité, prix modifiable, disponibilité affichée par emplacement.
+- Paiement **espèces**, **Mobile Money** (référence obligatoire) ou **crédit**.
+- **Ticket** numéroté (`VTE-000001`) affiché après encaissement, imprimable
+  (feuille d'impression dédiée : seul le ticket sort).
+- **Stock retiré automatiquement** dans la même transaction que la vente.
+- **Annulation** depuis la liste, avec motif obligatoire : le stock revient,
+  la vente reste visible avec le statut « Annulée ».
+- Envoi protégé par **clé d'idempotence** : un double clic ne crée pas deux ventes.
+- Mêmes règles en **mode direct** (RPC `post_sale` / `void_sale`) et via l'**API NestJS**
+  (`POST/GET /tenants/:id/sales`, `POST /tenants/:id/sales/:id/void`).
 
-**Critère de réussite :** vendre 3 articles, voir le stock diminuer de 3, annuler la vente,
-voir le stock revenir — et que tout figure dans l'historique.
+**Décisions techniques à connaître**
+
+- Une vente écrit sa sortie de stock **elle-même** (et non via `post_stock_operation`) :
+  un vendeur possède `sales.manage` mais pas `inventory.manage`, et doit pouvoir encaisser.
+- L'annulation, elle, passe par une **contre-passation** et exige donc `sales.manage`
+  **et** `inventory.manage` : annuler, c'est toucher au stock.
+- Les tables `sales` / `sale_items` sont en **lecture seule** pour le client : les écritures
+  passent uniquement par les fonctions `security definer`.
+
+**Critère de réussite (vérifié en base) :** vendre 3 articles → stock −3, ticket numéroté,
+rejeu de la même clé → une seule vente, stock insuffisant → refus explicite, annulation →
+stock restauré, double annulation → refus.
+
+**Reste à faire sur cette étape (plus tard)**
+
+- Douchette code-barres (le champ `barcode` existe déjà) et raccourcis clavier.
+- Remise globale ou par ligne (aujourd'hui : prix unitaire modifiable).
+- Table `payments` dédiée si l'on encaisse un ticket en plusieurs fois (utile pour le crédit).
 
 ---
 
@@ -120,14 +136,14 @@ webhook de paiement, écran de facturation.
 
 | # | Étape | Effort | Valeur |
 | --- | --- | --- | --- |
-| 1 | **Ventes** | ⭐⭐⭐⭐ | transforme l'outil en caisse : indispensable |
+| 1 | **Ventes** ✅ | ⭐⭐⭐⭐ | transforme l'outil en caisse : indispensable |
 | 2 | **Rapports** | ⭐⭐⭐ | donne la raison de revenir chaque semaine |
 | 3 | **Boutique publique** | ⭐⭐⭐ | différencie sur le marché local |
 | 4 | **Équipe** | ⭐⭐ | débloque les boutiques à plusieurs vendeurs |
 | 5 | **Abonnement** | ⭐⭐ | transforme l'usage en revenus |
 
-**Recommandation :** enchaîner **1 → 2** (ventes puis rapports). À ce moment-là, le produit
-est utilisable tous les jours par un vrai commerce, et vous pouvez le montrer à un client.
+**Recommandation :** l'étape 1 est faite — enchaîner sur **2 (rapports)**. À ce moment-là, le
+produit est utilisable tous les jours par un vrai commerce et peut être montré à un client.
 
 ---
 
@@ -136,17 +152,18 @@ est utilisable tous les jours par un vrai commerce, et vous pouvez le montrer à
 | Sujet | Pourquoi | Quand |
 | --- | --- | --- |
 | API dans une image Docker + hébergeur Node | l'API n'est pas déployée aujourd'hui (mode direct) | avec l'étape 3 |
-| Tests de bout en bout (Playwright déjà configuré) | vérifier les parcours réels à chaque déploiement | étape 1 |
+| Tests de bout en bout (Playwright déjà configuré) | vérifier les parcours réels à chaque déploiement | étape 2 |
 | Photos produits (Supabase Storage) | indispensable pour la boutique publique | étape 3 |
 | Sauvegardes et plan de reprise | un commerce ne perd pas son stock | avant la mise en production payante |
 | Journal d'audit exploitable | qui a fait quoi, quand | étape 4 |
 
 ---
 
-## Découpage de l'étape 1 (si on démarre)
+## Découpage de l'étape 2 (les rapports)
 
-1. Migration `sales` + `post_sale` + vues de lecture, appliquée et testée en SQL.
-2. Contrat côté front (`sales-api.ts`) + tests unitaires.
-3. Écran **Ventes** (liste) et **Nouvelle vente** (panier).
-4. Ticket, impression, annulation.
-5. Tests : 6 à 8 nouveaux cas, dont le refus de vendre sans stock.
+1. Vues SQL `sales_daily` (CA, marge, panier moyen par jour) et `product_performance`
+   (quantités, CA, marge par produit / catégorie), avec tests SQL.
+2. Contrat front (`reports-api.ts`) + mode direct + route API, tests unitaires.
+3. Écran **Rapports** : aujourd'hui, 7 / 30 / 90 jours, top produits, produits dormants.
+4. Export CSV (ventes de la période, produits).
+5. Tests : les chiffres de l'écran doivent égaler la somme exacte des tickets.

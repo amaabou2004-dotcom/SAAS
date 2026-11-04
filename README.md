@@ -2,8 +2,10 @@
 
 Plateforme multi-entreprises de gestion commerciale, de stock et de boutiques en ligne.
 
-> **État actuel : itération 2 — identité, entreprise, catalogue et stock.**
-> Les ventes, réservations, boutiques publiques et rapports ne sont pas encore implémentés. L’interface ne présente aucune donnée commerciale fictive.
+> **État actuel : itération 3 — identité, entreprise, catalogue, stock et ventes.**
+> La caisse est en place (panier, ticket numéroté, encaissement espèces / Mobile Money / crédit,
+> annulation tracée). Les réservations, boutiques publiques et rapports ne sont pas encore
+> implémentés. L’interface ne présente aucune donnée commerciale fictive.
 
 ## Déploiement sur Vercel
 
