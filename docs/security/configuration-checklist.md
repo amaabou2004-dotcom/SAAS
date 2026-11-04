@@ -1,5 +1,8 @@
 # Checklist de configuration sécurisée
 
+> Dernier audit complet : [`docs/AUDIT.md`](../AUDIT.md) (4 novembre 2026) — constats,
+> corrections appliquées et points restants côté compte.
+
 ## Supabase Auth
 
 - [ ] Confirmation d’e-mail obligatoire et auto-confirmation désactivée.
@@ -31,6 +34,10 @@
 
 - [x] RLS activée sur les tables de la première tranche.
 - [x] Privilèges `anon` révoqués sur les données privées.
+- [x] Privilèges `anon` révoqués sur **toutes les fonctions**, sauf les 3 RPC de la boutique publique (`storefront_catalog`, `storefront_info`, `place_storefront_order`) — migration `202611020010_security_hardening.sql`.
+- [x] Pipeline e-mail (`dispatch_notifications`, `sync_notification_status`, `order_notification_body`) et générateurs de démonstration réservés au service.
+- [x] Droits par défaut durcis : toute nouvelle table ou fonction du schéma `public` est fermée à `anon` par défaut.
+- [x] `suppliers` et `sales_overview` en lecture seule pour les clients (écriture via RPC contrôlées).
 - [x] Écriture directe des tenants et rôles interdite aux utilisateurs.
 - [x] Fonctions privilégiées avec `search_path` fixe.
 - [x] Tests d’isolation multi-tenants écrits.

@@ -205,10 +205,15 @@ docs/                  Décisions et consignes de sécurité
 - Les erreurs de base sensibles ne sont pas renvoyées au navigateur.
 - Le rôle `anon` n’a aucun droit direct sur les tables de la boutique : lecture par des fonctions
   `security definer` filtrées, écriture uniquement via `place_storefront_order`.
+- Depuis la migration `202611020010_security_hardening.sql`, `anon` ne peut exécuter **que** les trois
+  RPC de la boutique publique ; le pipeline e-mail et les générateurs de démonstration sont réservés
+  au service, et les nouveaux objets du schéma `public` sont fermés par défaut.
+- Audit complet (constats, corrections, reste à faire) : [`docs/AUDIT.md`](./docs/AUDIT.md).
 
 ## Avant la production
 
-Cette première tranche ne suffit pas pour une mise en production. Il reste notamment à brancher un SMTP personnalisé, activer le CAPTCHA, tester la restauration, finaliser les durées de session, exécuter les tests E2E avec de vrais e-mails et faire auditer les migrations sur l’environnement cible.
+Cette première tranche ne suffit pas pour une mise en production. Il reste notamment à brancher un SMTP personnalisé (Brevo — indispensable pour « mot de passe oublié »), réactiver la confirmation d’e-mail, activer le CAPTCHA, tester la restauration et finaliser les durées de session.
+Le détail priorisé se trouve dans [`docs/AUDIT.md`](./docs/AUDIT.md) (§7).
 
 ## Licence
 

@@ -158,6 +158,7 @@ Deux façons de brancher le front à la base, sans changer un écran :
 | Les routes du serveur | `apps/api/src/*/‑controller.ts` |
 | Les règles métier du serveur | `apps/api/src/*/‑service.ts` |
 | Les tables et la sécurité | `supabase/migrations/*.sql` |
+| **Le dernier audit complet** (sécurité, tests, reste à faire) | `docs/AUDIT.md` |
 
 ---
 
@@ -187,7 +188,8 @@ Trois chantiers utiles, dans cet ordre :
 1. ~~Ne pas rater une commande~~ ✅ : l'**e-mail gratuit** est en place
    (`docs/EMAIL-COMMANDES.md`) ; reste à faire côté **SMS / WhatsApp**.
 2. **Rassurer le client** : une page de suivi de commande à partir du numéro `CMD-…`.
-3. **Fiabiliser** : test de bout en bout dans la CI, sauvegardes, journal d'audit lisible.
+3. **Fiabiliser** : sauvegardes et journal d'audit lisible (le test de bout en bout a été
+   réparé le 4 novembre 2026, voir `docs/AUDIT.md`).
 
 Ordre proposé :
 

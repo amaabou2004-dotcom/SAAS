@@ -48,16 +48,28 @@ jobs:
       # refusé temporairement (limite de débit). On réessaie, puis on affiche
       # l'état des conteneurs pour diagnostiquer.
       - name: Démarrer Supabase local
+        # Les journaux de la CI ne sont pas toujours téléchargeables : en cas
+        # d'échec, la fin du journal est publiée en annotation (visible dans
+        # l'onglet « Checks » et via l'API), ce qui suffit à diagnostiquer.
         run: |
+          set -o pipefail
+          log=/tmp/supabase-start.log
+          : > "$log"
           for attempt in 1 2 3; do
-            echo "Tentative $attempt"
-            if pnpm exec supabase start --exclude studio,imgproxy,postgres-meta,realtime,edge-runtime,logflare,vector; then
+            echo "Tentative $attempt" | tee -a "$log"
+            if pnpm exec supabase start --exclude studio,imgproxy,postgres-meta,realtime,edge-runtime,logflare,vector 2>&1 | tee -a "$log"; then
               exit 0
             fi
-            docker ps -a || true
+            docker ps -a | tee -a "$log" || true
             sleep 20
           done
-          pnpm exec supabase status || true
+          pnpm exec supabase status 2>&1 | tee -a "$log" || true
+          {
+            echo "Espace disque :"; df -h / . || true
+            echo "Images présentes :"; docker images --format '{{.Repository}}:{{.Tag}}' || true
+          } | tee -a "$log" || true
+          detail=$(tail -c 4000 "$log" | tr '\r' ' ' | tr '\n' ' ' | sed 's/%/%25/g')
+          echo "::error title=Supabase local n'a pas démarré::${detail}"
           exit 1
       - run: pnpm test:db
       - run: pnpm test:db:concurrency
