@@ -28,7 +28,9 @@ jobs:
       - run: pnpm build
 
   database:
-    runs-on: ubuntu-latest
+    # Image épinglée : la CI base de données dépend de Docker, présent de façon
+    # fiable sur 24.04 (ubuntu-latest a changé de version d'image).
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
