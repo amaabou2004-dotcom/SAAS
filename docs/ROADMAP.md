@@ -225,6 +225,7 @@ l'**étape 5 (abonnement)**, une fois quelques boutiques utilisatrices.
 | Photos produits (Supabase Storage) | la boutique publique est aujourd'hui textuelle | juste après l'étape 3 |
 | Sauvegardes et plan de reprise | un commerce ne perd pas son stock | avant la mise en production payante |
 | Journal d'audit exploitable | qui a fait quoi, quand | étape 5 |
+| Test de bout en bout (Playwright) dans la CI | le métier est couvert par les tests unitaires, mais le parcours complet échoue encore en CI ; à rejouer avec Docker/Supabase local | avant la mise en production |
 
 ---
 
