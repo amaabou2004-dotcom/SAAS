@@ -88,7 +88,9 @@ beforeEach(() => {
   vi.mocked(setCategoryActive).mockResolvedValue({} as never);
   vi.mocked(createCategory).mockResolvedValue({} as never);
   vi.mocked(createLocation).mockResolvedValue({} as never);
+  vi.mocked(postStockOperation).mockClear();
   vi.mocked(postStockOperation).mockResolvedValue({ id: 'ac1ee4d1-28f1-4f77-b67e-21ceac76b636' });
+  vi.mocked(reverseStockOperation).mockClear();
   vi.mocked(reverseStockOperation).mockResolvedValue({ id: 'bc1ee4d1-28f1-4f77-b67e-21ceac76b636' });
   vi.stubGlobal('crypto', { randomUUID: () => 'cc1ee4d1-28f1-4f77-b67e-21ceac76b636' });
 });
@@ -160,6 +162,29 @@ describe('Workspace pages', () => {
 
     expect(await screen.findByText('7 en stock')).toBeInTheDocument();
     expect(screen.getByText('visible dans la boutique')).toBeInTheDocument();
+  });
+
+  it('ajoute du stock depuis la fiche produit sans changer d’écran', async () => {
+    const user = userEvent.setup();
+    vi.mocked(listProducts).mockResolvedValue([product]);
+    vi.mocked(listStock).mockResolvedValue([]);
+    vi.mocked(postStockOperation).mockClear();
+    renderWithWorkspace(<ProductsPage />);
+
+    expect(await screen.findByText('Rupture de stock')).toBeInTheDocument();
+    await user.type(screen.getByLabelText('Ajouter du stock'), '5');
+    await user.click(screen.getByRole('button', { name: 'Ajouter' }));
+
+    await waitFor(() => expect(postStockOperation).toHaveBeenCalled());
+    const [token, tenantId, input, key] = vi.mocked(postStockOperation).mock.calls[0]!;
+    expect(token).toBe('user-token');
+    expect(tenantId).toBe(tenant.id);
+    expect(input).toMatchObject({
+      operation_type: 'receipt',
+      lines: [{ variant_id: product.variants[0]!.id, location_id: locations[0]!.id, quantity_delta: '5' }],
+    });
+    expect(typeof key).toBe('string');
+    expect(key.length).toBeGreaterThanOrEqual(8);
   });
 
   it('envoie la photo choisie dans la galerie avec la fiche produit', async () => {
