@@ -1,3 +1,4 @@
+import { friendlyError } from '../../lib/friendly-error';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { LoaderCircle, MapPin, Plus } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
@@ -9,7 +10,7 @@ import { useWorkspace } from './workspace-context';
 import { createLocation, listLocations } from './workspace-api';
 
 function errorMessage(error: unknown) {
-  return error instanceof Error ? error.message : 'Une erreur inattendue est survenue.';
+  return friendlyError(error);
 }
 
 export function LocationsPage() {

@@ -1,9 +1,11 @@
+import { friendlyError } from '../../lib/friendly-error';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { LoaderCircle, Minus, Plus, Search, ShoppingBag, Store, Trash2 } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Brand } from '../../components/brand';
 import { Alert } from '../../components/ui/alert';
+import { SiteFooter } from '../../components/site-footer';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -158,7 +160,7 @@ export function PublicShopPage() {
   if (infoQuery.isError) {
     return (
       <ShopUnavailable
-        reason={infoQuery.error instanceof Error ? infoQuery.error.message : 'Impossible de joindre cette boutique.'}
+        reason={friendlyError(infoQuery.error, 'Impossible de joindre cette boutique.')}
       />
     );
   }
@@ -243,7 +245,7 @@ export function PublicShopPage() {
           <p className="mt-6 text-sm text-slate-500" role="status">Chargement des produits…</p>
         ) : catalogQuery.isError ? (
           <Alert tone="error" className="mt-4">
-            {catalogQuery.error instanceof Error ? catalogQuery.error.message : 'Le catalogue n’a pas pu être chargé.'}
+            {friendlyError(catalogQuery.error, 'Le catalogue n’a pas pu être chargé.')}
           </Alert>
         ) : visibleItems.length === 0 ? (
           <p className="mt-6 rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-10 text-center text-sm text-slate-500">
@@ -405,6 +407,8 @@ export function PublicShopPage() {
           </section>
         ) : null}
       </main>
+
+      <SiteFooter className="mt-8" />
 
       {cartCount > 0 ? (
         <div className="fixed inset-x-0 bottom-0 border-t border-slate-200 bg-white/95 backdrop-blur">

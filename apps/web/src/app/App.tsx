@@ -1,6 +1,7 @@
 import { LoaderCircle } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { BrowserRouter, Link, Navigate, Route, Routes } from 'react-router-dom';
+import { SiteFooter } from '../components/site-footer';
 import { Button } from '../components/ui/button';
 import { useAuth } from '../features/auth/auth-context';
 import { AuthCallbackPage } from '../features/auth/auth-callback-page';
@@ -9,6 +10,7 @@ import { ResetPasswordPage } from '../features/auth/reset-password-page';
 import { SignInPage } from '../features/auth/sign-in-page';
 import { SignUpPage } from '../features/auth/sign-up-page';
 import { VerifyEmailPage } from '../features/auth/verify-email-page';
+import { LegalNoticePage, PrivacyPolicyPage, TermsPage } from '../features/legal/legal-pages';
 import { OnboardingPage } from '../features/onboarding/onboarding-page';
 import { CategoriesPage } from '../features/workspace/categories-page';
 import { LocationsPage } from '../features/workspace/locations-page';
@@ -48,16 +50,19 @@ function RequireVerifiedUser({ children }: { children: ReactNode }) {
 
 function NotFoundPage() {
   return (
-    <main className="grid min-h-screen place-items-center bg-canvas px-5">
-      <div className="text-center">
-        <p className="text-sm font-bold text-mint">404</p>
-        <h1 className="mt-2 text-3xl font-bold text-ink">Cette page n’existe pas</h1>
-        <p className="mt-3 text-slate-600">Le lien est peut-être incomplet ou la page a été déplacée.</p>
-        <Button asChild variant="mint" className="mt-6">
-          <Link to="/">Revenir à mon espace</Link>
-        </Button>
-      </div>
-    </main>
+    <div className="flex min-h-screen flex-col bg-canvas">
+      <main className="grid flex-1 place-items-center px-5 py-12">
+        <div className="text-center">
+          <p className="text-sm font-bold text-mint">404</p>
+          <h1 className="mt-2 text-3xl font-bold text-ink">Cette page n’existe pas</h1>
+          <p className="mt-3 text-slate-600">Le lien est peut-être incomplet ou la page a été déplacée.</p>
+          <Button asChild variant="mint" className="mt-6">
+            <Link to="/">Revenir à mon espace</Link>
+          </Button>
+        </div>
+      </main>
+      <SiteFooter />
+    </div>
   );
 }
 
@@ -80,6 +85,10 @@ export function App() {
             </RequireVerifiedUser>
           }
         />
+        {/* Pages publiques et légales : accessibles sans compte. */}
+        <Route path="/mentions-legales" element={<LegalNoticePage />} />
+        <Route path="/confidentialite" element={<PrivacyPolicyPage />} />
+        <Route path="/conditions" element={<TermsPage />} />
         {/* Boutique publique : aucun compte requis, hors de l'espace de travail. */}
         <Route path="/b/:slug" element={<PublicShopPage />} />
         <Route

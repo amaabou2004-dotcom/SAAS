@@ -1,6 +1,8 @@
 import { BarChart3, Check, PackageCheck, ShieldCheck, Store } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 import { Brand } from '../../components/brand';
+import { legalInfo, legalLinks } from '../legal/legal-info';
 
 const features = [
   { icon: PackageCheck, label: 'Un stock unique, toujours traçable' },
@@ -69,9 +71,19 @@ export function AuthLayout({ eyebrow, title, description, children, footer }: Au
           {children}
           {footer ? <div className="mt-8">{footer}</div> : null}
         </div>
-        <p className="mx-auto mt-8 max-w-[440px] text-center text-[11px] leading-5 text-slate-400">
-          En continuant, vous utilisez un espace sécurisé. Ne communiquez jamais votre mot de passe ou votre code de vérification.
-        </p>
+        <div className="mx-auto mt-8 max-w-[440px] text-center text-[11px] leading-5 text-slate-400">
+          <p>En continuant, vous utilisez un espace sécurisé. Ne communiquez jamais votre mot de passe ou votre code de vérification.</p>
+          <nav aria-label="Informations légales" className="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+            {legalLinks.map(({ to, label }) => (
+              <Link key={to} to={to} className="font-semibold text-slate-500 hover:text-mint-dark hover:underline">
+                {label}
+              </Link>
+            ))}
+          </nav>
+          <p className="mt-2">
+            © {new Date().getFullYear()} {legalInfo.brand} — Édité par {legalInfo.publisher}
+          </p>
+        </div>
       </section>
     </main>
   );

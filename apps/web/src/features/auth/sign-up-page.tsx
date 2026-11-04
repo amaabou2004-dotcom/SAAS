@@ -132,6 +132,17 @@ export function SignUpPage() {
         >
           {isSubmitting ? 'Création en cours…' : 'Recevoir mon e-mail de vérification'}
         </Button>
+        <p className="mt-4 text-center text-xs leading-5 text-slate-500">
+          En créant mon espace, j’accepte les{' '}
+          <Link to="/conditions" className="font-semibold text-mint-dark hover:underline">
+            conditions générales
+          </Link>{' '}
+          et la{' '}
+          <Link to="/confidentialite" className="font-semibold text-mint-dark hover:underline">
+            politique de confidentialité
+          </Link>
+          .
+        </p>
       </form>
     </AuthLayout>
   );

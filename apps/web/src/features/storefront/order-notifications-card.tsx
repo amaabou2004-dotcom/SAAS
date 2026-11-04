@@ -1,3 +1,4 @@
+import { friendlyError } from '../../lib/friendly-error';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { BellRing, LoaderCircle, Mail } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
@@ -21,12 +22,7 @@ const cardClass = 'rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm
 const emailPattern = /^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i;
 
 function errorMessage(caught: unknown, fallback: string) {
-  if (!(caught instanceof Error)) return fallback;
-  const message = caught.message.trim();
-  if (/Failed to fetch|NetworkError/i.test(message)) {
-    return 'Connexion au serveur impossible. Vérifiez votre réseau puis réessayez.';
-  }
-  return message || fallback;
+  return friendlyError(caught, fallback);
 }
 
 function NotificationForm({

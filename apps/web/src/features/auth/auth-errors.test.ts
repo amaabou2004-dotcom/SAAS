@@ -15,7 +15,7 @@ describe('getAuthErrorMessage', () => {
 
   it('reports a disabled OAuth provider honestly', () => {
     expect(getAuthErrorMessage(new Error('provider is not enabled'))).toBe(
-      'La connexion Google n’est pas encore activée pour ce projet.',
+      'La connexion Google n’est pas disponible pour le moment. Utilisez votre adresse e-mail.',
     );
   });
 

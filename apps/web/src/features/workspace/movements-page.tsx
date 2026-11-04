@@ -1,3 +1,4 @@
+import { friendlyError } from '../../lib/friendly-error';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { History, LoaderCircle, RotateCcw } from 'lucide-react';
 import { useRef, useState, type FormEvent } from 'react';
@@ -17,7 +18,7 @@ const operationLabels: Record<string, string> = {
 };
 
 function errorMessage(error: unknown) {
-  return error instanceof Error ? error.message : 'Une erreur inattendue est survenue.';
+  return friendlyError(error);
 }
 
 export function MovementsPage() {
