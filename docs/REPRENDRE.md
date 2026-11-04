@@ -34,8 +34,9 @@ Plusieurs personnes peuvent travailler dans la même entreprise, chacune avec un
 | Créer son entreprise (onboarding) | ✅ | `/onboarding` |
 | Rôles et permissions à la création | ✅ | automatique |
 | Catégories de produits | ✅ | `/workspace/categories` |
-| Produits et variantes (SKU, code-barres) | ✅ | `/workspace/produits` |
+| Produits et variantes — **SKU généré automatiquement**, code-barres facultatif | ✅ | `/workspace/produits` |
 | **Photo du produit** choisie dans la galerie ou prise avec l'appareil photo | ✅ | `/workspace/produits` |
+| **Quantité de départ saisie avec le produit** (stock d'ouverture tracé) | ✅ | `/workspace/produits` |
 | Emplacements de stock | ✅ | `/workspace/emplacements` |
 | Niveaux de stock (physique, réservé, disponible) | ✅ | `/workspace/stock` |
 | Réceptions, ajustements, transferts | ✅ | `/workspace/mouvements` |
@@ -50,6 +51,7 @@ Plusieurs personnes peuvent travailler dans la même entreprise, chacune avec un
 | Inviter une personne par e-mail et lui donner un rôle | ✅ | `/workspace/equipe` |
 | Retirer un membre (jamais le dernier propriétaire) | ✅ | `/workspace/equipe` |
 | **Boutique publique** : lien `/b/adresse`, catalogue illustré, panier, commande sans compte | ✅ | `/b/<adresse>` |
+| **Tous les produits actifs visibles dans la boutique**, y compris en rupture (badge « indisponible ») | ✅ | `/b/<adresse>` |
 | Réglages de la boutique (adresse, nom, WhatsApp, stock, ouverture) | ✅ | `/workspace/commandes` |
 | **Commandes reçues** : confirmer (crée la vente), annuler, marquer livrée | ✅ | `/workspace/commandes` |
 | Lien copiable + envoi WhatsApp prérempli | ✅ | `/workspace/commandes` |
@@ -64,7 +66,24 @@ export CSV), **inviter son vendeur** avec un rôle limité, et **vendre en ligne
 un lien sur WhatsApp, ses clients commandent sans compte, et la commande devient une vente en
 un clic. Il peut aussi **mettre une photo sur chaque produit depuis son téléphone** : elle
 apparaît dans l'application et dans le catalogue public. C'est un socle solide et testé
-(194 tests).
+(199 tests).
+
+### Saisie simplifiée (4 novembre)
+
+Ajouter un produit ne demande plus que **deux informations obligatoires** : le nom et le prix
+de vente. Tout le reste a une valeur par défaut :
+
+* **le SKU est fabriqué automatiquement** (`EAUMIN-001`, `RIZPAR-001`…) si le champ est laissé vide ;
+* **le prix de revient vaut 0** s'il n'est pas renseigné ;
+* **la quantité en stock** saisie à la création est enregistrée comme stock d'ouverture
+  (elle apparaît dans l'historique des mouvements, donc annulable) ;
+* **le produit apparaît immédiatement dans la boutique**, et la fiche affiche son état :
+  « 7 en stock · visible dans la boutique ».
+
+Dans la boutique publique, **tous les produits actifs sont désormais affichés** : un produit sans
+stock n'est plus invisible, il porte la mention « rupture de stock » et ne peut pas être commandé.
+Avant, un produit à zéro était simplement masqué, ce qui donnait l'impression que la boutique
+refusait les produits.
 
 ---
 

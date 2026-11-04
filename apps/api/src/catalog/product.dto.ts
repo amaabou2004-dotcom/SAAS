@@ -28,15 +28,44 @@ export class CreateProductDto {
   @Matches(moneyPattern)
   sale_price!: string;
 
-  @Transform(({ value }: { value: unknown }) => typeof value === 'number' ? String(value) : value)
+  // Facultatif : sans prix de revient, la marge est simplement inconnue (0).
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) => {
+    if (typeof value === 'number') return String(value);
+    if (typeof value !== 'string') return value ?? '0';
+    const trimmed = value.trim();
+    return trimmed ? trimmed : '0';
+  })
   @IsString()
   @Matches(moneyPattern)
-  cost_price!: string;
+  cost_price?: string;
 
-  @Transform(({ value }: { value: unknown }) => typeof value === 'string' ? value.trim().toUpperCase() : value)
-  @IsString()
+  // Facultatif : vide, la base fabrique le SKU (`generate_product_sku`).
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) => {
+    if (typeof value !== 'string') return value ?? null;
+    const trimmed = value.trim().toUpperCase();
+    return trimmed ? trimmed : null;
+  })
   @Matches(/^[A-Z0-9][A-Z0-9._-]{0,79}$/)
-  sku!: string;
+  sku?: string | null;
+
+  // Quantité de départ, uniquement à la création : enregistrée comme stock
+  // d'ouverture par la base.
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) => {
+    if (typeof value === 'number') return String(value);
+    if (typeof value !== 'string') return value ?? null;
+    const trimmed = value.trim();
+    return trimmed ? trimmed : null;
+  })
+  @IsString()
+  @Matches(moneyPattern)
+  initial_quantity?: string | null;
+
+  @IsOptional()
+  @IsUUID()
+  location_id?: string | null;
 
   @IsOptional()
   @Transform(({ value }: { value: unknown }) => {

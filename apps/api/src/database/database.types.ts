@@ -284,11 +284,13 @@ export interface Database {
           p_description: string | null;
           p_sale_price: number | string;
           p_cost_price: number | string;
-          p_sku: string;
+          p_sku: string | null;
           p_barcode: string | null;
           p_attributes: Record<string, unknown>;
           p_active: boolean;
           p_image_url?: string | null;
+          p_initial_quantity?: number | string | null;
+          p_location_id?: string | null;
         };
         Returns: unknown;
       };

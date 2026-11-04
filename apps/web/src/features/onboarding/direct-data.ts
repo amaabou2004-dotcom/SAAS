@@ -323,7 +323,13 @@ async function saveProduct({ client, body }: RouteContext, tenantId: string, pro
   const attributes =
     body.attributes && typeof body.attributes === 'object' ? (body.attributes as Record<string, unknown>) : {};
 
-  const { error } = await client.rpc('upsert_product', {
+  // SKU vide : la base le fabrique elle-même (`generate_product_sku`).
+  const sku = typeof body.sku === 'string' && body.sku.trim() ? body.sku.trim().toUpperCase() : null;
+  // Quantité de départ : enregistrée par la base comme opération de stock
+  // « opening », avec le même contrôle que l'écran Stock.
+  const initialQuantity = asNumber(body.initial_quantity);
+
+  const { data, error } = await client.rpc('upsert_product', {
     p_tenant_id: tenantId,
     p_product_id: productId ?? null,
     p_variant_id: typeof body.variant_id === 'string' && UUID.test(body.variant_id) ? body.variant_id : null,
@@ -332,17 +338,20 @@ async function saveProduct({ client, body }: RouteContext, tenantId: string, pro
     p_description: typeof body.description === 'string' && body.description.trim() ? body.description : null,
     p_sale_price: asNumber(body.sale_price),
     p_cost_price: asNumber(body.cost_price),
-    p_sku: body.sku,
+    p_sku: sku,
     p_barcode: typeof body.barcode === 'string' && body.barcode.trim() ? body.barcode.trim() : null,
     p_attributes: attributes,
     p_active: typeof body.active === 'boolean' ? body.active : true,
     // Photo déjà envoyée dans le bucket `product-images` : on n'enregistre que
     // son adresse (une chaîne vide efface la photo).
     p_image_url: body.image_url === null ? null : typeof body.image_url === 'string' && body.image_url.trim() ? body.image_url.trim() : null,
+    p_initial_quantity: productId ? null : (Number.isFinite(initialQuantity) && initialQuantity > 0 ? initialQuantity : null),
+    p_location_id: typeof body.location_id === 'string' && UUID.test(body.location_id) ? body.location_id : null,
   });
 
   if (error) fail(error.message, 'Le produit n’a pas pu être enregistré.');
-  return { ok: true };
+  const saved = (data ?? {}) as { sku?: string; variant?: { sku?: string } };
+  return { ok: true, sku: saved.sku ?? saved.variant?.sku ?? null };
 }
 
 async function listLocations({ client }: RouteContext, tenantId: string) {

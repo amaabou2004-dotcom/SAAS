@@ -91,10 +91,15 @@ export interface ProductInput {
   description: string | null;
   sale_price: string;
   cost_price: string;
+  /** Vide : la base fabrique le SKU (voir `generate_product_sku`). */
   sku: string;
   barcode: string | null;
   attributes: Record<string, unknown>;
   image_url: string | null;
+  /** Création seulement : quantité de départ, enregistrée comme stock d'ouverture. */
+  initial_quantity?: string | null;
+  /** Création seulement : emplacement qui reçoit le stock de départ. */
+  location_id?: string | null;
 }
 
 export interface StockOperationInput {
@@ -132,13 +137,17 @@ export async function listProducts(token: string, tenantId: string) {
 
 export async function saveProduct(token: string, tenantId: string, input: ProductInput, existing?: Product) {
   const path = existing ? `/catalog/products/${existing.id}` : '/catalog/products';
-  await apiFetch(`${base(tenantId)}${path}`, token, {
+  const payload = await apiFetch<unknown>(`${base(tenantId)}${path}`, token, {
     method: existing ? 'PATCH' : 'POST',
     body: JSON.stringify({
       ...input,
       ...(existing ? { active: existing.active, variant_id: existing.variants[0]?.id } : {}),
     }),
   });
+  // La base renvoie la fiche enregistrée : on récupère le SKU réellement attribué
+  // (utile quand il a été fabriqué automatiquement).
+  const parsed = z.object({ sku: z.string().optional() }).safeParse(payload);
+  return { sku: parsed.success ? (parsed.data.sku ?? null) : null };
 }
 
 export async function setProductActive(token: string, tenantId: string, product: Product, active: boolean) {

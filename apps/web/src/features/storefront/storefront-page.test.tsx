@@ -1,9 +1,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import { hasPermission } from '../team/team-api';
 import { WorkspaceContext } from '../workspace/workspace-context';
-import { listLocations } from '../workspace/workspace-api';
+import { listLocations, listProducts } from '../workspace/workspace-api';
 import {
   cancelStorefrontOrder,
   confirmStorefrontOrder,
@@ -37,7 +38,7 @@ vi.mock('./storefront-api', async (importOriginal) => {
 
 vi.mock('../workspace/workspace-api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../workspace/workspace-api')>();
-  return { ...actual, listLocations: vi.fn() };
+  return { ...actual, listLocations: vi.fn(), listProducts: vi.fn() };
 });
 
 vi.mock('../team/team-api', async (importOriginal) => {
@@ -100,11 +101,13 @@ const order: StorefrontOrder = {
 function renderPage() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <QueryClientProvider client={client}>
-      <WorkspaceContext.Provider value={{ tenant, accessToken: 'token' }}>
-        <StorefrontPage />
-      </WorkspaceContext.Provider>
-    </QueryClientProvider>,
+    <MemoryRouter>
+      <QueryClientProvider client={client}>
+        <WorkspaceContext.Provider value={{ tenant, accessToken: 'token' }}>
+          <StorefrontPage />
+        </WorkspaceContext.Provider>
+      </QueryClientProvider>
+    </MemoryRouter>,
   );
 }
 
@@ -116,6 +119,7 @@ beforeEach(() => {
     { id: locationId, tenant_id: tenant.id, name: 'Boutique', code: 'BOUT', active: true },
   ]);
   vi.mocked(hasPermission).mockResolvedValue(true);
+  vi.mocked(listProducts).mockResolvedValue([]);
   vi.mocked(confirmStorefrontOrder).mockResolvedValue();
   vi.mocked(cancelStorefrontOrder).mockResolvedValue();
   vi.mocked(markStorefrontOrderDelivered).mockResolvedValue();

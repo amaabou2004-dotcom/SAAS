@@ -83,7 +83,7 @@ beforeEach(() => {
   vi.mocked(listProducts).mockResolvedValue([]);
   vi.mocked(listStock).mockResolvedValue([]);
   vi.mocked(listMovements).mockResolvedValue([]);
-  vi.mocked(saveProduct).mockResolvedValue(undefined);
+  vi.mocked(saveProduct).mockResolvedValue({ sku: 'EAU-001' });
   vi.mocked(setProductActive).mockResolvedValue(undefined);
   vi.mocked(setCategoryActive).mockResolvedValue({} as never);
   vi.mocked(createCategory).mockResolvedValue({} as never);
@@ -104,7 +104,7 @@ describe('Workspace pages', () => {
     expect(await screen.findByText('Aucun produit pour le moment')).toBeInTheDocument();
 
     await user.type(screen.getByLabelText('Nom du produit'), 'Eau minérale');
-    await user.type(screen.getByLabelText('SKU de la variante'), 'eau-001');
+    await user.type(screen.getByLabelText(/Code produit \(SKU\)/), 'eau-001');
     await user.type(screen.getByLabelText(/Prix de vente/), '500');
     await user.type(screen.getByLabelText(/Prix de revient/), '300');
     await user.click(screen.getByRole('button', { name: 'Créer le produit' }));
@@ -115,6 +115,53 @@ describe('Workspace pages', () => {
     expect(vi.mocked(saveProduct).mock.calls[0]?.[2]).toMatchObject({ name: 'Eau minérale', sku: 'EAU-001', sale_price: '500', cost_price: '300' });
   });
 
+  it('crée un produit avec seulement le nom, le prix et une quantité (SKU automatique)', async () => {
+    const user = userEvent.setup();
+    vi.mocked(saveProduct).mockClear();
+    renderWithWorkspace(<ProductsPage />);
+    expect(await screen.findByText('Aucun produit pour le moment')).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText('Nom du produit'), 'Savon parfumé');
+    await user.type(screen.getByLabelText(/Prix de vente/), '250');
+    await user.type(screen.getByLabelText('Quantité en stock'), '12');
+    await user.click(screen.getByRole('button', { name: 'Créer le produit' }));
+
+    await waitFor(() => expect(saveProduct).toHaveBeenCalled());
+    // Le SKU n'est pas saisi : chaîne vide, la base le fabrique.
+    expect(vi.mocked(saveProduct).mock.calls[0]?.[2]).toMatchObject({
+      name: 'Savon parfumé',
+      sale_price: '250',
+      cost_price: '0',
+      sku: '',
+      initial_quantity: '12',
+      location_id: locations[0]!.id,
+    });
+  });
+
+  it('affiche le stock et la visibilité boutique de chaque produit', async () => {
+    vi.mocked(listProducts).mockResolvedValue([product]);
+    vi.mocked(listStock).mockResolvedValue([
+      {
+        tenant_id: tenant.id,
+        variant_id: product.variants[0]!.id,
+        location_id: locations[0]!.id,
+        product_id: product.id,
+        product_name: product.name,
+        sku: product.variants[0]!.sku,
+        location_name: locations[0]!.name,
+        location_code: locations[0]!.code,
+        on_hand: 7,
+        reserved: 0,
+        available: 7,
+        updated_at: new Date(0).toISOString(),
+      },
+    ]);
+    renderWithWorkspace(<ProductsPage />);
+
+    expect(await screen.findByText('7 en stock')).toBeInTheDocument();
+    expect(screen.getByText('visible dans la boutique')).toBeInTheDocument();
+  });
+
   it('envoie la photo choisie dans la galerie avec la fiche produit', async () => {
     const user = userEvent.setup();
     vi.mocked(uploadProductImage).mockClear();
@@ -123,7 +170,7 @@ describe('Workspace pages', () => {
     renderWithWorkspace(<ProductsPage />);
 
     await user.type(await screen.findByLabelText('Nom du produit'), 'Eau minérale');
-    await user.type(screen.getByLabelText('SKU de la variante'), 'EAU-001');
+    await user.type(screen.getByLabelText(/Code produit \(SKU\)/), 'EAU-001');
     await user.type(screen.getByLabelText(/Prix de vente/), '500');
     await user.type(screen.getByLabelText(/Prix de revient/), '300');
     const photo = new File(['image'], 'photo.jpg', { type: 'image/jpeg' });
