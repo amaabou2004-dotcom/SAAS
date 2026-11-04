@@ -111,6 +111,9 @@ pnpm dev              # lancer l'interface (5173) et l'API (3001)
 
 ---
 
+> **La suite détaillée du projet** (5 étapes, effort, critères de réussite) :
+> [`docs/ROADMAP.md`](./ROADMAP.md).
+
 ## 8. La prochaine étape recommandée
 
 **Les ventes.** C'est ce qui transforme un outil de stock en outil de commerce :
