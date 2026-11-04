@@ -28,11 +28,12 @@ describe('GoogleAuthButton', () => {
     vi.restoreAllMocks();
   });
 
-  it('stays disabled until the provider is explicitly enabled', () => {
+  it('affiche rien tant que la connexion Google n’est pas ouverte', () => {
     render(<GoogleAuthButton onError={vi.fn()} />);
 
-    expect(screen.getByRole('button', { name: 'Continuer avec Google' })).toBeDisabled();
-    expect(screen.getByText('Disponible après activation sécurisée du fournisseur Google.')).toBeInTheDocument();
+    // Aucun réglage interne n'est exposé : le bouton reste simplement absent.
+    expect(screen.queryByRole('button', { name: 'Continuer avec Google' })).not.toBeInTheDocument();
+    expect(screen.queryByText(/activation/i)).not.toBeInTheDocument();
     expect(mocks.signInWithGoogle).not.toHaveBeenCalled();
   });
 
@@ -46,7 +47,7 @@ describe('GoogleAuthButton', () => {
 
     expect(onError).toHaveBeenCalledWith(null);
     expect(mocks.signInWithGoogle).toHaveBeenCalledWith();
-    expect(screen.getByText('Connexion directe avec Google, sans code OTP.')).toBeInTheDocument();
+    expect(screen.getByText('Connexion directe avec Google, sans code de vérification.')).toBeInTheDocument();
   });
 
   it('uses native navigation instead of a popup inside an embedded preview', async () => {

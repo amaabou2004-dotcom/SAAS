@@ -7,7 +7,7 @@ export function getAuthErrorMessage(error: unknown): string {
 
   if (normalized.includes('configuration requise')) return error.message;
   if (normalized.includes('provider is not enabled') || normalized.includes('provider_disabled')) {
-    return 'La connexion Google n’est pas encore activée pour ce projet.';
+    return 'La connexion Google n’est pas disponible pour le moment. Utilisez votre adresse e-mail.';
   }
   if (normalized.includes('access_denied')) {
     return 'La connexion Google a été annulée. Vous pouvez réessayer.';

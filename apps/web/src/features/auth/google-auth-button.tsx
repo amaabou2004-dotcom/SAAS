@@ -59,21 +59,21 @@ export function GoogleAuthButton({ disabled = false, onError }: GoogleAuthButton
     }
   };
 
-  const unavailableTitle = isGoogleAuthEnabled
-    ? undefined
-    : 'Activez le fournisseur Google dans Supabase pour utiliser cette connexion.';
+  // Tant que la connexion Google n'est pas ouverte par l'éditeur, le bouton
+  // n'apparaît pas : aucun réglage interne n'est exposé au visiteur.
+  if (!isGoogleAuthEnabled) return null;
 
   return (
     <div className="mb-6">
       {embedded ? (
         canConnect && oauthUrl ? (
-          <Button asChild variant="outline" size="lg" className="w-full" title={unavailableTitle}>
+          <Button asChild variant="outline" size="lg" className="w-full">
             <a href={oauthUrl} target="_top" onClick={() => onError(null)}>
               <GoogleLabel />
             </a>
           </Button>
         ) : (
-          <Button type="button" variant="outline" size="lg" className="w-full" disabled title={unavailableTitle}>
+          <Button type="button" variant="outline" size="lg" className="w-full" disabled>
             <GoogleLabel />
           </Button>
         )
@@ -86,15 +86,12 @@ export function GoogleAuthButton({ disabled = false, onError }: GoogleAuthButton
           onClick={() => { void connect(); }}
           loading={loading}
           disabled={!canConnect}
-          title={unavailableTitle}
         >
           <GoogleLabel />
         </Button>
       )}
       <p className="mt-2.5 text-center text-xs leading-5 text-slate-500">
-        {isGoogleAuthEnabled
-          ? 'Connexion directe avec Google, sans code OTP.'
-          : 'Disponible après activation sécurisée du fournisseur Google.'}
+        Connexion directe avec Google, sans code de vérification.
       </p>
       {embedded && canConnect && oauthUrl ? (
         <a

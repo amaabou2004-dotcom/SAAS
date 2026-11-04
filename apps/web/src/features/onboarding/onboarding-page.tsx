@@ -1,3 +1,4 @@
+import { friendlyError } from '../../lib/friendly-error';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, Building2, Check, Globe2, LoaderCircle, LogOut, PackagePlus, ShieldCheck } from 'lucide-react';
@@ -77,7 +78,7 @@ export function OnboardingPage() {
     try {
       await createMutation.mutateAsync(values);
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : 'La création de l’entreprise a échoué.');
+      setFormError(friendlyError(error, 'La création de l’entreprise a échoué.'));
     }
   });
 
@@ -110,7 +111,7 @@ export function OnboardingPage() {
           <div className="mx-auto max-w-2xl">
             <Alert tone="error">
               <strong className="mb-1 block">Votre espace n’a pas pu être chargé</strong>
-              {tenantsQuery.error instanceof Error ? tenantsQuery.error.message : 'Vérifiez la configuration de l’API puis réessayez.'}
+              {friendlyError(tenantsQuery.error, 'Vos entreprises n’ont pas pu être chargées. Réessayez.')}
             </Alert>
             <Button className="mt-5" variant="outline" onClick={() => { void tenantsQuery.refetch(); }}>
               Réessayer

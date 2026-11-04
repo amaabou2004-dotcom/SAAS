@@ -16,7 +16,7 @@ describe('SignUpPage', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText('Connexion au service à configurer')).toBeInTheDocument();
+    expect(screen.getByText('Mode développement')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Recevoir mon e-mail de vérification' })).toBeDisabled();
     expect(screen.queryByText(/utilisateur/i)).not.toBeInTheDocument();
   });

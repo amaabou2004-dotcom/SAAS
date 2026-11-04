@@ -1,8 +1,10 @@
+import { friendlyError } from '../../lib/friendly-error';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeftRight, BarChart3, Building2, ChevronDown, History, LayoutDashboard, LoaderCircle, LogOut, MapPin, Package, Receipt, Store, Tags, Users, Warehouse } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Brand } from '../../components/brand';
+import { SiteFooter } from '../../components/site-footer';
 import { Alert } from '../../components/ui/alert';
 import { Button } from '../../components/ui/button';
 import { useAuth } from '../auth/auth-context';
@@ -91,7 +93,7 @@ export function WorkspaceLayout() {
   if (tenantsQuery.isError) {
     return (
       <main className="mx-auto max-w-2xl px-5 py-16">
-        <Alert tone="error">Votre espace n’a pas pu être chargé. {tenantsQuery.error instanceof Error ? tenantsQuery.error.message : ''}</Alert>
+        <Alert tone="error">{friendlyError(tenantsQuery.error, 'Votre espace n’a pas pu être chargé. Réessayez.')}</Alert>
         <Button className="mt-5" variant="outline" onClick={() => { void tenantsQuery.refetch(); }}>Réessayer</Button>
       </main>
     );
@@ -178,6 +180,7 @@ export function WorkspaceLayout() {
         <main className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10">
           <Outlet />
         </main>
+        <SiteFooter compact />
       </div>
     </WorkspaceContext.Provider>
   );

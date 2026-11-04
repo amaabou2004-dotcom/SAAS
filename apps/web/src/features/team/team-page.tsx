@@ -1,3 +1,4 @@
+import { friendlyError } from '../../lib/friendly-error';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Check, LoaderCircle, Mail, ShieldCheck, Trash2, UserPlus, Users } from 'lucide-react';
 import { useState } from 'react';
@@ -23,9 +24,7 @@ const inputClass =
   'min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3.5 text-sm text-ink outline-none focus:border-mint focus:ring-4 focus:ring-teal-100';
 
 function errorMessage(error: unknown) {
-  return error instanceof Error && error.message.trim()
-    ? error.message
-    : 'Une erreur inattendue est survenue.';
+  return friendlyError(error);
 }
 
 function expiry(value: string) {

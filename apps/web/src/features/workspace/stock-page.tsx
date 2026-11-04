@@ -1,3 +1,4 @@
+import { friendlyError } from '../../lib/friendly-error';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeftRight, LoaderCircle, PackageOpen } from 'lucide-react';
 import { useRef, useState, type FormEvent } from 'react';
@@ -13,7 +14,7 @@ const inputClass = 'min-h-11 w-full rounded-xl border border-slate-300 bg-white 
 type OperationType = StockOperationInput['operation_type'];
 
 function errorMessage(error: unknown) {
-  return error instanceof Error ? error.message : 'Une erreur inattendue est survenue.';
+  return friendlyError(error);
 }
 
 export function StockPage() {

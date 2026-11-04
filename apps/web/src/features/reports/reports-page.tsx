@@ -1,3 +1,4 @@
+import { friendlyError } from '../../lib/friendly-error';
 import { useQuery } from '@tanstack/react-query';
 import { BarChart3, Download, LoaderCircle, PackageSearch, TrendingUp, Wallet } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -17,9 +18,7 @@ const PERIODS = [
 const dayLabel = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', timeZone: 'UTC' });
 
 function errorMessage(error: unknown) {
-  return error instanceof Error && error.message.trim()
-    ? error.message
-    : 'Une erreur inattendue est survenue.';
+  return friendlyError(error);
 }
 
 function Kpi({

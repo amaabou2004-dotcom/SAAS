@@ -1,0 +1,9 @@
+# Stokari — les pages publiques sont indexables, l'espace privé ne l'est pas.
+User-agent: *
+Allow: /
+Allow: /mentions-legales
+Allow: /confidentialite
+Allow: /conditions
+Disallow: /workspace
+Disallow: /auth
+Disallow: /onboarding
