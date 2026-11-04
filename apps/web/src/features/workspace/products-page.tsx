@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Archive, ImagePlus, LoaderCircle, PackagePlus, Pencil, RotateCcw, Trash2 } from 'lucide-react';
-import { useState, type FormEvent } from 'react';
+import { Archive, ImagePlus, LoaderCircle, PackagePlus, Pencil, RotateCcw, Store, Trash2 } from 'lucide-react';
+import { useMemo, useState, type FormEvent } from 'react';
 import { Alert } from '../../components/ui/alert';
 import { Button } from '../../components/ui/button';
 import { Label } from '../../components/ui/label';
@@ -8,12 +8,27 @@ import { EmptyWorkspace, WorkspaceSection } from './workspace-layout';
 import { useWorkspace } from './workspace-context';
 import { formatMoney } from './workspace-format';
 import { deleteProductImage, productImagePath, uploadProductImage, validateProductImage } from './product-image';
-import { listCategories, listProducts, saveProduct, setProductActive, type Product, type ProductInput } from './workspace-api';
+import {
+  listCategories,
+  listLocations,
+  listProducts,
+  listStock,
+  saveProduct,
+  setProductActive,
+  type Product,
+  type ProductInput,
+} from './workspace-api';
 
 const inputClass = 'min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3.5 text-sm text-ink outline-none focus:border-mint focus:ring-4 focus:ring-teal-100';
+const moneyPattern = /^\d+(\.\d{1,4})?$/;
 
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : 'Une erreur inattendue est survenue.';
+}
+
+function stockBadge(total: number) {
+  if (total <= 0) return { label: 'Rupture de stock', tone: 'bg-amber-50 text-amber-700' };
+  return { label: `${total} en stock`, tone: 'bg-emerald-50 text-emerald-700' };
 }
 
 export function ProductsPage() {
@@ -24,15 +39,19 @@ export function ProductsPage() {
   const [sku, setSku] = useState('');
   const [salePrice, setSalePrice] = useState('');
   const [costPrice, setCostPrice] = useState('');
+  const [initialQuantity, setInitialQuantity] = useState('');
+  const [locationId, setLocationId] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [description, setDescription] = useState('');
   const [barcode, setBarcode] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [removeImage, setRemoveImage] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [photoStatus, setPhotoStatus] = useState<string | null>(null);
+
   const productsQuery = useQuery({
     queryKey: ['catalog', 'products', tenant.id],
     queryFn: () => listProducts(accessToken, tenant.id),
@@ -41,19 +60,44 @@ export function ProductsPage() {
     queryKey: ['catalog', 'categories', tenant.id],
     queryFn: () => listCategories(accessToken, tenant.id),
   });
+  const locationsQuery = useQuery({
+    queryKey: ['inventory', 'locations', tenant.id],
+    queryFn: () => listLocations(accessToken, tenant.id),
+  });
+  const stockQuery = useQuery({
+    queryKey: ['inventory', 'stock', tenant.id],
+    queryFn: () => listStock(accessToken, tenant.id),
+  });
+
   const saveMutation = useMutation({
     mutationFn: ({ input, existing }: { input: ProductInput; existing: Product | null }) =>
       saveProduct(accessToken, tenant.id, input, existing ?? undefined),
   });
   const activeMutation = useMutation({
-    mutationFn: ({ product, active }: { product: Product; active: boolean }) =>
-      setProductActive(accessToken, tenant.id, product, active),
+    mutationFn: ({ product, active }: { product: Product; active: boolean }) => setProductActive(accessToken, tenant.id, product, active),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['catalog', 'products', tenant.id] }),
   });
 
+  const activeLocations = (locationsQuery.data ?? []).filter((location) => location.active);
+  const defaultLocationId = activeLocations[0]?.id ?? '';
+  const chosenLocationId = locationId || defaultLocationId;
+
+  /** Stock disponible par variante, tous emplacements confondus. */
+  const stockByVariant = useMemo(() => {
+    const totals = new Map<string, number>();
+    for (const row of stockQuery.data ?? []) {
+      totals.set(row.variant_id, (totals.get(row.variant_id) ?? 0) + row.available);
+    }
+    return totals;
+  }, [stockQuery.data]);
+
+  const stockForProduct = (product: Product) =>
+    product.variants.reduce((total, variant) => total + (stockByVariant.get(variant.id) ?? 0), 0);
+
   const resetForm = () => {
     setEditing(null);
-    setName(''); setSku(''); setSalePrice(''); setCostPrice(''); setCategoryId(''); setDescription(''); setBarcode('');
+    setName(''); setSku(''); setSalePrice(''); setCostPrice(''); setInitialQuantity('');
+    setCategoryId(''); setDescription(''); setBarcode('');
     setFormError(null);
     setImageFile(null);
     setImagePreview(null);
@@ -88,10 +132,12 @@ export function ProductsPage() {
   const startEdit = (product: Product) => {
     const variant = product.variants[0];
     setEditing(product);
+    setNotice(null);
     setName(product.name);
     setSku(variant?.sku ?? '');
     setSalePrice(String(product.sale_price));
     setCostPrice(String(product.cost_price));
+    setInitialQuantity('');
     setCategoryId(product.category_id ?? '');
     setDescription(product.description ?? '');
     setBarcode(variant?.barcode ?? '');
@@ -108,25 +154,48 @@ export function ProductsPage() {
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFormError(null);
-    if (!name.trim() || !sku.trim() || !salePrice || !costPrice) {
-      setFormError('Le nom, le SKU, le prix de vente et le prix de revient sont obligatoires.');
+    setNotice(null);
+
+    // Seuls le nom et le prix de vente sont obligatoires : tout le reste a une
+    // valeur par défaut raisonnable (SKU fabriqué, prix de revient à 0).
+    if (name.trim().length < 2) {
+      setFormError('Indiquez le nom du produit (2 caractères minimum).');
       return;
     }
-    if (!/^\d+(\.\d{1,2})?$/.test(salePrice) || !/^\d+(\.\d{1,2})?$/.test(costPrice)) {
-      setFormError('Les prix doivent être des nombres positifs avec au maximum deux décimales.');
+    if (!moneyPattern.test(salePrice.trim())) {
+      setFormError('Le prix de vente doit être un nombre positif (exemple : 500).');
       return;
     }
+    const cost = costPrice.trim();
+    if (cost && !moneyPattern.test(cost)) {
+      setFormError('Le prix de revient doit être un nombre positif (ou rester vide).');
+      return;
+    }
+    const quantity = initialQuantity.trim();
+    if (quantity && !moneyPattern.test(quantity)) {
+      setFormError('La quantité doit être un nombre entier (exemple : 12).');
+      return;
+    }
+    const typedSku = sku.trim().toUpperCase();
+    if (typedSku && !/^[A-Z0-9][A-Z0-9._-]{0,79}$/.test(typedSku)) {
+      setFormError('Le code produit (SKU) accepte lettres, chiffres, point, tiret et souligné. Laissez-le vide pour le générer.');
+      return;
+    }
+
     const input: ProductInput = {
       category_id: categoryId || null,
       name: name.trim(),
       description: description.trim() || null,
-      sale_price: salePrice,
-      cost_price: costPrice,
-      sku: sku.trim().toUpperCase(),
+      sale_price: salePrice.trim(),
+      cost_price: cost || '0',
+      sku: typedSku,
       barcode: barcode.trim() || null,
       attributes: editing?.variants[0]?.attributes ?? {},
       // Sans nouvelle photo, on garde celle de la fiche (sauf si on l’a retirée).
       image_url: removeImage ? null : (editing?.image_url ?? null),
+      // Quantité de départ : à la création seulement.
+      initial_quantity: editing ? null : (quantity || null),
+      location_id: editing ? null : (chosenLocationId || null),
     };
     let uploadedPath: string | null = null;
     setPhotoStatus(null);
@@ -136,11 +205,20 @@ export function ProductsPage() {
         uploadedPath = uploaded.path;
         input.image_url = uploaded.url;
       }
-      await saveMutation.mutateAsync({ input, existing: editing });
+      const saved = await saveMutation.mutateAsync({ input, existing: editing });
       // L’ancienne photo n’est effacée qu’une fois la fiche bien enregistrée.
       const previousPath = productImagePath(editing?.image_url);
       if (previousPath && (uploadedPath || removeImage)) void deleteProductImage(previousPath);
-      await queryClient.invalidateQueries({ queryKey: ['catalog', 'products', tenant.id] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['catalog', 'products', tenant.id] }),
+        queryClient.invalidateQueries({ queryKey: ['inventory', 'stock', tenant.id] }),
+      ]);
+      const generatedSku = saved?.sku ?? typedSku;
+      setNotice(
+        editing
+          ? 'Produit modifié. Les changements sont déjà visibles dans la boutique.'
+          : `Produit ajouté${generatedSku ? ` (code ${generatedSku})` : ''} : il est déjà dans votre boutique.`,
+      );
       resetForm();
     } catch (error) {
       // Photo envoyée mais fiche refusée : on ne laisse pas de fichier perdu.
@@ -157,8 +235,8 @@ export function ProductsPage() {
 
   return (
     <WorkspaceSection
-      title="Catalogue produits"
-      description={`Créez vos produits et leurs variantes dans ${tenant.name}. Les produits utilisés par l’historique se désactivent, sans suppression des mouvements.`}
+      title="Produits"
+      description={`Ajoutez un produit, sa photo et sa quantité : il apparaît aussitôt dans votre boutique en ligne. Un produit désactivé est masqué, sans rien supprimer de l’historique.`}
       action={editing ? <Button type="button" variant="outline" onClick={resetForm}>Nouveau produit</Button> : null}
     >
       <div className="grid gap-7 lg:grid-cols-[0.85fr_1.15fr]">
@@ -168,6 +246,7 @@ export function ProductsPage() {
             <h2 className="font-bold text-ink">{editing ? 'Modifier le produit' : 'Nouveau produit'}</h2>
           </div>
           {formError ? <Alert tone="error" className="mb-5">{formError}</Alert> : null}
+          {notice ? <Alert tone="success" className="mb-5">{notice}</Alert> : null}
           <form onSubmit={(event) => { void submit(event); }} className="space-y-4">
             <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-3">
               <p className="mb-2 text-sm font-semibold text-ink">Photo du produit <span className="font-normal text-slate-400">(facultative)</span></p>
@@ -214,40 +293,89 @@ export function ProductsPage() {
                 </div>
               </div>
             </div>
+
             <div>
               <Label htmlFor="product-name" className="mb-2 block">Nom du produit</Label>
-              <input id="product-name" className={inputClass} value={name} onChange={(event) => setName(event.target.value)} required maxLength={160} />
+              <input id="product-name" className={inputClass} value={name} onChange={(event) => setName(event.target.value)} required maxLength={160} placeholder="Eau minérale 1,5 L" />
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <Label htmlFor="product-sku" className="mb-2 block">SKU de la variante</Label>
-                <input id="product-sku" className={inputClass} value={sku} onChange={(event) => setSku(event.target.value)} required maxLength={80} autoCapitalize="characters" />
-              </div>
-              <div>
-                <Label htmlFor="product-barcode" className="mb-2 block">Code-barres <span className="font-normal text-slate-400">(optionnel)</span></Label>
-                <input id="product-barcode" className={inputClass} value={barcode} onChange={(event) => setBarcode(event.target.value)} maxLength={80} />
-              </div>
-            </div>
+
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <Label htmlFor="sale-price" className="mb-2 block">Prix de vente ({tenant.currency_code})</Label>
-                <input id="sale-price" type="number" min="0" step="0.01" className={inputClass} value={salePrice} onChange={(event) => setSalePrice(event.target.value)} required />
+                <input id="sale-price" type="number" min="0" step="0.01" inputMode="decimal" className={inputClass} value={salePrice} onChange={(event) => setSalePrice(event.target.value)} required placeholder="500" />
               </div>
               <div>
-                <Label htmlFor="cost-price" className="mb-2 block">Prix de revient ({tenant.currency_code})</Label>
-                <input id="cost-price" type="number" min="0" step="0.01" className={inputClass} value={costPrice} onChange={(event) => setCostPrice(event.target.value)} required />
+                <Label htmlFor="cost-price" className="mb-2 block">
+                  Prix de revient <span className="font-normal text-slate-400">(facultatif)</span>
+                </Label>
+                <input id="cost-price" type="number" min="0" step="0.01" inputMode="decimal" className={inputClass} value={costPrice} onChange={(event) => setCostPrice(event.target.value)} placeholder="0" />
               </div>
             </div>
+
+            {!editing ? (
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <Label htmlFor="initial-quantity" className="mb-2 block">Quantité en stock</Label>
+                    <input
+                      id="initial-quantity"
+                      type="number"
+                      min="0"
+                      step="1"
+                      inputMode="numeric"
+                      className={inputClass}
+                      value={initialQuantity}
+                      onChange={(event) => setInitialQuantity(event.target.value)}
+                      placeholder="12"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="initial-location" className="mb-2 block">Emplacement</Label>
+                    <select
+                      id="initial-location"
+                      className={inputClass}
+                      value={chosenLocationId}
+                      onChange={(event) => setLocationId(event.target.value)}
+                      disabled={activeLocations.length === 0}
+                    >
+                      {activeLocations.length === 0 ? <option value="">Aucun emplacement</option> : null}
+                      {activeLocations.map((location) => (
+                        <option key={location.id} value={location.id}>{location.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <p className="mt-2 text-xs leading-5 text-slate-500">
+                  Facultatif : la quantité est enregistrée comme stock d’ouverture et apparaît tout de suite dans la boutique.
+                  Vous pourrez l’ajuster dans « Stock ».
+                </p>
+              </div>
+            ) : null}
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <Label htmlFor="product-sku" className="mb-2 block">
+                  Code produit (SKU) <span className="font-normal text-slate-400">(facultatif)</span>
+                </Label>
+                <input id="product-sku" className={inputClass} value={sku} onChange={(event) => setSku(event.target.value)} maxLength={80} autoCapitalize="characters" placeholder="Automatique" />
+                <p className="mt-1 text-xs text-slate-500">Laissez vide : le code est créé automatiquement.</p>
+              </div>
+              <div>
+                <Label htmlFor="product-barcode" className="mb-2 block">Code-barres <span className="font-normal text-slate-400">(facultatif)</span></Label>
+                <input id="product-barcode" className={inputClass} value={barcode} onChange={(event) => setBarcode(event.target.value)} maxLength={80} />
+              </div>
+            </div>
+
             <div>
-              <Label htmlFor="product-category" className="mb-2 block">Catégorie <span className="font-normal text-slate-400">(optionnelle)</span></Label>
+              <Label htmlFor="product-category" className="mb-2 block">Catégorie <span className="font-normal text-slate-400">(facultative)</span></Label>
               <select id="product-category" className={inputClass} value={categoryId} onChange={(event) => setCategoryId(event.target.value)}>
                 <option value="">Sans catégorie</option>
                 {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
               </select>
             </div>
             <div>
-              <Label htmlFor="product-description" className="mb-2 block">Description <span className="font-normal text-slate-400">(optionnelle)</span></Label>
-              <textarea id="product-description" className={`${inputClass} min-h-24 py-3`} value={description} onChange={(event) => setDescription(event.target.value)} maxLength={2000} />
+              <Label htmlFor="product-description" className="mb-2 block">Description <span className="font-normal text-slate-400">(facultative)</span></Label>
+              <textarea id="product-description" className={`${inputClass} min-h-24 py-3`} value={description} onChange={(event) => setDescription(event.target.value)} maxLength={2000} placeholder="Ce que le client doit savoir : taille, couleur, poids…" />
             </div>
             <Button type="submit" variant="mint" className="w-full" loading={saveMutation.isPending}>
               {editing ? 'Enregistrer les modifications' : 'Créer le produit'}
@@ -261,51 +389,62 @@ export function ProductsPage() {
           ) : productsQuery.isError ? (
             <Alert tone="error">{errorMessage(productsQuery.error)} <Button type="button" variant="link" onClick={() => { void productsQuery.refetch(); }}>Réessayer</Button></Alert>
           ) : products.length === 0 ? (
-            <EmptyWorkspace title="Aucun produit pour le moment" description="Votre catalogue est vide. Utilisez le formulaire pour enregistrer un produit réel ; aucun article de démonstration n’est ajouté." />
+            <EmptyWorkspace title="Aucun produit pour le moment" description="Remplissez le formulaire : nom, prix de vente, quantité. Le produit rejoint votre stock et votre boutique immédiatement." />
           ) : (
             <div className="space-y-3">
-              {products.map((product) => (
-                <article key={product.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="flex min-w-0 items-start gap-3">
-                      {product.image_url ? (
-                        <img src={product.image_url} alt={product.name} loading="lazy" className="size-14 shrink-0 rounded-lg border border-slate-200 bg-slate-50 object-cover" />
-                      ) : (
-                        <span className="grid size-14 shrink-0 place-items-center rounded-lg border border-slate-200 bg-slate-50 text-slate-300">
-                          <ImagePlus className="size-5" aria-hidden="true" />
-                        </span>
-                      )}
-                      <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h2 className="font-bold text-ink">{product.name}</h2>
-                        <span className={`rounded-full px-2 py-1 text-[11px] font-semibold ${product.active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>{product.active ? 'Actif' : 'Désactivé'}</span>
+              {products.map((product) => {
+                const total = stockForProduct(product);
+                const stock = stockBadge(total);
+                return (
+                  <article key={product.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="flex min-w-0 items-start gap-3">
+                        {product.image_url ? (
+                          <img src={product.image_url} alt={product.name} loading="lazy" className="size-14 shrink-0 rounded-lg border border-slate-200 bg-slate-50 object-cover" />
+                        ) : (
+                          <span className="grid size-14 shrink-0 place-items-center rounded-lg border border-slate-200 bg-slate-50 text-slate-300">
+                            <ImagePlus className="size-5" aria-hidden="true" />
+                          </span>
+                        )}
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h2 className="font-bold text-ink">{product.name}</h2>
+                            <span className={`rounded-full px-2 py-1 text-[11px] font-semibold ${product.active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>{product.active ? 'Actif' : 'Désactivé'}</span>
+                          </div>
+                          <p className="mt-1 text-sm text-slate-500">{product.category?.name ?? 'Sans catégorie'}</p>
+                        </div>
                       </div>
-                      <p className="mt-1 text-sm text-slate-500">{product.category?.name ?? 'Sans catégorie'}</p>
+                      <div className="flex gap-1">
+                        <Button type="button" variant="ghost" size="sm" onClick={() => startEdit(product)} aria-label={`Modifier ${product.name}`}><Pencil className="size-4" aria-hidden="true" /></Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          loading={activeMutation.isPending && activeMutation.variables?.product.id === product.id}
+                          onClick={() => activeMutation.mutate({ product, active: !product.active })}
+                          aria-label={product.active ? `Désactiver ${product.name}` : `Réactiver ${product.name}`}
+                        >
+                          {product.active ? <Archive className="size-4" aria-hidden="true" /> : <RotateCcw className="size-4" aria-hidden="true" />}
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex gap-1">
-                      <Button type="button" variant="ghost" size="sm" onClick={() => startEdit(product)} aria-label={`Modifier ${product.name}`}><Pencil className="size-4" aria-hidden="true" /></Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        loading={activeMutation.isPending && activeMutation.variables?.product.id === product.id}
-                        onClick={() => activeMutation.mutate({ product, active: !product.active })}
-                        aria-label={product.active ? `Désactiver ${product.name}` : `Réactiver ${product.name}`}
-                      >
-                        {product.active ? <Archive className="size-4" aria-hidden="true" /> : <RotateCcw className="size-4" aria-hidden="true" />}
-                      </Button>
+                    <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+                      <span className="text-slate-600">Vente : <strong className="text-ink">{formatMoney(product.sale_price, tenant.currency_code)}</strong></span>
+                      <span className="text-slate-600">Revient : <strong className="text-ink">{formatMoney(product.cost_price, tenant.currency_code)}</strong></span>
+                      <span className={`rounded-full px-2 py-1 text-[11px] font-semibold ${stock.tone}`}>{stock.label}</span>
                     </div>
-                  </div>
-                  <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
-                    <span className="text-slate-600">Vente : <strong className="text-ink">{formatMoney(product.sale_price, tenant.currency_code)}</strong></span>
-                    <span className="text-slate-600">Revient : <strong className="text-ink">{formatMoney(product.cost_price, tenant.currency_code)}</strong></span>
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {product.variants.map((variant) => <span key={variant.id} className="rounded-md bg-slate-100 px-2 py-1 font-mono text-xs text-slate-600">{variant.sku}{variant.barcode ? ` · ${variant.barcode}` : ''}</span>)}
-                  </div>
-                </article>
-              ))}
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      {product.variants.map((variant) => <span key={variant.id} className="rounded-md bg-slate-100 px-2 py-1 font-mono text-xs text-slate-600">{variant.sku}{variant.barcode ? ` · ${variant.barcode}` : ''}</span>)}
+                      <span className="inline-flex items-center gap-1 text-xs text-slate-500">
+                        <Store className="size-3.5" aria-hidden="true" />
+                        {product.active
+                          ? (total > 0 ? 'visible dans la boutique' : 'affiché en rupture de stock dans la boutique')
+                          : 'masqué de la boutique (produit désactivé)'}
+                      </span>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           )}
           {activeMutation.isError ? <Alert tone="error" className="mt-4">{errorMessage(activeMutation.error)}</Alert> : null}

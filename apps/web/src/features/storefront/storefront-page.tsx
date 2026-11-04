@@ -1,11 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Check, Copy, ExternalLink, LoaderCircle, MapPin, Phone, Send, Store, Truck, X } from 'lucide-react';
+import { Check, Copy, ExternalLink, LoaderCircle, MapPin, Package, Phone, Send, Store, Truck, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Alert } from '../../components/ui/alert';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
-import { listLocations } from '../workspace/workspace-api';
+import { listLocations, listProducts, type Product } from '../workspace/workspace-api';
 import { formatDate, formatMoney } from '../workspace/workspace-format';
 import { useWorkspace } from '../workspace/workspace-context';
 import { EmptyWorkspace, WorkspaceSection } from '../workspace/workspace-layout';
@@ -243,6 +244,42 @@ function SettingsForm({
   );
 }
 
+/**
+ * Rappel visuel : la boutique ne demande aucun ajout manuel de produit.
+ * Tout produit actif du catalogue y apparaît, avec ou sans stock.
+ */
+function ShopCatalogueCard({ products, published }: { products: Product[]; published: boolean }) {
+  const activeCount = products.filter((product) => product.active).length;
+  return (
+    <section className={cardClass}>
+      <h2 className="flex items-center gap-2 text-lg font-bold text-ink">
+        <Package className="size-5 text-mint-dark" aria-hidden="true" />Produits affichés dans la boutique
+      </h2>
+      <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600">
+        {activeCount > 0
+          ? `Vos ${activeCount} produit(s) actif(s) sont déjà en ligne, sans rien ajouter ici.`
+          : 'Aucun produit actif pour l’instant. Ajoutez un produit : il apparaîtra ici automatiquement.'}
+      </p>
+      <ul className="mt-3 grid gap-1 text-sm text-slate-600">
+        <li>• Un produit <strong>actif</strong> s’affiche : nom, photo, prix de vente, catégorie.</li>
+        <li>• Sans stock, il s’affiche quand même avec la mention <strong>« rupture de stock »</strong> et ne peut pas être commandé.</li>
+        <li>• Un produit <strong>désactivé</strong> est masqué, sans rien supprimer de votre historique.</li>
+      </ul>
+      {!published ? (
+        <Alert tone="info" className="mt-4">
+          La boutique est encore fermée : cochez « Boutique ouverte au public » plus haut puis enregistrez pour que vos
+          clients voient ces produits.
+        </Alert>
+      ) : null}
+      <Button asChild size="sm" variant="outline" className="mt-4">
+        <Link to="/workspace/produits">
+          <Package className="size-4" aria-hidden="true" />Ajouter ou modifier un produit
+        </Link>
+      </Button>
+    </section>
+  );
+}
+
 function OrderCard({
   order,
   canManageSales,
@@ -451,6 +488,10 @@ export function StorefrontPage() {
     queryKey: ['inventory', 'locations', tenant.id],
     queryFn: () => listLocations(accessToken, tenant.id),
   });
+  const productsQuery = useQuery({
+    queryKey: ['catalog', 'products', tenant.id],
+    queryFn: () => listProducts(accessToken, tenant.id),
+  });
   const permissionQuery = useQuery({
     queryKey: ['permissions', tenant.id, 'stores.manage'],
     queryFn: () => hasPermission(accessToken, tenant.id, 'stores.manage'),
@@ -492,6 +533,10 @@ export function StorefrontPage() {
           }}
         />
       ) : null}
+
+      <div className="mt-5">
+        <ShopCatalogueCard products={productsQuery.data ?? []} published={settings?.published ?? false} />
+      </div>
 
       <OrderNotificationsCard canManage={permissionQuery.data === true} />
 

@@ -35,6 +35,8 @@ describe('CatalogService', () => {
       p_attributes: {},
       p_active: true,
       p_image_url: null,
+      p_initial_quantity: null,
+      p_location_id: null,
     });
   });
 

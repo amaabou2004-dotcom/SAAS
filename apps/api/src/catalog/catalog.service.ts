@@ -157,12 +157,15 @@ export class CatalogService {
       p_name: input.name,
       p_description: input.description ?? null,
       p_sale_price: input.sale_price,
-      p_cost_price: input.cost_price,
-      p_sku: input.sku,
+      p_cost_price: input.cost_price ?? '0',
+      // SKU absent : la base le fabrique et le renvoie dans la réponse.
+      p_sku: input.sku ?? null,
       p_barcode: input.barcode ?? null,
       p_attributes: input.attributes ?? {},
       p_active: active,
       p_image_url: input.image_url ?? null,
+      p_initial_quantity: productId ? null : (input.initial_quantity ?? null),
+      p_location_id: input.location_id ?? null,
     });
     if (error) this.fail(error, 'L’enregistrement du produit a échoué.');
     const payload: unknown = data;

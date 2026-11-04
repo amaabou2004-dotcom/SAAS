@@ -173,7 +173,7 @@ test('Auth, catalogue, stock et isolation fonctionnent avec Supabase local et Ma
 
     await createTenantAndOpenWorkspace(page, tenantName, tenantSlug);
     await page.getByRole('link', { name: 'Produits', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'Catalogue produits' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Produits', exact: true })).toBeVisible();
 
     await page.getByRole('link', { name: 'Catégories', exact: true }).click();
     await page.getByLabel('Nom', { exact: true }).fill(categoryName);
@@ -182,7 +182,7 @@ test('Auth, catalogue, stock et isolation fonctionnent avec Supabase local et Ma
 
     await page.getByRole('link', { name: 'Produits', exact: true }).click();
     await page.getByLabel('Nom du produit').fill(productName);
-    await page.getByLabel('SKU de la variante').fill(sku);
+    await page.getByLabel(/Code produit \(SKU\)/).fill(sku);
     await page.getByLabel(/Prix de vente/).fill('500');
     await page.getByLabel(/Prix de revient/).fill('300');
     await page.locator('#product-category').selectOption({ label: categoryName });
@@ -256,7 +256,7 @@ test('Auth, catalogue, stock et isolation fonctionnent avec Supabase local et Ma
     // Comme pour la première entreprise : l'espace s'ouvre sur l'accueil du
     // jour, le catalogue s'atteint par l'onglet « Produits ».
     await secondPage.getByRole('link', { name: 'Produits', exact: true }).click();
-    await expect(secondPage.getByRole('heading', { name: 'Catalogue produits' })).toBeVisible();
+    await expect(secondPage.getByRole('heading', { name: 'Produits', exact: true })).toBeVisible();
     await expect(secondPage.getByText('Aucun produit pour le moment')).toBeVisible();
     const secondToken = await accessToken(secondPage);
 

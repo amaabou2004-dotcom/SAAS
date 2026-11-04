@@ -1,6 +1,6 @@
 begin;
 
-select plan(35);
+select plan(39);
 
 insert into auth.users (
   id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -355,5 +355,42 @@ select throws_ok(
   'authenticated user cannot bypass the product RPC with a direct insert'
 );
 
+-- SKU automatique et stock de départ (migration 202611030001) -------------
+select public.upsert_product(
+  '4f5c6bd8-9b79-4b69-9b76-4b4b47b91a01', null, null, null,
+  'Savon parfumé', null, 250, 0, null, null, '{}'::jsonb, true, null, 4, null
+);
+select matches(
+  (select sku from public.product_variants
+    where tenant_id = '4f5c6bd8-9b79-4b69-9b76-4b4b47b91a01'
+      and product_id = (select id from public.products
+                        where tenant_id = '4f5c6bd8-9b79-4b69-9b76-4b4b47b91a01' and name = 'Savon parfumé')),
+  '^SAVONP-[0-9]{3}$',
+  'a product saved without SKU receives a generated SKU'
+);
+select results_eq(
+  $$select on_hand::integer from public.stock_balances
+    where tenant_id = '4f5c6bd8-9b79-4b69-9b76-4b4b47b91a01'
+      and variant_id = (select id from public.product_variants
+                        where tenant_id = '4f5c6bd8-9b79-4b69-9b76-4b4b47b91a01' and sku like 'SAVONP-%')$$,
+  $$values (4)$$,
+  'the initial quantity is posted as opening stock'
+);
+select public.upsert_product(
+  '4f5c6bd8-9b79-4b69-9b76-4b4b47b91a01', null, null, null,
+  'Savon doux', null, 250, 0, null, null, '{}'::jsonb, true, null, null, null
+);
+select results_eq(
+  $$select count(distinct sku)::integer from public.product_variants
+    where tenant_id = '4f5c6bd8-9b79-4b69-9b76-4b4b47b91a01' and sku like 'SAVONP-%'$$,
+  $$values (2)$$,
+  'two products with the same name receive two different generated SKUs'
+);
+select has_function(
+  'public', 'generate_product_sku', array['uuid', 'text'],
+  'the SKU generator is exposed to the application'
+);
+
 select * from finish();
 rollback;
+

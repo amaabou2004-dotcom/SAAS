@@ -69,6 +69,30 @@ beforeEach(() => {
 });
 
 describe('boutique publique', () => {
+  it('affiche un produit en rupture sans permettre de le commander', async () => {
+    vi.mocked(getShopCatalog).mockResolvedValue([
+      {
+        product_id: '99999999-9999-4999-8999-999999999999',
+        variant_id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+        name: 'Riz parfumé 5 kg',
+        description: null,
+        sku: 'RIZ-001',
+        category_name: 'Céréales',
+        unit_price: 6000,
+        available: 0,
+        currency_code: 'XOF',
+        image_url: null,
+      },
+    ]);
+    renderShop();
+
+    expect(await screen.findByText('Riz parfumé 5 kg')).toBeInTheDocument();
+    expect(screen.getByText('rupture de stock')).toBeInTheDocument();
+    expect(screen.getByText('Indisponible')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Ajouter' })).not.toBeInTheDocument();
+  });
+
+
   it('affiche le catalogue et remplit le panier sans compte', async () => {
     renderShop();
 

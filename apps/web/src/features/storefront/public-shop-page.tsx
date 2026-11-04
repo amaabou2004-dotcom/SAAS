@@ -248,7 +248,7 @@ export function PublicShopPage() {
         ) : visibleItems.length === 0 ? (
           <p className="mt-6 rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-10 text-center text-sm text-slate-500">
             {items.length === 0
-              ? 'La boutique n’a pas encore de produit disponible.'
+              ? 'La boutique n’a pas encore de produit. Le commerçant doit ajouter un produit dans ses « Produits ».'
               : 'Aucun produit ne correspond à cette recherche.'}
           </p>
         ) : (
@@ -277,9 +277,17 @@ export function PublicShopPage() {
                       <p className="text-base font-bold tabular-nums text-ink">
                         {formatPrice(item.unit_price, currency)}
                       </p>
-                      <p className="text-xs text-slate-500">reste {item.available}</p>
+                      {item.available > 0 ? (
+                        <p className="text-xs text-slate-500">reste {item.available}</p>
+                      ) : (
+                        <p className="text-xs font-semibold text-amber-700">rupture de stock</p>
+                      )}
                     </div>
-                    {quantity === 0 ? (
+                    {item.available <= 0 ? (
+                      <span className="rounded-full bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700">
+                        Indisponible
+                      </span>
+                    ) : quantity === 0 ? (
                       <Button size="sm" variant="mint" type="button" onClick={() => add(item, 1)}>
                         <Plus className="size-4" aria-hidden="true" />Ajouter
                       </Button>
