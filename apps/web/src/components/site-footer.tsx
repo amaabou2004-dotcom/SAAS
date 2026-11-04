@@ -45,8 +45,8 @@ export function SiteFooter({ compact = false, className }: SiteFooterProps) {
           </nav>
         </div>
         <p className="leading-6 text-slate-500">
-          © {year} {legalInfo.brand} — Édité par <strong className="font-semibold text-slate-700">{legalInfo.publisher}</strong>,{' '}
-          {legalInfo.city}, {legalInfo.country}.
+          © {year} {legalInfo.brand} — Édité par{' '}
+          <strong className="font-semibold text-slate-700">{legalInfo.publisher}</strong>, {legalInfo.country}.
         </p>
       </div>
     </footer>

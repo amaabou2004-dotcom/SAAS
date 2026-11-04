@@ -10,8 +10,11 @@ export const legalInfo = {
   /** Personne qui édite le service et signe les documents officiels. */
   publisher: 'Amadou Aboubakar',
   publisherRole: 'Éditeur du service et responsable de la publication',
-  city: 'Niamey',
   country: 'Niger',
+  /**
+   * Pas de ville dans les informations publiques : la signature reste sobre
+   * (« Édité par Amadou Aboubakar, Niger »).
+   */
   /** Contact public : WhatsApp d'abord, c'est le canal utilisé par les commerçants. */
   phone: '+227 99 57 35 80',
   whatsappUrl: 'https://wa.me/22799573580',
