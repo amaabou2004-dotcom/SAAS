@@ -378,7 +378,7 @@ select results_eq(
 );
 select public.upsert_product(
   '4f5c6bd8-9b79-4b69-9b76-4b4b47b91a01', null, null, null,
-  'Savon doux', null, 250, 0, null, null, '{}'::jsonb, true, null, null, null
+  'Savon parfumé', null, 250, 0, null, null, '{}'::jsonb, true, null, null, null
 );
 select results_eq(
   $$select count(distinct sku)::integer from public.product_variants
