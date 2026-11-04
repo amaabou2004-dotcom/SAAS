@@ -77,7 +77,7 @@ export function LegalNoticePage() {
       <Section title="1. Éditeur du service">
         <p>
           Le service <strong>{legalInfo.brand}</strong> est édité par{' '}
-          <strong>{legalInfo.publisher}</strong>, établi à {legalInfo.city}, {legalInfo.country}.
+          <strong>{legalInfo.publisher}</strong>, établi au {legalInfo.country}.
         </p>
         <p>
           {legalInfo.publisher} assure également la fonction de{' '}
@@ -146,7 +146,7 @@ export function LegalNoticePage() {
         <p>
           Les présentes mentions sont soumises au droit nigérien. En cas de difficulté, nous vous
           invitons à nous écrire d’abord : une solution amiable est presque toujours possible. À
-          défaut d’accord, les tribunaux compétents de {legalInfo.city} sont seuls saisis.
+          défaut d’accord, les tribunaux compétents du {legalInfo.country} sont seuls saisis.
         </p>
       </Section>
     </LegalLayout>
@@ -162,7 +162,7 @@ export function PrivacyPolicyPage() {
       <Section title="1. Qui traite vos données">
         <p>
           Le responsable du traitement est <strong>{legalInfo.publisher}</strong>, éditeur de{' '}
-          {legalInfo.brand}, {legalInfo.city}, {legalInfo.country}. Chaque entreprise cliente reste
+          {legalInfo.brand}, {legalInfo.country}. Chaque entreprise cliente reste
           responsable des données de ses propres clients qu’elle saisit dans le service.
         </p>
       </Section>
@@ -407,13 +407,13 @@ export function TermsPage() {
         <p>
           Ces conditions sont soumises au droit nigérien. Avant toute action, écrivez-nous : nous
           cherchons d’abord une solution amiable. À défaut, les tribunaux compétents de{' '}
-          {legalInfo.city} sont saisis.
+          {legalInfo.country} sont saisis.
         </p>
       </Section>
 
       <Section title="10. Nous contacter">
         <p>
-          Éditeur : <strong>{legalInfo.publisher}</strong> — {legalInfo.city}, {legalInfo.country}.
+          Éditeur : <strong>{legalInfo.publisher}</strong> — {legalInfo.country}.
           WhatsApp : <strong>{legalInfo.phone}</strong>
           {legalInfo.email ? (
             <>

@@ -24,7 +24,6 @@ describe('pages légales', () => {
 
     expect(screen.getAllByRole('heading', { level: 1 })[0]).toHaveTextContent(title);
     expect(container.textContent).toContain(legalInfo.publisher);
-    expect(container.textContent).toContain(legalInfo.city);
     expect(container.textContent).toContain(legalInfo.phone);
     expect(screen.getByText(new RegExp(`Dernière mise à jour`))).toBeInTheDocument();
   });
@@ -46,6 +45,12 @@ describe('pages légales', () => {
     for (const mot of ['brevo', 'supabase', 'netlify', 'smtp', 'vault', 'mailpit', 'api key']) {
       expect(texte).not.toContain(mot);
     }
+  });
+
+  it.each(pages)('ne cite aucune ville dans la signature ($name)', ({ Page }) => {
+    const { container } = renderPage(Page);
+
+    expect((container.textContent ?? '').toLowerCase()).not.toContain('niamey');
   });
 
   it('annonce clairement la gratuité du service', () => {
