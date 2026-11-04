@@ -1,7 +1,8 @@
 # Reprendre le projet — la page unique
 
 > Vous ne savez plus où vous en êtes ? Lisez cette page, elle fait le point.
-> Dernière mise à jour : version `0.1.0` — itération 7 (accueil du jour, caisse, rapports, équipe et **boutique publique**).
+> Dernière mise à jour : version `0.1.0` — itération 8 (accueil du jour, caisse, rapports, équipe,
+> **boutique publique** et **photos produits**). **Stokari est gratuit pour le moment.**
 
 ---
 
@@ -72,7 +73,11 @@ apparaît dans l'application et dans le catalogue public. C'est un socle solide 
 | --- | --- |
 | Notifications à l'arrivée d'une commande (SMS / WhatsApp) | ne pas rater une commande |
 | Suivi de commande pour le client | répondre à « où en est ma commande ? » |
-| **Abonnements / facturation** | gagner de l'argent avec le SaaS |
+
+> **L'abonnement n'est pas au programme :** l'application est **gratuite pour le moment**.
+> Aucun plan payant, aucune limite, aucun paiement n'est demandé — il n'y a donc rien à
+> désactiver. Le jour où cela changera, les plans s'ajouteront par-dessus l'existant sans
+> bloquer les boutiques qui utilisent déjà Stokari.
 
 ---
 
@@ -167,9 +172,16 @@ pnpm dev              # lancer l'interface (5173) et l'API (3001)
 
 ## 8. La prochaine étape recommandée
 
-**L'abonnement.** Les quatre premières étapes sont livrées, et les photos produits aussi :
-le socle commercial est complet. Le prochain chantier utile est l'abonnement — un plan gratuit
-limité, puis un plan payant (Mobile Money), pour que Stokari gagne de l'argent.
+**Servir les boutiques qui utilisent déjà Stokari** — pas la facturation : l'application est
+**gratuite pour le moment**, décision assumée. Les quatre étapes sont livrées, les photos
+produits aussi, et l'abonnement est **volontairement reporté**.
+
+Trois chantiers utiles, dans cet ordre :
+
+1. **Ne pas rater une commande** : prévenir le commerçant (SMS ou WhatsApp) dès qu'une commande
+   arrive sur sa boutique publique.
+2. **Rassurer le client** : une page de suivi de commande à partir du numéro `CMD-…`.
+3. **Fiabiliser** : test de bout en bout dans la CI, sauvegardes, journal d'audit lisible.
 
 Ordre proposé :
 
@@ -180,4 +192,5 @@ Ordre proposé :
 4. ~~Invitations d'équipe~~ ✅ — membres, rôles, invitations, acceptation automatique.
 5. ~~Photos produits~~ ✅ — photo choisie dans la galerie du téléphone, réduite avant envoi,
    affichée dans l'application et dans le catalogue public.
-6. **Abonnements** — modèle économique.
+6. **Abonnements** — ⏸️ reporté : Stokari est **gratuit** pour le moment, rien à payer ni à
+   désactiver. À rouvrir quand plusieurs boutiques l'utiliseront vraiment.

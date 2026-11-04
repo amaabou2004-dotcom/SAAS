@@ -10,7 +10,12 @@ Plateforme multi-entreprises de gestion commerciale, de stock et de boutiques en
 > sans compte, un panier, et des commandes qui deviennent des ventes en un clic côté commerçant.
 > Chaque produit peut porter une **photo choisie dans la galerie du téléphone** (réduite avant
 > envoi, bucket Supabase Storage `product-images` isolé par entreprise), affichée dans
-> l’application et dans le catalogue public. Les abonnements ne sont pas encore implémentés.
+> l’application et dans le catalogue public.
+
+> **Tarification : Stokari est gratuit pour le moment.** Aucun abonnement, aucune limite,
+> aucun paiement : toutes les fonctions sont accessibles sans carte ni Mobile Money. Un
+> éventuel plan payant pourra être ajouté plus tard sans bloquer les boutiques existantes
+> (voir l'étape 5, reportée, dans [`docs/ROADMAP.md`](./docs/ROADMAP.md)).
 > L’interface ne présente aucune donnée commerciale fictive.
 
 ## Déploiement sur Vercel

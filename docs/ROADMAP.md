@@ -19,14 +19,17 @@ mouvements, caisse (ticket numéroté, stock qui baisse tout seul, annulation tr
 commandes à confirmer, et gestion de l'équipe par rôles. C'est testé (185 tests) et isolé par
 entreprise.
 
-Ce qui manque maintenant, c'est **l'abonnement**.
+Le paiement n'est **pas** au programme : **Stokari est gratuit pour le moment**. Les prochains
+chantiers servent les boutiques qui l'utilisent (notifications de commande, suivi client,
+fiabilité), pas la facturation.
 
 ```
    [FAIT] Catalogue + Stock + Mouvements + Sécurité + VENTES + RAPPORTS + ÉQUIPE
                           + BOUTIQUE PUBLIQUE + PHOTOS PRODUITS
               │
               ▼
-   [5] ABONNEMENT
+   [GRATUIT] Aucun abonnement, aucune limite — par décision, pour le moment
+   [PLUS TARD] Notifications de commande · suivi client · fiabilité (e2e, sauvegardes)
 ```
 
 ---
@@ -219,16 +222,28 @@ base ; il manquait l'écran pour ajouter des personnes.
 
 ---
 
-## Étape 5 — L'abonnement (le modèle économique)
+## Étape 5 — L'abonnement — ⏸️ REPORTÉE (l'application est gratuite pour le moment)
 
-**Pourquoi :** un SaaS doit encaisser. À faire une fois que la valeur est démontrée.
+**Décision du propriétaire du produit : Stokari est gratuit pour le moment.** Aucun plan
+payant, aucune limite, aucun mur de paiement n'est mis en place : toutes les fonctions livrées
+(catalogue illustré, stock, ventes, rapports, équipe, boutique publique) restent accessibles
+sans rien payer, sans carte ni Mobile Money.
 
-**Ce que l'utilisateur voit :** un plan **Gratuit** (1 utilisateur, 50 produits, 100 ventes/mois)
-et un plan **Pro** (utilisateurs illimités, boutique publique, rapports avancés), payé par
-**Mobile Money** ou carte.
+**Ce que cela implique techniquement (aujourd'hui)**
 
-**Technique :** table `subscriptions` + limites appliquées côté base (pas seulement dans l'UI),
-webhook de paiement, écran de facturation.
+- aucun code d'abonnement n'existe : pas de table `subscriptions`, pas de webhook de paiement,
+  pas d'écran de facturation — rien à désactiver, rien ne bloque un utilisateur ;
+- aucune limite artificielle (nombre de produits, de ventes, de membres) n'est appliquée ;
+- le jour où la décision changera, il suffira d'ajouter les plans **sans casser l'existant** :
+  une table `subscriptions` avec un plan « gratuit » par défaut, et des limites vérifiées
+  **côté base** (jamais seulement dans l'interface).
+
+**Quand y revenir :** quand plusieurs boutiques utilisent réellement Stokari et que la valeur
+est démontrée (le prix et le moyen de paiement restent à choisir : Mobile Money, carte).
+
+**Ce qu'il faudra construire ce jour-là :** un plan **Gratuit** (limites à définir) et un plan
+**Pro** (utilisateurs illimités, rapports avancés), un webhook de paiement, un écran de
+facturation.
 
 ---
 
@@ -240,11 +255,16 @@ webhook de paiement, écran de facturation.
 | 2 | **Rapports** ✅ | ⭐⭐⭐ | donne la raison de revenir chaque semaine |
 | 3 | **Boutique publique** ✅ | ⭐⭐⭐ | différencie sur le marché local |
 | 4 | **Équipe** ✅ | ⭐⭐ | débloque les boutiques à plusieurs vendeurs |
-| 5 | **Abonnement** | ⭐⭐ | transforme l'usage en revenus |
+| 5 | **Abonnement** ⏸️ | ⭐⭐ | reporté : l'application est **gratuite** pour le moment |
 
-**Recommandation :** les étapes 1, 2, 3 et 4 sont faites, ainsi que les photos produits — le
-prochain chantier utile est l'**étape 5 (abonnement)**, une fois quelques boutiques
-utilisatrices.
+**Recommandation :** les étapes 1, 2, 3 et 4 sont faites, ainsi que les photos produits, et
+l'abonnement est **volontairement reporté** (application gratuite). Les prochains chantiers
+utiles sont donc ceux qui servent les utilisateurs d'aujourd'hui, pas la facturation :
+
+1. **Notifications à l'arrivée d'une commande** (SMS ou WhatsApp) — ne pas rater une vente.
+2. **Suivi de commande pour le client** — répondre à « où en est ma commande ? ».
+3. **Fiabilité** : test e2e en CI, sauvegardes, journal d'audit exploitable.
+4. **Mobile Money réel** dans la caisse (aujourd'hui : référence de paiement saisie à la main).
 
 ---
 
@@ -252,10 +272,10 @@ utilisatrices.
 
 | Sujet | Pourquoi | Quand |
 | --- | --- | --- |
-| API dans une image Docker + hébergeur Node | l'API n'est pas déployée aujourd'hui (mode direct) | avant la production payante |
-| Tests de bout en bout (Playwright déjà configuré) | vérifier les parcours réels à chaque déploiement | étape 5 |
-| Sauvegardes et plan de reprise | un commerce ne perd pas son stock | avant la mise en production payante |
-| Journal d'audit exploitable | qui a fait quoi, quand | étape 5 |
+| API dans une image Docker + hébergeur Node | l'API n'est pas déployée aujourd'hui (mode direct) | avant l'ouverture au public |
+| Tests de bout en bout (Playwright déjà configuré) | vérifier les parcours réels à chaque déploiement | prochains chantiers |
+| Sauvegardes et plan de reprise | un commerce ne perd pas son stock | avant l'ouverture au public |
+| Journal d'audit exploitable | qui a fait quoi, quand | prochains chantiers |
 | Test de bout en bout (Playwright) dans la CI | le métier est couvert par les tests unitaires, mais le parcours complet échoue encore en CI ; à rejouer avec Docker/Supabase local | avant la mise en production |
 
 ---
