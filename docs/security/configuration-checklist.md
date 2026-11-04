@@ -7,7 +7,7 @@
 
 - [ ] Confirmation d’e-mail obligatoire et auto-confirmation désactivée.
 - [ ] Modèle d’inscription avec `{{ .Token }}` pour le parcours par code.
-- [ ] Mot de passe d’au moins 12 caractères.
+- [ ] Longueur minimale de 8 caractères et politique `lower_upper_letters_digits` dans Supabase Auth, comme dans l’application : au moins une minuscule, une majuscule et un chiffre.
 - [ ] OTP de 8 chiffres avec expiration courte.
 - [ ] SMTP personnalisé configuré et délivrabilité testée.
 - [ ] CAPTCHA activé sur les parcours publics sensibles.

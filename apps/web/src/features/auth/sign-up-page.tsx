@@ -9,7 +9,14 @@ import { isSupabaseConfigured } from '../../lib/supabase';
 import { getAuthErrorMessage } from './auth-errors';
 import { AuthLayout } from './auth-layout';
 import { signUpWithPassword } from './auth-service';
-import { signUpSchema, type SignUpValues } from './auth-schemas';
+import {
+  digitPattern,
+  lowercaseLetterPattern,
+  PASSWORD_MIN_LENGTH,
+  signUpSchema,
+  uppercaseLetterPattern,
+  type SignUpValues,
+} from './auth-schemas';
 import { ConfigurationNotice } from './configuration-notice';
 import { FormField } from './form-field';
 import { GoogleAuthButton } from './google-auth-button';
@@ -31,9 +38,10 @@ export function SignUpPage() {
 
   const password = useWatch({ control, name: 'password', defaultValue: '' });
   const passwordRules = [
-    { label: '12 caractères minimum', valid: password.length >= 12 },
-    { label: 'Au moins une lettre', valid: /[A-Za-zÀ-ÖØ-öø-ÿ]/.test(password) },
-    { label: 'Au moins un chiffre', valid: /\d/.test(password) },
+    { label: `${PASSWORD_MIN_LENGTH} caractères minimum`, valid: password.length >= PASSWORD_MIN_LENGTH },
+    { label: 'Au moins une lettre minuscule', valid: lowercaseLetterPattern.test(password) },
+    { label: 'Au moins une lettre majuscule', valid: uppercaseLetterPattern.test(password) },
+    { label: 'Au moins un chiffre', valid: digitPattern.test(password) },
   ];
 
   const onSubmit = handleSubmit(async (values) => {

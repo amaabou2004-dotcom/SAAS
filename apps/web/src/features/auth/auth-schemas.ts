@@ -7,12 +7,18 @@ export const emailSchema = z
   .max(254, 'Cette adresse e-mail est trop longue.')
   .pipe(z.email('Saisissez une adresse e-mail valide.'));
 
+export const PASSWORD_MIN_LENGTH = 8;
+export const lowercaseLetterPattern = /[a-z]/;
+export const uppercaseLetterPattern = /[A-Z]/;
+export const digitPattern = /\d/;
+
 export const passwordSchema = z
   .string()
-  .min(12, 'Utilisez au moins 12 caractères.')
+  .min(PASSWORD_MIN_LENGTH, `Utilisez au moins ${PASSWORD_MIN_LENGTH} caractères.`)
   .max(128, 'Utilisez au maximum 128 caractères.')
-  .regex(/[A-Za-zÀ-ÖØ-öø-ÿ]/, 'Ajoutez au moins une lettre.')
-  .regex(/\d/, 'Ajoutez au moins un chiffre.');
+  .regex(lowercaseLetterPattern, 'Ajoutez au moins une lettre minuscule.')
+  .regex(uppercaseLetterPattern, 'Ajoutez au moins une lettre majuscule.')
+  .regex(digitPattern, 'Ajoutez au moins un chiffre.');
 
 export const signUpSchema = z
   .object({

@@ -71,10 +71,30 @@ jobs:
           detail=$(tail -c 4000 "$log" | tr '\r' ' ' | tr '\n' ' ' | sed 's/%/%25/g')
           echo "::error title=Supabase local n'a pas démarré::${detail}"
           exit 1
-      - run: pnpm test:db
+      - name: Tests pgTAP
+        # Comme pour le démarrage, conserver le détail dans une annotation :
+        # l'archive des journaux GitHub n'est pas toujours téléchargeable.
+        run: |
+          set -o pipefail
+          log=/tmp/supabase-test-db.log
+          if pnpm test:db 2>&1 | tee "$log"; then
+            exit 0
+          fi
+          detail=$(tail -c 8000 "$log" | tr '\r' ' ' | tr '\n' ' ' | sed 's/%/%25/g')
+          echo "::error title=Échec des tests pgTAP::${detail}"
+          exit 1
       - run: pnpm test:db:concurrency
       - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm test:e2e
+      - name: Parcours navigateur E2E
+        run: |
+          set -o pipefail
+          log=/tmp/playwright-e2e.log
+          if pnpm test:e2e 2>&1 | tee "$log"; then
+            exit 0
+          fi
+          detail=$(tail -c 12000 "$log" | tr '\r' ' ' | tr '\n' ' ' | sed 's/%/%25/g')
+          echo "::error title=Échec du parcours E2E::${detail}"
+          exit 1
       - if: failure()
         uses: actions/upload-artifact@v4
         with:

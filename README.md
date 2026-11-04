@@ -2,7 +2,7 @@
 
 Plateforme multi-entreprises de gestion commerciale, de stock et de boutiques en ligne.
 
-> **État actuel : itération 9 — accueil du jour, identité, entreprise, catalogue illustré, stock, ventes, rapports, équipe et boutique publique.**
+> **État actuel : itération 10 — caisse rapide, crédits clients, suivi de commande et application installable (PWA), en plus du catalogue, du stock, des rapports, de l’équipe et de la boutique publique.**
 > La caisse est en place (panier, ticket numéroté, encaissement espèces / Mobile Money / crédit,
 > annulation tracée), les rapports aussi (CA, marge, top produits, produits dormants, export
 > CSV), la gestion de l’équipe (invitations, rôles, acceptation automatique à la connexion) et
@@ -12,6 +12,10 @@ Plateforme multi-entreprises de gestion commerciale, de stock et de boutiques en
 > envoi, bucket Supabase Storage `product-images` isolé par entreprise), affichée dans
 > l’application et dans le catalogue public. Chaque commande peut aussi déclencher un
 > **e-mail d'alerte gratuit** au commerçant ([`docs/EMAIL-COMMANDES.md`](./docs/EMAIL-COMMANDES.md)).
+>
+> La **caisse rapide** permet d’encaisser par simples touchers et d’envoyer le reçu sur WhatsApp.
+> Les ventes à crédit acceptent des règlements partiels, le client suit sa commande avec son numéro
+> `CMD-…`, et l’application s’installe sur l’écran d’accueil du téléphone.
 
 > **Tarification : Stokari est gratuit pour le moment.** Aucun abonnement, aucune limite,
 > aucun paiement : toutes les fonctions sont accessibles sans carte ni Mobile Money. Un
@@ -81,11 +85,14 @@ recalculent toujours le prix de la commande.
 - catégories, produits/variantes et emplacements tenant-scopés ;
 - stock physique, réservé et disponible calculé, avec réceptions, ajustements et transferts transactionnels ;
 - historique immuable et contre-passations avec motif et idempotence ;
-- ventes (panier, prix négocié, ticket numéroté, annulation qui remet le stock) ;
+- ventes (panier ou caisse rapide, prix négocié, ticket numéroté, reçu WhatsApp, annulation qui remet le stock) ;
+- crédits clients (reste à payer, règlements espèces / Mobile Money, paiements partiels) ;
 - rapports (CA, marge, série quotidienne, top produits/catégories, dormants, export CSV) ;
 - équipe (membres, rôles, invitations, acceptation automatique) ;
 - accueil du jour (ventes et marge du jour, commandes à confirmer, ruptures, actions rapides) ;
-- boutique publique (`/b/<adresse>`), réglages et traitement des commandes reçues ;
+- boutique publique (`/b/<adresse>`), logo, réglages et traitement des commandes reçues ;
+- suivi public d’une commande (`/b/<adresse>/suivi`) avec son numéro `CMD-…` ;
+- installation sur téléphone (PWA) et shell disponible lors des coupures réseau ;
 - API NestJS documentée avec Swagger en développement.
 
 Une instance Supabase configurée est indispensable pour exécuter réellement ces parcours. Sans elle, les formulaires d’authentification restent désactivés et affichent un message de configuration explicite.

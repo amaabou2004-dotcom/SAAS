@@ -103,7 +103,7 @@ Dans Google Cloud Console → *Credentials* → votre client OAuth :
 ### c. Vérifier en 4 clics
 
 1. Ouvrez l'URL Netlify.
-2. Créez un compte (e-mail + mot de passe de 12 caractères).
+2. Créez un compte (e-mail + mot de passe de 8 caractères minimum, avec au moins une minuscule, une majuscule et un chiffre).
 3. Créez l'entreprise → ajoutez un produit → saisissez du stock.
 4. Rechargez la page : session et données restent (elles vivent dans Supabase).
 
