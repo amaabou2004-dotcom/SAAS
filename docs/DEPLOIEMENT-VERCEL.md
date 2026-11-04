@@ -5,6 +5,24 @@
 
 ---
 
+## 0. Combien ça coûte : **0 F CFA**
+
+Stokari est **gratuit pour le moment**, y compris pour le faire tourner :
+
+| Poste | Offre utilisée | Prix |
+| --- | --- | --- |
+| Hébergement du site | **Vercel Hobby** (plan gratuit) | 0 |
+| Base de données, comptes, photos | **Supabase Free** (plan gratuit) | 0 |
+| Nom de domaine | l'adresse fournie par Vercel (`…vercel.app`) | 0 |
+| Paiement dans l'application | **il n'y en a aucun** : pas d'abonnement, pas de carte | 0 |
+
+Aucune carte bancaire n'est demandée pour ces deux plans gratuits. Le jour où le trafic
+dépasse le plan gratuit (beaucoup de visiteurs ou beaucoup de photos), Vercel et Supabase
+préviennent avant de facturer : il suffit alors de choisir un plan payant, ou de rester sur le
+gratuit en supprimant d'anciennes photos.
+
+---
+
 ## 1. Ce qui est déjà fait
 
 | Élément | État |

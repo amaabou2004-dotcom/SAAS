@@ -1,4 +1,4 @@
-import { BarChart3, PackageCheck, ShieldCheck, Store } from 'lucide-react';
+import { BarChart3, Check, PackageCheck, ShieldCheck, Store } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Brand } from '../../components/brand';
 
@@ -61,6 +61,10 @@ export function AuthLayout({ eyebrow, title, description, children, footer }: Au
             <p className="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-mint-dark">{eyebrow}</p>
             <h2 className="text-[30px] font-bold leading-tight tracking-[-0.03em] text-ink sm:text-[34px]">{title}</h2>
             <p className="mt-3 text-[15px] leading-6 text-slate-600">{description}</p>
+            <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold text-mint-dark">
+              <Check className="size-3.5" aria-hidden="true" />
+              Gratuit : toutes les fonctions, sans carte bancaire
+            </p>
           </div>
           {children}
           {footer ? <div className="mt-8">{footer}</div> : null}
