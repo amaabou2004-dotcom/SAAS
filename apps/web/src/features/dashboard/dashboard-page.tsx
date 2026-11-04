@@ -125,8 +125,8 @@ export function DashboardPage() {
       description={`${dayLabel.charAt(0).toUpperCase()}${dayLabel.slice(1)} — voici l’essentiel de votre commerce aujourd’hui.`}
       action={
         <Button asChild variant="mint">
-          <Link to="/workspace/ventes/nouvelle">
-            <Receipt className="size-4" aria-hidden="true" />Nouvelle vente
+          <Link to="/workspace/ventes/caisse">
+            <Receipt className="size-4" aria-hidden="true" />Encaisser une vente
           </Link>
         </Button>
       }
@@ -264,8 +264,8 @@ export function DashboardPage() {
         <h2 className="text-sm font-bold text-ink">Actions rapides</h2>
         <div className="mt-2 flex flex-wrap gap-2">
           <Button asChild variant="outline">
-            <Link to="/workspace/ventes/nouvelle">
-              <Receipt className="size-4" aria-hidden="true" />Encaisser une vente
+            <Link to="/workspace/ventes/caisse">
+              <Receipt className="size-4" aria-hidden="true" />Caisse rapide
             </Link>
           </Button>
           <Button asChild variant="outline">

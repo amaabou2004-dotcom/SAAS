@@ -19,6 +19,7 @@ import { ProductsPage } from '../features/workspace/products-page';
 import { StockPage } from '../features/workspace/stock-page';
 import { WorkspaceLayout } from '../features/workspace/workspace-layout';
 import { NewSalePage } from '../features/sales/new-sale-page';
+import { QuickSalePage } from '../features/sales/quick-sale-page';
 import { ReportsPage } from '../features/reports/reports-page';
 import { SalesPage } from '../features/sales/sales-page';
 import { DashboardPage } from '../features/dashboard/dashboard-page';
@@ -103,6 +104,7 @@ export function App() {
           <Route path="accueil" element={<DashboardPage />} />
           <Route path="ventes" element={<SalesPage />} />
           <Route path="ventes/nouvelle" element={<NewSalePage />} />
+          <Route path="ventes/caisse" element={<QuickSalePage />} />
           <Route path="rapports" element={<ReportsPage />} />
           <Route path="produits" element={<ProductsPage />} />
           <Route path="categories" element={<CategoriesPage />} />
