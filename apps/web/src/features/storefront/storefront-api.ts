@@ -206,6 +206,73 @@ export async function markStorefrontOrderDelivered(
   await apiFetch(`${base(tenantId)}/orders/${orderId}/delivered`, token, { method: 'POST', body: '{}' });
 }
 
+const notificationSettingsSchema = z.object({
+  recipient_email: z.string().nullable(),
+  enabled: z.boolean(),
+  provider_ready: z.boolean(),
+});
+
+const notificationSchema = z.object({
+  id: z.uuid(),
+  order_id: z.uuid().nullable(),
+  recipient_email: z.string(),
+  subject: z.string(),
+  status: z.enum(['pending', 'sending', 'sent', 'failed']),
+  attempts: z.number(),
+  last_error: z.string().nullable(),
+  created_at: z.string(),
+  sent_at: z.string().nullable(),
+});
+
+export type NotificationSettings = z.infer<typeof notificationSettingsSchema>;
+export type OrderNotification = z.infer<typeof notificationSchema>;
+
+export interface NotificationSettingsInput {
+  recipient_email: string | null;
+  enabled: boolean;
+}
+
+const notificationsBase = (tenantId: string) => `/tenants/${tenantId}/notifications`;
+
+/** Adresse e-mail prévenue à chaque commande + état de l'envoi côté serveur. */
+export async function getNotificationSettings(token: string, tenantId: string): Promise<NotificationSettings> {
+  return notificationSettingsSchema.parse(await apiFetch<unknown>(notificationsBase(tenantId), token));
+}
+
+export async function saveNotificationSettings(
+  token: string,
+  tenantId: string,
+  input: NotificationSettingsInput,
+): Promise<NotificationSettings> {
+  return notificationSettingsSchema.parse(
+    await apiFetch<unknown>(notificationsBase(tenantId), token, {
+      method: 'PUT',
+      body: JSON.stringify(input),
+    }),
+  );
+}
+
+/** Les derniers messages d'alerte : envoyé, en attente ou échoué. */
+export async function listOrderNotifications(token: string, tenantId: string): Promise<OrderNotification[]> {
+  return z.array(notificationSchema).parse(
+    await apiFetch<unknown>(`${notificationsBase(tenantId)}/history`, token),
+  );
+}
+
+export const notificationStatusLabels = {
+  pending: 'En attente d’envoi',
+  sending: 'En cours d’envoi',
+  sent: 'Envoyé',
+  failed: 'Échec',
+} as const;
+
+export const notificationStatusTones = {
+  pending: 'bg-amber-50 text-amber-800 border-amber-200',
+  sending: 'bg-teal-50 text-mint-dark border-teal-200',
+  sent: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  failed: 'bg-red-50 text-red-700 border-red-200',
+} as const;
+
 export const orderStatusLabels = {
   pending: 'À confirmer',
   confirmed: 'Confirmée',

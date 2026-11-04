@@ -193,6 +193,18 @@ type StorefrontOrderItemRow = {
   created_at: string;
 }
 
+type NotificationRow = {
+  id: string;
+  order_id: string | null;
+  recipient_email: string;
+  subject: string;
+  status: string;
+  attempts: number;
+  last_error: string | null;
+  created_at: string;
+  sent_at: string | null;
+}
+
 type StorefrontCatalogRow = {
   product_id: string;
   variant_id: string;
@@ -305,6 +317,18 @@ export interface Database {
           p_reverses_operation_id: string | null;
         };
         Returns: string;
+      };
+      notification_settings_get: {
+        Args: { p_tenant_id: string };
+        Returns: Record<string, unknown>;
+      };
+      notification_settings_save: {
+        Args: { p_tenant_id: string; p_recipient_email: string | null; p_enabled: boolean };
+        Returns: Record<string, unknown>;
+      };
+      notifications_list: {
+        Args: { p_tenant_id: string; p_limit?: number };
+        Returns: NotificationRow[];
       };
       storefront_info: {
         Args: { p_slug: string };

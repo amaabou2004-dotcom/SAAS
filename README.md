@@ -2,7 +2,7 @@
 
 Plateforme multi-entreprises de gestion commerciale, de stock et de boutiques en ligne.
 
-> **État actuel : itération 8 — accueil du jour, identité, entreprise, catalogue illustré, stock, ventes, rapports, équipe et boutique publique.**
+> **État actuel : itération 9 — accueil du jour, identité, entreprise, catalogue illustré, stock, ventes, rapports, équipe et boutique publique.**
 > La caisse est en place (panier, ticket numéroté, encaissement espèces / Mobile Money / crédit,
 > annulation tracée), les rapports aussi (CA, marge, top produits, produits dormants, export
 > CSV), la gestion de l’équipe (invitations, rôles, acceptation automatique à la connexion) et
@@ -10,7 +10,8 @@ Plateforme multi-entreprises de gestion commerciale, de stock et de boutiques en
 > sans compte, un panier, et des commandes qui deviennent des ventes en un clic côté commerçant.
 > Chaque produit peut porter une **photo choisie dans la galerie du téléphone** (réduite avant
 > envoi, bucket Supabase Storage `product-images` isolé par entreprise), affichée dans
-> l’application et dans le catalogue public.
+> l’application et dans le catalogue public. Chaque commande peut aussi déclencher un
+> **e-mail d'alerte gratuit** au commerçant ([`docs/EMAIL-COMMANDES.md`](./docs/EMAIL-COMMANDES.md)).
 
 > **Tarification : Stokari est gratuit pour le moment.** Aucun abonnement, aucune limite,
 > aucun paiement : toutes les fonctions sont accessibles sans carte ni Mobile Money. Un

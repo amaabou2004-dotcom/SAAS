@@ -661,6 +661,43 @@ async function placeShopOrder({ client, body, idempotencyKey }: RouteContext, sl
   return asRow(data);
 }
 
+/* Alertes e-mail des commandes (gratuit : Brevo + pg_net côté base). */
+
+async function notificationSettings({ client }: RouteContext, tenantId: string) {
+  const { data, error } = await client.rpc('notification_settings_get', { p_tenant_id: tenantId });
+  if (error) fail(error.message, 'Les réglages d’alerte e-mail n’ont pas pu être chargés.');
+  return asRow(data);
+}
+
+async function saveNotificationSettings({ client, body }: RouteContext, tenantId: string) {
+  const email = typeof body.recipient_email === 'string' && body.recipient_email.trim()
+    ? body.recipient_email.trim()
+    : null;
+  const { data, error } = await client.rpc('notification_settings_save', {
+    p_tenant_id: tenantId,
+    p_recipient_email: email,
+    p_enabled: body.enabled === true,
+  });
+  if (error) fail(error.message, 'L’adresse d’alerte n’a pas pu être enregistrée.');
+  return asRow(data);
+}
+
+async function listNotifications({ client }: RouteContext, tenantId: string) {
+  const { data, error } = await client.rpc('notifications_list', { p_tenant_id: tenantId, p_limit: 10 });
+  if (error) fail(error.message, 'Les dernières alertes e-mail n’ont pas pu être chargées.');
+  return asRows(data).map((row) => ({
+    id: row.id as string,
+    order_id: (row.order_id as string | null) ?? null,
+    recipient_email: asText(row.recipient_email),
+    subject: asText(row.subject),
+    status: asText(row.status),
+    attempts: asNumber(row.attempts),
+    last_error: (row.last_error as string | null) ?? null,
+    created_at: asText(row.created_at),
+    sent_at: (row.sent_at as string | null) ?? null,
+  }));
+}
+
 /* Boutique côté commerçant. */
 
 async function storefrontSettings({ client }: RouteContext, tenantId: string) {
@@ -873,6 +910,18 @@ export async function directApiFetch<T>(
     if (resource === 'orders') {
       if (!resourceId) return (await listStorefrontOrders(context, tenantId)) as T;
       if (action) return (await storefrontOrderAction(context, tenantId, resourceId, action)) as T;
+    }
+    throw new Error(`Route inconnue : ${path}`);
+  }
+
+  if (scope === 'notifications') {
+    if (!resource) {
+      return (method === 'PUT'
+        ? await saveNotificationSettings(context, tenantId)
+        : await notificationSettings(context, tenantId)) as T;
+    }
+    if (resource === 'history' && method === 'GET') {
+      return (await listNotifications(context, tenantId)) as T;
     }
     throw new Error(`Route inconnue : ${path}`);
   }

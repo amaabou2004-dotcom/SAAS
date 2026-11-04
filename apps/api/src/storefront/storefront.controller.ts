@@ -1,8 +1,14 @@
-import { Body, Controller, Get, Headers, Inject, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Inject, Param, ParseUUIDPipe, Post, Put, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiTags } from '@nestjs/swagger';
 import { CurrentAuth } from '../auth/current-auth.decorator.js';
 import { SupabaseAuthGuard } from '../auth/supabase-auth.guard.js';
-import { CancelOrderDto, ConfirmOrderDto, PlaceOrderDto, StorefrontSettingsDto } from './storefront.dto.js';
+import {
+  CancelOrderDto,
+  ConfirmOrderDto,
+  NotificationSettingsDto,
+  PlaceOrderDto,
+  StorefrontSettingsDto,
+} from './storefront.dto.js';
 import { StorefrontService } from './storefront.service.js';
 
 /** Vitrine publique : accessible sans compte, protégée par la limitation de débit globale. */
@@ -92,5 +98,39 @@ export class StorefrontController {
     @Param('orderId', ParseUUIDPipe) orderId: string,
   ) {
     return this.storefront.markDelivered(auth.accessToken, tenantId, orderId);
+  }
+}
+
+/** Alertes e-mail des commandes (adresse à prévenir + historique d'envoi). */
+@ApiTags('notifications')
+@ApiBearerAuth()
+@UseGuards(SupabaseAuthGuard)
+@Controller('tenants/:tenantId/notifications')
+export class NotificationController {
+  constructor(@Inject(StorefrontService) private readonly storefront: StorefrontService) {}
+
+  @Get()
+  settings(
+    @CurrentAuth() auth: { accessToken: string },
+    @Param('tenantId', ParseUUIDPipe) tenantId: string,
+  ) {
+    return this.storefront.notificationSettings(auth.accessToken, tenantId);
+  }
+
+  @Put()
+  saveSettings(
+    @CurrentAuth() auth: { accessToken: string },
+    @Param('tenantId', ParseUUIDPipe) tenantId: string,
+    @Body() input: NotificationSettingsDto,
+  ) {
+    return this.storefront.saveNotificationSettings(auth.accessToken, tenantId, input);
+  }
+
+  @Get('history')
+  history(
+    @CurrentAuth() auth: { accessToken: string },
+    @Param('tenantId', ParseUUIDPipe) tenantId: string,
+  ) {
+    return this.storefront.notificationHistory(auth.accessToken, tenantId);
   }
 }

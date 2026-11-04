@@ -4,6 +4,7 @@ import {
   ArrayMinSize,
   IsArray,
   IsBoolean,
+  IsEmail,
   IsNumber,
   IsOptional,
   IsString,
@@ -102,4 +103,19 @@ export class CancelOrderDto {
   @IsString()
   @Length(2, 400)
   reason!: string;
+}
+
+/** Adresse e-mail prévenue à chaque commande (alerte gratuite). */
+export class NotificationSettingsDto {
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) => {
+    if (typeof value !== 'string') return value ?? null;
+    const trimmed = value.trim();
+    return trimmed ? trimmed : null;
+  })
+  @IsEmail({}, { message: 'Adresse e-mail invalide.' })
+  recipient_email?: string | null;
+
+  @IsBoolean()
+  enabled!: boolean;
 }

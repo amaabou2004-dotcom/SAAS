@@ -1,7 +1,7 @@
 # Reprendre le projet — la page unique
 
 > Vous ne savez plus où vous en êtes ? Lisez cette page, elle fait le point.
-> Dernière mise à jour : version `0.1.0` — itération 8 (accueil du jour, caisse, rapports, équipe,
+> Dernière mise à jour : version `0.1.0` — itération 9 (accueil du jour, caisse, rapports, équipe,
 > **boutique publique** et **photos produits**). **Stokari est gratuit pour le moment.**
 
 ---
@@ -53,6 +53,7 @@ Plusieurs personnes peuvent travailler dans la même entreprise, chacune avec un
 | Réglages de la boutique (adresse, nom, WhatsApp, stock, ouverture) | ✅ | `/workspace/commandes` |
 | **Commandes reçues** : confirmer (crée la vente), annuler, marquer livrée | ✅ | `/workspace/commandes` |
 | Lien copiable + envoi WhatsApp prérempli | ✅ | `/workspace/commandes` |
+| **Alerte e-mail gratuite** à chaque commande (adresse + historique d'envoi) | ✅ | `/workspace/commandes` |
 | Idempotence (pas de double saisie) | ✅ | toutes les opérations |
 | Isolation entre entreprises (RLS PostgreSQL) | ✅ | base de données |
 
@@ -63,7 +64,7 @@ export CSV), **inviter son vendeur** avec un rôle limité, et **vendre en ligne
 un lien sur WhatsApp, ses clients commandent sans compte, et la commande devient une vente en
 un clic. Il peut aussi **mettre une photo sur chaque produit depuis son téléphone** : elle
 apparaît dans l'application et dans le catalogue public. C'est un socle solide et testé
-(185 tests).
+(194 tests).
 
 ---
 
@@ -71,7 +72,7 @@ apparaît dans l'application et dans le catalogue public. C'est un socle solide 
 
 | À construire | Pourquoi c'est important |
 | --- | --- |
-| Notifications à l'arrivée d'une commande (SMS / WhatsApp) | ne pas rater une commande |
+| Notifications **SMS / WhatsApp** (l'e-mail, lui, est déjà en place) | joindre un commerçant qui ne lit pas ses e-mails |
 | Suivi de commande pour le client | répondre à « où en est ma commande ? » |
 
 > **L'abonnement n'est pas au programme :** l'application est **gratuite pour le moment**.
@@ -114,6 +115,10 @@ apparaît dans l'application et dans le catalogue public. C'est un socle solide 
 14. Revenez dans **Boutique** : la commande est là, « À confirmer » → **Confirmer en vente**.
     Elle passe en « Confirmée », une vente `VTE-…` est créée et le stock baisse. **Marquer
     comme livrée** clôt le cycle ; **Annuler la commande** demande un motif.
+15. Sous les réglages, carte **« Alertes e-mail des commandes »** : saisissez l'adresse à
+    prévenir et **Enregistrer l'alerte**. Sans clé installée, les alertes restent
+    « En attente d'envoi » — la mise en route gratuite (5 minutes) est décrite dans
+    [`docs/EMAIL-COMMANDES.md`](./EMAIL-COMMANDES.md).
 
 ---
 
@@ -149,6 +154,7 @@ Deux façons de brancher le front à la base, sans changer un écran :
 | Accueil du jour (tableau de bord) | `apps/web/src/features/dashboard/` |
 | Boutique publique (page client) | `apps/web/src/features/storefront/` |
 | Photos produits (envoi dans le rangement) | `apps/web/src/features/workspace/product-image.ts` |
+| Alertes e-mail des commandes | `apps/web/src/features/storefront/order-notifications-card.tsx` + `supabase/migrations/*notifications*.sql` |
 | Les routes du serveur | `apps/api/src/*/‑controller.ts` |
 | Les règles métier du serveur | `apps/api/src/*/‑service.ts` |
 | Les tables et la sécurité | `supabase/migrations/*.sql` |
@@ -159,7 +165,7 @@ Deux façons de brancher le front à la base, sans changer un écran :
 
 ```bash
 pnpm install          # installer les dépendances
-pnpm test             # 185 tests (API + web)
+pnpm test             # 194 tests (API + web)
 pnpm typecheck        # vérification TypeScript
 pnpm lint             # qualité du code
 pnpm dev              # lancer l'interface (5173) et l'API (3001)
@@ -178,8 +184,8 @@ produits aussi, et l'abonnement est **volontairement reporté**.
 
 Trois chantiers utiles, dans cet ordre :
 
-1. **Ne pas rater une commande** : prévenir le commerçant (SMS ou WhatsApp) dès qu'une commande
-   arrive sur sa boutique publique.
+1. ~~Ne pas rater une commande~~ ✅ : l'**e-mail gratuit** est en place
+   (`docs/EMAIL-COMMANDES.md`) ; reste à faire côté **SMS / WhatsApp**.
 2. **Rassurer le client** : une page de suivi de commande à partir du numéro `CMD-…`.
 3. **Fiabiliser** : test de bout en bout dans la CI, sauvegardes, journal d'audit lisible.
 

@@ -16,7 +16,7 @@ Stokari sait aujourd'hui **ranger, compter, vendre, mesurer, travailler à plusi
 hors du magasin** : produits illustrés par une photo, catégories, emplacements, stock,
 mouvements, caisse (ticket numéroté, stock qui baisse tout seul, annulation tracée), rapports
 (CA, marge, top produits, dormants, CSV), boutique publique partageable sur WhatsApp avec
-commandes à confirmer, et gestion de l'équipe par rôles. C'est testé (185 tests) et isolé par
+commandes à confirmer, et gestion de l'équipe par rôles. C'est testé (194 tests) et isolé par
 entreprise.
 
 Le paiement n'est **pas** au programme : **Stokari est gratuit pour le moment**. Les prochains
@@ -152,7 +152,9 @@ partageable transforme Stokari en vitrine, sans application à installer côté 
 
 **Reste à faire sur cette étape (plus tard)**
 
-- Notifications (SMS ou WhatsApp) envoyées au commerçant à l'arrivée d'une commande.
+- ~~Notification à l'arrivée d'une commande~~ ✅ **e-mail gratuit** (Brevo 300/jour, envoi par
+  la base via `pg_net` + `pg_cron`, clé dans Vault — voir [`docs/EMAIL-COMMANDES.md`](./EMAIL-COMMANDES.md)).
+- Notifications **SMS ou WhatsApp** (le canal que tout le monde lit au Niger).
 - Page de suivi pour le client (« où en est ma commande ? ») à partir du numéro de commande.
 
 ---
@@ -261,7 +263,7 @@ facturation.
 l'abonnement est **volontairement reporté** (application gratuite). Les prochains chantiers
 utiles sont donc ceux qui servent les utilisateurs d'aujourd'hui, pas la facturation :
 
-1. **Notifications à l'arrivée d'une commande** (SMS ou WhatsApp) — ne pas rater une vente.
+1. ~~Notifications à l'arrivée d'une commande~~ ✅ **e-mail gratuit** ; restent **SMS / WhatsApp**.
 2. **Suivi de commande pour le client** — répondre à « où en est ma commande ? ».
 3. **Fiabilité** : test e2e en CI, sauvegardes, journal d'audit exploitable.
 4. **Mobile Money réel** dans la caisse (aujourd'hui : référence de paiement saisie à la main).

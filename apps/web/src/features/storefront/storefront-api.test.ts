@@ -1,14 +1,17 @@
 import {
   cancelStorefrontOrder,
   confirmStorefrontOrder,
+  getNotificationSettings,
   getShopCatalog,
   getShopInfo,
   getStorefrontSettings,
   isValidSlug,
+  listOrderNotifications,
   listStorefrontOrders,
   markStorefrontOrderDelivered,
   placeShopOrder,
   publicShopUrl,
+  saveNotificationSettings,
   saveStorefrontSettings,
   slugify,
   whatsappShareUrl,
@@ -218,5 +221,47 @@ describe('boutique côté commerçant', () => {
 
     await markStorefrontOrderDelivered('token', tenantId, orderId);
     expect(fetchMock.mock.calls[2]?.[0]).toBe(`/api/v1/tenants/${tenantId}/storefront/orders/${orderId}/delivered`);
+  });
+});
+
+describe('alertes e-mail des commandes', () => {
+  it('lit et enregistre l’adresse à prévenir', async () => {
+    const fetchMock = stubFetch({ recipient_email: 'patron@boutique.com', enabled: true, provider_ready: false });
+
+    const loaded = await getNotificationSettings('token', tenantId);
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(`/api/v1/tenants/${tenantId}/notifications`);
+    expect(loaded.recipient_email).toBe('patron@boutique.com');
+
+    const saved = await saveNotificationSettings('token', tenantId, {
+      recipient_email: 'patron@boutique.com',
+      enabled: true,
+    });
+    const [path, init] = fetchMock.mock.calls[1] ?? [];
+    expect(path).toBe(`/api/v1/tenants/${tenantId}/notifications`);
+    expect(init?.method).toBe('PUT');
+    expect(bodyOf(init)).toEqual({ recipient_email: 'patron@boutique.com', enabled: true });
+    expect(saved.provider_ready).toBe(false);
+  });
+
+  it('liste les dernières alertes avec leur statut', async () => {
+    const fetchMock = stubFetch([
+      {
+        id: '66666666-6666-4666-8666-666666666666',
+        order_id: orderId,
+        recipient_email: 'patron@boutique.com',
+        subject: 'Nouvelle commande CMD-000001 — Aïcha SARL',
+        status: 'sent',
+        attempts: 1,
+        last_error: null,
+        created_at: '2026-11-04T09:00:30.000Z',
+        sent_at: '2026-11-04T09:00:45.000Z',
+      },
+    ]);
+
+    const list = await listOrderNotifications('token', tenantId);
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(`/api/v1/tenants/${tenantId}/notifications/history`);
+    expect(list).toHaveLength(1);
+    expect(list[0]?.status).toBe('sent');
   });
 });

@@ -4,6 +4,7 @@ import { toDatabaseHttpException, type DatabaseError } from '../database/databas
 import {
   SLUG_PATTERN,
   type CancelOrderDto,
+  type NotificationSettingsDto,
   type ConfirmOrderDto,
   type PlaceOrderDto,
   type StorefrontSettingsDto,
@@ -135,5 +136,37 @@ export class StorefrontService {
     });
     if (error) this.fail(error, 'La livraison n’a pas pu être enregistrée.');
     return { ok: true };
+  }
+
+  async notificationSettings(accessToken: string, tenantId: string) {
+    const { data, error } = await this.supabase.createUserClient(accessToken).rpc('notification_settings_get', {
+      p_tenant_id: tenantId,
+    });
+    if (error) this.fail(error, 'Les réglages d’alerte e-mail n’ont pas pu être chargés.');
+    return data ?? null;
+  }
+
+  async saveNotificationSettings(accessToken: string, tenantId: string, input: NotificationSettingsDto) {
+    const { data, error } = await this.supabase.createUserClient(accessToken).rpc('notification_settings_save', {
+      p_tenant_id: tenantId,
+      p_recipient_email: input.recipient_email ?? null,
+      p_enabled: input.enabled,
+    });
+    if (error) this.fail(error, 'L’adresse d’alerte n’a pas pu être enregistrée.');
+    return data ?? null;
+  }
+
+  async notificationHistory(accessToken: string, tenantId: string) {
+    const { data, error } = await this.supabase.createUserClient(accessToken).rpc('notifications_list', {
+      p_tenant_id: tenantId,
+      p_limit: 10,
+    });
+    if (error) this.fail(error, 'Les dernières alertes e-mail n’ont pas pu être chargées.');
+    const payload: unknown = data;
+    if (!Array.isArray(payload)) {
+      throw new InternalServerErrorException('La base a retourné une réponse inattendue.');
+    }
+    const rows: unknown[] = payload;
+    return rows;
   }
 }

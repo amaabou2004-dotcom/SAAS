@@ -121,6 +121,32 @@ describe('StorefrontService — côté commerçant', () => {
     await expect(service.orders('token', TENANT_ID)).rejects.toThrow(/réponse inattendue/);
   });
 
+  it('gère l’adresse d’alerte e-mail et son historique', async () => {
+    const { service, calls } = makeService([
+      { data: { recipient_email: 'patron@boutique.com', enabled: true, provider_ready: true } },
+      { data: { recipient_email: 'patron@boutique.com', enabled: false, provider_ready: true } },
+      { data: [{ id: 'n1', subject: 'Nouvelle commande CMD-000001', status: 'sent' }] },
+    ]);
+
+    await service.notificationSettings('token', TENANT_ID);
+    expect(calls[0]).toEqual({ name: 'notification_settings_get', args: { p_tenant_id: TENANT_ID } });
+
+    await service.saveNotificationSettings('token', TENANT_ID, { recipient_email: 'patron@boutique.com', enabled: false });
+    expect(calls[1]).toEqual({
+      name: 'notification_settings_save',
+      args: { p_tenant_id: TENANT_ID, p_recipient_email: 'patron@boutique.com', p_enabled: false },
+    });
+
+    const history = await service.notificationHistory('token', TENANT_ID);
+    expect(calls[2]).toEqual({ name: 'notifications_list', args: { p_tenant_id: TENANT_ID, p_limit: 10 } });
+    expect(history).toHaveLength(1);
+  });
+
+  it('refuse un historique qui n’est pas une liste', async () => {
+    const { service } = makeService([{ data: { pas: 'une liste' } }]);
+    await expect(service.notificationHistory('token', TENANT_ID)).rejects.toThrow(/réponse inattendue/);
+  });
+
   it('traduit les erreurs de la base en réponses HTTP françaises', () => {
     const cases: Array<[string, string, unknown]> = [
       ['P0002', 'Boutique introuvable ou fermée.', NotFoundException],

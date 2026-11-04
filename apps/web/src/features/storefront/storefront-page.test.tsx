@@ -7,9 +7,12 @@ import { listLocations } from '../workspace/workspace-api';
 import {
   cancelStorefrontOrder,
   confirmStorefrontOrder,
+  getNotificationSettings,
   getStorefrontSettings,
+  listOrderNotifications,
   listStorefrontOrders,
   markStorefrontOrderDelivered,
+  saveNotificationSettings,
   saveStorefrontSettings,
   type StorefrontOrder,
   type StorefrontSettings,
@@ -26,6 +29,9 @@ vi.mock('./storefront-api', async (importOriginal) => {
     confirmStorefrontOrder: vi.fn(),
     cancelStorefrontOrder: vi.fn(),
     markStorefrontOrderDelivered: vi.fn(),
+    getNotificationSettings: vi.fn(),
+    saveNotificationSettings: vi.fn(),
+    listOrderNotifications: vi.fn(),
   };
 });
 
@@ -113,9 +119,58 @@ beforeEach(() => {
   vi.mocked(confirmStorefrontOrder).mockResolvedValue();
   vi.mocked(cancelStorefrontOrder).mockResolvedValue();
   vi.mocked(markStorefrontOrderDelivered).mockResolvedValue();
+  vi.mocked(getNotificationSettings).mockResolvedValue({ recipient_email: null, enabled: false, provider_ready: false });
+  vi.mocked(saveNotificationSettings).mockResolvedValue({ recipient_email: 'patron@boutique.com', enabled: true, provider_ready: false });
+  vi.mocked(listOrderNotifications).mockResolvedValue([]);
 });
 
 describe('écran boutique du commerçant', () => {
+  it('enregistre l’adresse e-mail prévenue à chaque commande', async () => {
+    renderPage();
+
+    const input = await screen.findByLabelText('Adresse e-mail à prévenir');
+    await userEvent.type(input, 'patron@boutique.com');
+    await userEvent.click(screen.getByRole('button', { name: 'Enregistrer l’alerte' }));
+
+    expect(saveNotificationSettings).toHaveBeenCalledWith('token', tenant.id, {
+      recipient_email: 'patron@boutique.com',
+      enabled: true,
+    });
+  });
+
+  it('affiche l’état des dernières alertes e-mail', async () => {
+    vi.mocked(listOrderNotifications).mockResolvedValue([
+      {
+        id: '66666666-6666-4666-8666-666666666666',
+        order_id: orderId,
+        recipient_email: 'patron@boutique.com',
+        subject: 'Nouvelle commande CMD-000001 — Aïcha SARL',
+        status: 'sent',
+        attempts: 1,
+        last_error: null,
+        created_at: '2026-11-04T09:00:30.000Z',
+        sent_at: '2026-11-04T09:00:45.000Z',
+      },
+      {
+        id: '77777777-7777-4777-8777-777777777777',
+        order_id: null,
+        recipient_email: 'patron@boutique.com',
+        subject: 'Nouvelle commande CMD-000002 — Aïcha SARL',
+        status: 'pending',
+        attempts: 0,
+        last_error: null,
+        created_at: '2026-11-04T10:00:00.000Z',
+        sent_at: null,
+      },
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Nouvelle commande CMD-000001 — Aïcha SARL')).toBeInTheDocument();
+    expect(screen.getByText('Envoyé')).toBeInTheDocument();
+    expect(screen.getByText('En attente d’envoi')).toBeInTheDocument();
+  });
+
   it('affiche le lien public et les commandes reçues', async () => {
     renderPage();
 

@@ -10,6 +10,7 @@ import { formatDate, formatMoney } from '../workspace/workspace-format';
 import { useWorkspace } from '../workspace/workspace-context';
 import { EmptyWorkspace, WorkspaceSection } from '../workspace/workspace-layout';
 import { hasPermission } from '../team/team-api';
+import { OrderNotificationsCard } from './order-notifications-card';
 import {
   cancelStorefrontOrder,
   confirmStorefrontOrder,
@@ -491,6 +492,8 @@ export function StorefrontPage() {
           }}
         />
       ) : null}
+
+      <OrderNotificationsCard canManage={permissionQuery.data === true} />
 
       <div className="mt-8">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">

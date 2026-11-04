@@ -1,6 +1,6 @@
 import { plainToInstance } from 'class-transformer';
 import { validateSync } from 'class-validator';
-import { CancelOrderDto, PlaceOrderDto, StorefrontSettingsDto } from './storefront.dto.js';
+import { CancelOrderDto, NotificationSettingsDto, PlaceOrderDto, StorefrontSettingsDto } from './storefront.dto.js';
 
 const VARIANT_ID = '33333333-3333-4333-8333-333333333333';
 const LOCATION_ID = '44444444-4444-4444-8444-444444444444';
@@ -73,5 +73,26 @@ describe('CancelOrderDto', () => {
   it('exige un motif de 2 caractères minimum', () => {
     expect(messages(CancelOrderDto, { reason: 'a' }).join(' ')).toMatch(/reason/);
     expect(validateSync(plainToInstance(CancelOrderDto, { reason: 'Client injoignable' }))).toHaveLength(0);
+  });
+});
+
+describe('NotificationSettingsDto', () => {
+  it('accepte une adresse valide et normalise les espaces', () => {
+    const dto = plainToInstance(NotificationSettingsDto, { recipient_email: '  Patron@Boutique.com  ', enabled: true });
+    expect(validateSync(dto, { whitelist: true })).toHaveLength(0);
+    expect(dto.recipient_email).toBe('Patron@Boutique.com');
+  });
+
+  it('accepte l’effacement (null) et refuse une adresse invalide', () => {
+    expect(validateSync(plainToInstance(NotificationSettingsDto, { recipient_email: null, enabled: false }))).toHaveLength(0);
+    expect(messages(NotificationSettingsDto, { recipient_email: 'pas-une-adresse', enabled: true })).toContain(
+      'Adresse e-mail invalide.',
+    );
+  });
+
+  it('exige l’interrupteur d’activation', () => {
+    expect(messages(NotificationSettingsDto, { recipient_email: 'patron@boutique.com' })).toContain(
+      'enabled must be a boolean value',
+    );
   });
 });
