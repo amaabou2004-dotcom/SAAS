@@ -19,7 +19,7 @@ mouvements, caisse (ticket numéroté, stock qui baisse tout seul, annulation tr
 (CA, marge, top produits, dormants, CSV), boutique publique partageable sur WhatsApp avec
 commandes à confirmer, et gestion de l'équipe par rôles. La caisse rapide envoie aussi un reçu
 WhatsApp, les crédits acceptent des règlements partiels et le client suit sa commande. C'est
-testé (**238 tests** : 64 API + 174 web) et isolé par entreprise.
+testé (**240 tests** : 64 API + 176 web) et isolé par entreprise.
 
 Le paiement n'est **pas** au programme : **Stokari est gratuit pour le moment**. Les prochains
 chantiers servent les boutiques qui l'utilisent (notifications SMS / WhatsApp, sauvegardes,

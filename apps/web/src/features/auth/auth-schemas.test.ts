@@ -2,10 +2,11 @@ import { passwordSchema, signUpSchema, verifyEmailSchema } from './auth-schemas'
 
 describe('authentication validation', () => {
   it('accepts a password satisfying the security policy', () => {
+    expect(passwordSchema.safeParse('Abcde123').success).toBe(true);
     expect(passwordSchema.safeParse('MotDePasse2026Securise').success).toBe(true);
   });
 
-  it.each(['court1', 'MotDePasseSansChiffre', '123456789012'])(
+  it.each(['Ab1', 'abcdefg1', 'ABCDEFG1', 'ABCDEFGH', '12345678'])(
     'rejects an unsafe password: %s',
     (password) => {
       expect(passwordSchema.safeParse(password).success).toBe(false);

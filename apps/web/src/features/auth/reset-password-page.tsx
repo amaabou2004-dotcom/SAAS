@@ -9,7 +9,7 @@ import { getAuthErrorMessage } from './auth-errors';
 import { useAuth } from './auth-context';
 import { AuthLayout } from './auth-layout';
 import { updatePassword } from './auth-service';
-import { resetPasswordSchema, type ResetPasswordValues } from './auth-schemas';
+import { PASSWORD_MIN_LENGTH, resetPasswordSchema, type ResetPasswordValues } from './auth-schemas';
 import { ConfigurationNotice } from './configuration-notice';
 import { FormField } from './form-field';
 
@@ -56,7 +56,7 @@ export function ResetPasswordPage() {
           label="Nouveau mot de passe"
           type="password"
           autoComplete="new-password"
-          placeholder="12 caractères minimum"
+          placeholder={`${PASSWORD_MIN_LENGTH} caractères, avec a–z, A–Z et 0–9`}
           error={errors.password?.message}
         />
         <FormField

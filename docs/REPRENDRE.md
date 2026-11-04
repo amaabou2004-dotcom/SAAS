@@ -73,7 +73,7 @@ un lien sur WhatsApp, ses clients commandent sans compte, et la commande devient
 un clic. Il peut aussi **mettre une photo sur chaque produit depuis son téléphone** : elle
 apparaît dans l'application et dans le catalogue public. La caisse rapide, les règlements de
 crédit, le suivi client et l’installation sur téléphone complètent ce parcours. C'est un socle
-solide et testé (**238 tests** : 64 API + 174 web).
+solide et testé (**240 tests** : 64 API + 176 web).
 
 ### Saisie simplifiée (4 novembre)
 
@@ -110,7 +110,7 @@ refusait les produits.
 ## 4. Comment le voir tourner (3 minutes)
 
 1. Ouvrez l'aperçu du **port 5173**.
-2. **Créez un compte** : e-mail + mot de passe (8 caractères minimum).
+2. **Créez un compte** : e-mail + mot de passe de 8 caractères minimum, contenant au moins une minuscule, une majuscule et un chiffre.
 3. Un **code à 8 chiffres** s'affiche — en développement, il est dans la réponse du
    serveur ; sinon utilisez le lien reçu.
 4. Vous arrivez sur **« Créer votre entreprise »** : nom, devise (XOF par défaut), fuseau.
@@ -196,13 +196,13 @@ Deux façons de brancher le front à la base, sans changer un écran :
 
 ```bash
 pnpm install          # installer les dépendances
-pnpm test             # 238 tests (64 API + 174 web)
+pnpm test             # 240 tests (64 API + 176 web)
 pnpm typecheck        # vérification TypeScript
 pnpm lint             # qualité du code
 pnpm dev              # lancer l'interface (5173) et l'API (3001)
 ```
 
-La CI GitHub est verte sur la branche de reprise : lint, types, 238 tests, build, tests pgTAP,
+La CI GitHub est verte sur la branche de reprise : lint, types, 240 tests, build, tests pgTAP,
 concurrence du stock et parcours navigateur E2E avec Supabase local et Mailpit.
 
 ---

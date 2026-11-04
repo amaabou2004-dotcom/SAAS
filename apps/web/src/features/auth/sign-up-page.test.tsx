@@ -18,6 +18,10 @@ describe('SignUpPage', () => {
 
     expect(screen.getByText('Mode développement')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Recevoir mon e-mail de vérification' })).toBeDisabled();
+    expect(screen.getByText('8 caractères minimum')).toBeInTheDocument();
+    expect(screen.getByText('Au moins une lettre minuscule')).toBeInTheDocument();
+    expect(screen.getByText('Au moins une lettre majuscule')).toBeInTheDocument();
+    expect(screen.getByText('Au moins un chiffre')).toBeInTheDocument();
     expect(screen.queryByText(/utilisateur/i)).not.toBeInTheDocument();
   });
 });
