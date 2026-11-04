@@ -2,7 +2,7 @@
 
 Plateforme multi-entreprises de gestion commerciale, de stock et de boutiques en ligne.
 
-> **État actuel : itération 6 — identité, entreprise, catalogue, stock, ventes, rapports, équipe et boutique publique.**
+> **État actuel : itération 7 — accueil du jour, identité, entreprise, catalogue, stock, ventes, rapports, équipe et boutique publique.**
 > La caisse est en place (panier, ticket numéroté, encaissement espèces / Mobile Money / crédit,
 > annulation tracée), les rapports aussi (CA, marge, top produits, produits dormants, export
 > CSV), la gestion de l’équipe (invitations, rôles, acceptation automatique à la connexion) et
@@ -73,6 +73,7 @@ recalculent toujours le prix de la commande.
 - ventes (panier, prix négocié, ticket numéroté, annulation qui remet le stock) ;
 - rapports (CA, marge, série quotidienne, top produits/catégories, dormants, export CSV) ;
 - équipe (membres, rôles, invitations, acceptation automatique) ;
+- accueil du jour (ventes et marge du jour, commandes à confirmer, ruptures, actions rapides) ;
 - boutique publique (`/b/<adresse>`), réglages et traitement des commandes reçues ;
 - API NestJS documentée avec Swagger en développement.
 

@@ -1,7 +1,7 @@
 # Reprendre le projet — la page unique
 
 > Vous ne savez plus où vous en êtes ? Lisez cette page, elle fait le point.
-> Dernière mise à jour : version `0.1.0` — itération 6 (caisse, rapports, équipe et **boutique publique**).
+> Dernière mise à jour : version `0.1.0` — itération 7 (accueil du jour, caisse, rapports, équipe et **boutique publique**).
 
 ---
 
@@ -24,6 +24,7 @@ Plusieurs personnes peuvent travailler dans la même entreprise, chacune avec un
 
 | Fonction | État | Où |
 | --- | --- | --- |
+| **Accueil** : chiffres du jour, commandes à confirmer, ruptures, actions rapides | ✅ | `/workspace/accueil` |
 | Créer un compte (e-mail + mot de passe) | ✅ | `/auth/inscription` |
 | Vérifier son e-mail par code à 8 chiffres | ✅ | `/auth/verification` |
 | Se connecter / se déconnecter | ✅ | `/auth/connexion` |
@@ -58,7 +59,7 @@ enregistrer son stock, suivre les mouvements, **vendre au comptoir** (ticket num
 qui baisse tout seul, annulation qui remet le stock), **voir ce qui rapporte** (rapports et
 export CSV), **inviter son vendeur** avec un rôle limité, et **vendre en ligne** : il partage
 un lien sur WhatsApp, ses clients commandent sans compte, et la commande devient une vente en
-un clic. C'est un socle solide et testé (169 tests).
+un clic. C'est un socle solide et testé (172 tests).
 
 ---
 
@@ -80,7 +81,9 @@ un clic. C'est un socle solide et testé (169 tests).
 3. Un **code à 8 chiffres** s'affiche — en développement, il est dans la réponse du
    serveur ; sinon utilisez le lien reçu.
 4. Vous arrivez sur **« Créer votre entreprise »** : nom, devise (XOF par défaut), fuseau.
-5. Vous êtes dans l'espace : commencez par **Emplacements** (un dépôt est déjà créé),
+5. Vous êtes dans l'espace, sur l'**Accueil** : ventes et marge du jour, commandes en ligne à
+   confirmer, produits épuisés, actions rapides. Commencez par **Emplacements** (un dépôt est
+   déjà créé),
    puis **Catégories**, puis **Produits**.
 6. Onglet **Stock** : saisissez une quantité d'ouverture via **Mouvements** → réception.
 7. Onglet **Mouvements** : chaque opération est horodatée, attribuée et annulable.
@@ -134,6 +137,7 @@ Deux façons de brancher le front à la base, sans changer un écran :
 | Ventes, ticket, panier | `apps/web/src/features/sales/` |
 | Équipe, invitations, rôles | `apps/web/src/features/team/` |
 | Rapports, CSV | `apps/web/src/features/reports/` |
+| Accueil du jour (tableau de bord) | `apps/web/src/features/dashboard/` |
 | Boutique publique (page client) | `apps/web/src/features/storefront/` |
 | Les routes du serveur | `apps/api/src/*/‑controller.ts` |
 | Les règles métier du serveur | `apps/api/src/*/‑service.ts` |
@@ -145,7 +149,7 @@ Deux façons de brancher le front à la base, sans changer un écran :
 
 ```bash
 pnpm install          # installer les dépendances
-pnpm test             # 169 tests (API + web)
+pnpm test             # 172 tests (API + web)
 pnpm typecheck        # vérification TypeScript
 pnpm lint             # qualité du code
 pnpm dev              # lancer l'interface (5173) et l'API (3001)

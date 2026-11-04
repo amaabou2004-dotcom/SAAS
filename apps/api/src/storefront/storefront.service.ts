@@ -57,7 +57,8 @@ export class StorefrontService {
     if (!Array.isArray(payload)) {
       throw new InternalServerErrorException('La base a retourné une réponse inattendue.');
     }
-    return payload;
+    const rows: unknown[] = payload;
+    return rows;
   }
 
   async placeOrder(slug: string, input: PlaceOrderDto, idempotencyKey: string | undefined) {
@@ -103,7 +104,8 @@ export class StorefrontService {
     if (!Array.isArray(payload)) {
       throw new InternalServerErrorException('La base a retourné une réponse inattendue.');
     }
-    return payload;
+    const rows: unknown[] = payload;
+    return rows;
   }
 
   async confirm(accessToken: string, tenantId: string, orderId: string, input: ConfirmOrderDto) {

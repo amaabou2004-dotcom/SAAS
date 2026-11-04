@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeftRight, BarChart3, Building2, History, LoaderCircle, LogOut, MapPin, Package, Receipt, Store, Tags, Users, Warehouse } from 'lucide-react';
+import { ArrowLeftRight, BarChart3, Building2, History, LayoutDashboard, LoaderCircle, LogOut, MapPin, Package, Receipt, Store, Tags, Users, Warehouse } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { NavLink, Navigate, Outlet, useNavigate } from 'react-router-dom';
 import { Brand } from '../../components/brand';
@@ -12,6 +12,7 @@ import { acceptMyInvitations } from '../team/team-api';
 import { WorkspaceContext } from './workspace-context';
 
 const navigation = [
+  { to: '/workspace/accueil', label: 'Accueil', icon: LayoutDashboard },
   { to: '/workspace/ventes', label: 'Ventes', icon: Receipt },
   { to: '/workspace/commandes', label: 'Boutique', icon: Store },
   { to: '/workspace/rapports', label: 'Rapports', icon: BarChart3 },

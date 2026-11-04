@@ -19,6 +19,7 @@ import { WorkspaceLayout } from '../features/workspace/workspace-layout';
 import { NewSalePage } from '../features/sales/new-sale-page';
 import { ReportsPage } from '../features/reports/reports-page';
 import { SalesPage } from '../features/sales/sales-page';
+import { DashboardPage } from '../features/dashboard/dashboard-page';
 import { StorefrontPage } from '../features/storefront/storefront-page';
 import { PublicShopPage } from '../features/storefront/public-shop-page';
 import { TeamPage } from '../features/team/team-page';
@@ -89,7 +90,8 @@ export function App() {
             </RequireVerifiedUser>
           }
         >
-          <Route index element={<Navigate to="ventes" replace />} />
+          <Route index element={<Navigate to="accueil" replace />} />
+          <Route path="accueil" element={<DashboardPage />} />
           <Route path="ventes" element={<SalesPage />} />
           <Route path="ventes/nouvelle" element={<NewSalePage />} />
           <Route path="rapports" element={<ReportsPage />} />
