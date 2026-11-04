@@ -145,7 +145,8 @@ async function createTenantAndOpenWorkspace(page, name, slug) {
     throw new Error(`Création de ${slug}: HTTP ${response.status()} ${responseBody.slice(0, 1200)}. Contenu: ${body.slice(0, 1800)}`);
   }
   try {
-    await expect(page).toHaveURL(/\/workspace\/produits$/);
+    // L'espace s'ouvre sur l'accueil du jour ; le catalogue est un onglet.
+    await expect(page).toHaveURL(/\/workspace\/accueil$/);
   } catch (error) {
     const body = await page.locator('body').innerText().catch(() => '(page illisible)');
     throw new Error(`Création de ${slug}: HTTP ${response.status()} ${responseBody.slice(0, 1200)}, mais redirection impossible depuis ${page.url()}. Contenu: ${body.slice(0, 1800)}`, { cause: error });
@@ -171,6 +172,7 @@ test('Auth, catalogue, stock et isolation fonctionnent avec Supabase local et Ma
     await waitForOnboardingForm(page);
 
     await createTenantAndOpenWorkspace(page, tenantName, tenantSlug);
+    await page.getByRole('link', { name: 'Produits', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Catalogue produits' })).toBeVisible();
 
     await page.getByRole('link', { name: 'Catégories', exact: true }).click();
