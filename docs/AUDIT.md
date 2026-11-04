@@ -1,6 +1,6 @@
 # Audit complet de Stokari
 
-**Date :** 4 novembre 2026 · **Version auditée :** commit `c13b2f4` (branche `arena/a1588569-saas`)
+**Date :** 4 novembre 2026 · **Version auditée :** commits `c13b2f4` → `c290cd1` (branche `arena/a1588569-saas`)
 **Périmètre :** sécurité des accès, base de données, API, code du site, tests automatiques, performance, préparation à la mise en ligne.
 
 Ce document répond à trois questions, dans cet ordre :
