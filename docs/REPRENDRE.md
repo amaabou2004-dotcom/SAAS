@@ -1,7 +1,7 @@
 # Reprendre le projet — la page unique
 
 > Vous ne savez plus où vous en êtes ? Lisez cette page, elle fait le point.
-> Dernière mise à jour : version `0.1.0` — itération 3 (la caisse est en place).
+> Dernière mise à jour : version `0.1.0` — itération 4 (la caisse et l'équipe sont en place).
 
 ---
 
@@ -9,8 +9,9 @@
 
 **Stokari** est une application web de **gestion commerciale pour les commerces** :
 vous y gérez vos **produits**, vos **stock** (entrées, sorties, transferts), vos
-**catégories**, vos **emplacements** — et vous y **encaissez vos ventes** (panier, ticket,
-Mobile Money, annulation) — chaque entreprise étant totalement isolée des autres.
+**catégories**, vos **emplacements** — vous y **encaissez vos ventes** (panier, ticket,
+Mobile Money, annulation) et vous y **gérez votre équipe** (invitations, rôles) — chaque
+entreprise étant totalement isolée des autres.
 
 Plusieurs personnes peuvent travailler dans la même entreprise, chacune avec un rôle
 (propriétaire, gestionnaire, vendeur…).
@@ -38,13 +39,16 @@ Plusieurs personnes peuvent travailler dans la même entreprise, chacune avec un
 | **Nouvelle vente** : panier, prix modifiable, ticket imprimable | ✅ | `/workspace/ventes/nouvelle` |
 | Encaissement espèces / Mobile Money / crédit | ✅ | écran Nouvelle vente |
 | Annulation d'une vente avec retour du stock | ✅ | détail d'une vente |
+| **Équipe** : membres, rôles, invitations en attente | ✅ | `/workspace/equipe` |
+| Inviter une personne par e-mail et lui donner un rôle | ✅ | `/workspace/equipe` |
+| Retirer un membre (jamais le dernier propriétaire) | ✅ | `/workspace/equipe` |
 | Idempotence (pas de double saisie) | ✅ | toutes les opérations |
 | Isolation entre entreprises (RLS PostgreSQL) | ✅ | base de données |
 
 **En clair :** quelqu'un peut s'inscrire, créer sa boutique, saisir ses produits,
-enregistrer son stock, suivre les mouvements **et vendre au comptoir** : le ticket est
-numéroté, le stock baisse tout seul, et une annulation remet le stock en place. C'est un
-socle solide et testé (93 tests).
+enregistrer son stock, suivre les mouvements, **vendre au comptoir** (ticket numéroté, stock
+qui baisse tout seul, annulation qui remet le stock) **et inviter son vendeur** avec un rôle
+limité. C'est un socle solide et testé (116 tests).
 
 ---
 
@@ -55,7 +59,6 @@ socle solide et testé (93 tests).
 | **Boutiques publiques** (catalogue partageable, lien client) | vendre hors du magasin, sur WhatsApp |
 | **Rapports** (chiffre d'affaires, marge, rotation) | savoir ce qui rapporte |
 | **Abonnements / facturation** | gagner de l'argent avec le SaaS |
-| **Invitations d'équipe** par e-mail | les rôles existent, mais on ajoute les membres en base |
 
 ---
 
@@ -74,6 +77,8 @@ socle solide et testé (93 tests).
    choisissez le paiement, **Encaissez**. Le ticket s'affiche avec son numéro `VTE-…`.
 9. Revenez sur **Ventes** : le ticket est dans la liste. Ouvrez **Détails** pour annuler
    (le stock revient) — l'annulation demande un motif.
+10. Onglet **Équipe** : invitez une adresse avec le rôle **Vendeur**. Si cette personne crée
+    un compte avec cette adresse, l'entreprise apparaîtra chez elle dès sa connexion.
 
 ---
 
@@ -104,6 +109,7 @@ Deux façons de brancher le front à la base, sans changer un écran :
 | La création d'entreprise | `apps/web/src/features/onboarding/` |
 | Produits, stock, mouvements | `apps/web/src/features/workspace/` |
 | Ventes, ticket, panier | `apps/web/src/features/sales/` |
+| Équipe, invitations, rôles | `apps/web/src/features/team/` |
 | Les routes du serveur | `apps/api/src/*/‑controller.ts` |
 | Les règles métier du serveur | `apps/api/src/*/‑service.ts` |
 | Les tables et la sécurité | `supabase/migrations/*.sql` |
@@ -114,7 +120,7 @@ Deux façons de brancher le front à la base, sans changer un écran :
 
 ```bash
 pnpm install          # installer les dépendances
-pnpm test             # 93 tests (API + web)
+pnpm test             # 116 tests (API + web)
 pnpm typecheck        # vérification TypeScript
 pnpm lint             # qualité du code
 pnpm dev              # lancer l'interface (5173) et l'API (3001)
@@ -127,13 +133,13 @@ pnpm dev              # lancer l'interface (5173) et l'API (3001)
 
 ## 8. La prochaine étape recommandée
 
-**Les rapports.** Les ventes sont maintenant enregistrées : il faut les transformer en
+**Les rapports.** Ventes et équipe sont en place : il reste à transformer les tickets en
 informations utiles — ce qui rapporte, ce qui dort, quelle marge.
 
 Ordre proposé :
 
-1. ~~Ventes~~ ✅ — c'est fait : panier, ticket, encaissement, stock automatique, annulation.
-2. **Rapports** — chiffre d'affaires du jour, du mois, marge, produits qui se vendent le mieux.
+1. ~~Ventes~~ ✅ — panier, ticket, encaissement, stock automatique, annulation.
+2. **Rapports** — chiffre d'affaires du jour / 7 / 30 / 90 jours, marge, top produits.
 3. **Boutique publique** — un lien à partager sur WhatsApp, avec le catalogue et les prix.
-4. **Invitations d'équipe** — ajouter un vendeur avec un rôle limité aux ventes.
+4. ~~Invitations d'équipe~~ ✅ — membres, rôles, invitations, acceptation automatique.
 5. **Abonnements** — offrir un plan gratuit limité, puis un plan payant.

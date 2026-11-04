@@ -1,26 +1,28 @@
 # La suite du projet — feuille de route
 
-> État au dernier commit : **étape 1 terminée** — la caisse fonctionne (panier, ticket,
-> encaissement, annulation, sortie de stock automatique), en plus du socle technique
-> (authentification, entreprises, catalogue, stock, mouvements, sécurité).
+> État au dernier commit : **étapes 1 (ventes) et 4 (équipe) terminées** — la caisse
+> fonctionne (panier, ticket, encaissement, annulation, sortie de stock automatique) et
+> l'équipe se gère dans l'application (invitation par e-mail, rôles, retrait), en plus du
+> socle technique (authentification, entreprises, catalogue, stock, mouvements, sécurité).
 > Ce document décrit **ce qui reste**, dans l'ordre, avec le pourquoi de chaque étape.
 
 ---
 
 ## Où en est le produit, en une image
 
-Stokari sait aujourd'hui **ranger, compter et vendre** : produits, catégories, emplacements,
-stock, mouvements, et la caisse (ticket numéroté, stock qui baisse tout seul, annulation
-tracée). C'est testé (93 tests) et isolé par entreprise.
+Stokari sait aujourd'hui **ranger, compter, vendre et travailler à plusieurs** : produits,
+catégories, emplacements, stock, mouvements, caisse (ticket numéroté, stock qui baisse tout
+seul, annulation tracée) et gestion de l'équipe par rôles. C'est testé (116 tests) et isolé
+par entreprise.
 
 Ce qui manque maintenant, c'est **ce que la vente produit comme information** (les rapports),
-puis **la vente hors du magasin** (la boutique publique), l'équipe et l'abonnement.
+puis **la vente hors du magasin** (la boutique publique), et l'abonnement.
 
 ```
-   [FAIT] Catalogue + Stock + Mouvements + Sécurité + VENTES
+   [FAIT] Catalogue + Stock + Mouvements + Sécurité + VENTES + ÉQUIPE
               │
               ▼
-   [2] RAPPORTS ──► [3] BOUTIQUE PUBLIQUE ──► [4] ÉQUIPE ──► [5] ABONNEMENT
+   [2] RAPPORTS ──► [3] BOUTIQUE PUBLIQUE ──► [5] ABONNEMENT
 ```
 
 ---
@@ -103,19 +105,39 @@ la voir apparaître côté commerçant.
 
 ---
 
-## Étape 4 — L'équipe
+## Étape 4 — L'équipe — ✅ TERMINÉE
 
-**Pourquoi :** dans une boutique, il y a le patron et le vendeur. Les rôles existent déjà en
-base (5 rôles, permissions vérifiées) ; il manque l'écran pour ajouter des personnes.
+**Pourquoi :** dans une boutique, il y a le patron et le vendeur. Les rôles existaient déjà en
+base ; il manquait l'écran pour ajouter des personnes.
 
-**Ce que l'utilisateur voit :** inviter un vendeur par e-mail, changer son rôle, le retirer,
-avec les garde-fous (impossible de retirer le dernier propriétaire).
+**Ce qui est livré** (`/workspace/equipe`)
 
-**Technique :** table `tenant_invitations` + RPC `invite_member`, `accept_invitation`,
-`update_member_role`, `remove_member` — le travail déjà spécifié, à porter sur ce schéma.
+- Liste des **membres** : nom, e-mail, rôle, date d'arrivée, mention « vous ».
+- **Changer le rôle** d'un membre dans une liste déroulante (les 5 rôles sont expliqués à
+  droite de l'écran, avec leurs permissions).
+- **Retirer** un membre, avec une confirmation en deux temps (pas de suppression accidentelle).
+- **Inviter** par e-mail avec un rôle : si la personne a déjà un compte, elle rejoint
+  l'entreprise immédiatement ; sinon l'invitation attend son inscription.
+- **Invitations en attente** : liste, date d'expiration (14 jours) et annulation.
+- **Acceptation automatique** : à la connexion, les invitations envoyées à votre adresse
+  deviennent des adhésions réelles — l'entreprise apparaît alors dans votre espace.
+- Lecture seule pour qui n'a pas `members.manage` : on voit l'équipe, on ne la modifie pas.
 
-**Critère de réussite :** inviter une 2ᵉ personne avec le rôle Vendeur ; elle ne voit ni les
-coûts, ni les autres entreprises, et ne peut pas modifier le catalogue.
+**Garde-fous côté base (vérifiés en SQL)**
+
+- il doit toujours rester **au moins un propriétaire** (changer son rôle ou le retirer échoue) ;
+- seul un propriétaire peut inviter / changer / retirer (`members.manage`) ;
+- les invitations expirent au bout de 14 jours ; une invitation révoquée ne revient pas ;
+- le client ne peut pas écrire directement dans `tenant_invitations` (fonctions
+  `security definer` uniquement) ;
+- un vendeur qui tente d'inviter reçoit un refus explicite.
+
+**Reste à faire sur cette étape (plus tard)**
+
+- Envoi réel de l'e-mail d'invitation (aujourd'hui : aucun e-mail automatique, l'invitation
+  s'active à la connexion) — nécessite un SMTP personnalisé.
+- Invitation par lien partageable (le jeton `token` existe déjà dans la table).
+- Journal d'audit des changements d'équipe.
 
 ---
 
@@ -139,7 +161,7 @@ webhook de paiement, écran de facturation.
 | 1 | **Ventes** ✅ | ⭐⭐⭐⭐ | transforme l'outil en caisse : indispensable |
 | 2 | **Rapports** | ⭐⭐⭐ | donne la raison de revenir chaque semaine |
 | 3 | **Boutique publique** | ⭐⭐⭐ | différencie sur le marché local |
-| 4 | **Équipe** | ⭐⭐ | débloque les boutiques à plusieurs vendeurs |
+| 4 | **Équipe** ✅ | ⭐⭐ | débloque les boutiques à plusieurs vendeurs |
 | 5 | **Abonnement** | ⭐⭐ | transforme l'usage en revenus |
 
 **Recommandation :** l'étape 1 est faite — enchaîner sur **2 (rapports)**. À ce moment-là, le
@@ -155,7 +177,7 @@ produit est utilisable tous les jours par un vrai commerce et peut être montré
 | Tests de bout en bout (Playwright déjà configuré) | vérifier les parcours réels à chaque déploiement | étape 2 |
 | Photos produits (Supabase Storage) | indispensable pour la boutique publique | étape 3 |
 | Sauvegardes et plan de reprise | un commerce ne perd pas son stock | avant la mise en production payante |
-| Journal d'audit exploitable | qui a fait quoi, quand | étape 4 |
+| Journal d'audit exploitable | qui a fait quoi, quand | étape 2 |
 
 ---
 

@@ -18,6 +18,7 @@ import { StockPage } from '../features/workspace/stock-page';
 import { WorkspaceLayout } from '../features/workspace/workspace-layout';
 import { NewSalePage } from '../features/sales/new-sale-page';
 import { SalesPage } from '../features/sales/sales-page';
+import { TeamPage } from '../features/team/team-page';
 
 function FullPageLoader() {
   return (
@@ -91,6 +92,7 @@ export function App() {
           <Route path="emplacements" element={<LocationsPage />} />
           <Route path="stock" element={<StockPage />} />
           <Route path="mouvements" element={<MovementsPage />} />
+          <Route path="equipe" element={<TeamPage />} />
         </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

@@ -262,6 +262,78 @@ export interface Database {
         };
         Returns: string;
       };
+      list_tenant_members: {
+        Args: { p_tenant_id: string };
+        Returns: Array<{
+          membership_id: string;
+          user_id: string;
+          full_name: string;
+          email: string;
+          role_id: string;
+          role_name: string;
+          status: string;
+          created_at: string;
+        }>;
+      };
+      list_tenant_roles: {
+        Args: { p_tenant_id: string };
+        Returns: Array<{
+          id: string;
+          name: string;
+          description: string;
+          is_system: boolean;
+          permissions: string[];
+          member_count: number;
+        }>;
+      };
+      list_tenant_invitations: {
+        Args: { p_tenant_id: string };
+        Returns: Array<{
+          id: string;
+          email: string;
+          full_name: string;
+          role_id: string;
+          role_name: string;
+          status: string;
+          created_at: string;
+          expires_at: string;
+          token: string;
+        }>;
+      };
+      invite_member: {
+        Args: {
+          p_tenant_id: string;
+          p_email: string;
+          p_role_id: string;
+          p_full_name?: string | null;
+        };
+        Returns: {
+          status: string;
+          user_id?: string;
+          membership_id?: string;
+          invitation_id?: string;
+        };
+      };
+      revoke_invitation: {
+        Args: { p_tenant_id: string; p_invitation_id: string };
+        Returns: undefined;
+      };
+      update_member_role: {
+        Args: { p_tenant_id: string; p_membership_id: string; p_role_id: string };
+        Returns: undefined;
+      };
+      remove_member: {
+        Args: { p_tenant_id: string; p_membership_id: string };
+        Returns: undefined;
+      };
+      has_tenant_permission: {
+        Args: { target_tenant_id: string; target_permission: string };
+        Returns: boolean;
+      };
+      accept_my_invitations: {
+        Args: Record<string, never>;
+        Returns: { accepted?: number };
+      };
       void_sale: {
         Args: {
           p_tenant_id: string;

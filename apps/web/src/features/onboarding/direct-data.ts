@@ -191,6 +191,44 @@ function toSaleItem(row: Payload) {
   };
 }
 
+function toMember(row: Payload) {
+  return {
+    membership_id: row.membership_id as string,
+    user_id: row.user_id as string,
+    full_name: asText(row.full_name),
+    email: asText(row.email),
+    role_id: row.role_id as string,
+    role_name: asText(row.role_name),
+    status: row.status as string,
+    created_at: row.created_at as string,
+  };
+}
+
+function toRole(row: Payload) {
+  return {
+    id: row.id as string,
+    name: row.name as string,
+    description: asText(row.description),
+    is_system: Boolean(row.is_system),
+    permissions: Array.isArray(row.permissions) ? (row.permissions as string[]) : [],
+    member_count: asNumber(row.member_count),
+  };
+}
+
+function toInvitation(row: Payload) {
+  return {
+    id: row.id as string,
+    email: asText(row.email),
+    full_name: asText(row.full_name),
+    role_id: row.role_id as string,
+    role_name: asText(row.role_name),
+    status: row.status as string,
+    created_at: row.created_at as string,
+    expires_at: row.expires_at as string,
+    token: row.token as string,
+  };
+}
+
 async function listTenants({ client }: RouteContext) {
   const { data, error } = await client
     .from('tenants')
@@ -486,6 +524,79 @@ async function voidSale({ client, body, idempotencyKey }: RouteContext, tenantId
   return readSale(client, tenantId, saleId);
 }
 
+async function listMembers({ client }: RouteContext, tenantId: string) {
+  const { data, error } = await client.rpc('list_tenant_members', { p_tenant_id: tenantId });
+  if (error) fail(error.message, 'Impossible de charger l’équipe.');
+  return asRows(data).map(toMember);
+}
+
+async function listRoles({ client }: RouteContext, tenantId: string) {
+  const { data, error } = await client.rpc('list_tenant_roles', { p_tenant_id: tenantId });
+  if (error) fail(error.message, 'Impossible de charger les rôles.');
+  return asRows(data).map(toRole);
+}
+
+async function listInvitations({ client }: RouteContext, tenantId: string) {
+  const { data, error } = await client.rpc('list_tenant_invitations', { p_tenant_id: tenantId });
+  if (error) fail(error.message, 'Impossible de charger les invitations.');
+  return asRows(data).map(toInvitation);
+}
+
+async function inviteMember({ client, body }: RouteContext, tenantId: string) {
+  const { data, error } = await client.rpc('invite_member', {
+    p_tenant_id: tenantId,
+    p_email: body.email,
+    p_role_id: body.role_id,
+    p_full_name: typeof body.full_name === 'string' && body.full_name.trim() ? body.full_name.trim() : null,
+  });
+  if (error) fail(error.message, 'L’invitation n’a pas pu être envoyée.');
+  return asRow(data);
+}
+
+async function revokeInvitation({ client }: RouteContext, tenantId: string, invitationId: string) {
+  const { error } = await client.rpc('revoke_invitation', {
+    p_tenant_id: tenantId,
+    p_invitation_id: invitationId,
+  });
+  if (error) fail(error.message, 'L’invitation n’a pas pu être annulée.');
+  return { ok: true };
+}
+
+async function updateMemberRole({ client, body }: RouteContext, tenantId: string, membershipId: string) {
+  const { error } = await client.rpc('update_member_role', {
+    p_tenant_id: tenantId,
+    p_membership_id: membershipId,
+    p_role_id: body.role_id,
+  });
+  if (error) fail(error.message, 'Le rôle du membre n’a pas pu être modifié.');
+  return { ok: true };
+}
+
+async function removeMember({ client }: RouteContext, tenantId: string, membershipId: string) {
+  const { error } = await client.rpc('remove_member', {
+    p_tenant_id: tenantId,
+    p_membership_id: membershipId,
+  });
+  if (error) fail(error.message, 'Le membre n’a pas pu être retiré.');
+  return { ok: true };
+}
+
+async function hasPermission({ client }: RouteContext, tenantId: string, permission: string) {
+  const { data, error } = await client.rpc('has_tenant_permission', {
+    target_tenant_id: tenantId,
+    target_permission: permission,
+  });
+  if (error) fail(error.message, 'Impossible de vérifier vos droits.');
+  return { allowed: data === true };
+}
+
+async function acceptMyInvitations({ client }: RouteContext) {
+  const { data, error } = await client.rpc('accept_my_invitations', {});
+  if (error) fail(error.message, 'Les invitations n’ont pas pu être acceptées.');
+  const payload = asRow(data);
+  return { accepted: asNumber(payload.accepted) };
+}
+
 /** `true` quand la route est gérée par le mode direct (sinon on garde l'API). */
 export function isDirectRoute(path: string): boolean {
   return new RegExp(
@@ -502,6 +613,12 @@ export function isDirectRoute(path: string): boolean {
       '^/tenants/[0-9a-f-]{36}/sales$',
       '^/tenants/[0-9a-f-]{36}/sales/[0-9a-f-]{36}$',
       '^/tenants/[0-9a-f-]{36}/sales/[0-9a-f-]{36}/void$',
+      '^/tenants/[0-9a-f-]{36}/members(/[0-9a-f-]{36})?$',
+      '^/tenants/[0-9a-f-]{36}/roles$',
+      '^/tenants/[0-9a-f-]{36}/invitations$',
+      '^/tenants/[0-9a-f-]{36}/invitations/[0-9a-f-]{36}/revoke$',
+      '^/tenants/[0-9a-f-]{36}/permissions/[a-z][a-z._]*$',
+      '^/invitations/accept$',
     ].join('|'),
     'i',
   ).test(path);
@@ -522,6 +639,10 @@ export async function directApiFetch<T>(
 
   const segments = path.replace(/\/+$/, '').split('/').filter(Boolean);
 
+  if (segments[0] === 'invitations' && segments[1] === 'accept') {
+    if (method !== 'POST') throw new Error(`Route inconnue : ${path}`);
+    return (await acceptMyInvitations(context)) as T;
+  }
   if (segments[0] !== 'tenants') throw new Error(`Route inconnue : ${path}`);
   if (segments[1] === 'me') return (await listTenants(context)) as T;
   if (segments.length === 1) {
@@ -580,6 +701,29 @@ export async function directApiFetch<T>(
     }
     if (resourceId) throw new Error(`Route inconnue : ${path}`);
     return (await readSale(context.client, tenantId, resource)) as T;
+  }
+
+  if (scope === 'members') {
+    if (!resource) return (await listMembers(context, tenantId)) as T;
+    if (method === 'DELETE') return (await removeMember(context, tenantId, resource)) as T;
+    if (method === 'PATCH') return (await updateMemberRole(context, tenantId, resource)) as T;
+    throw new Error(`Route inconnue : ${path}`);
+  }
+
+  if (scope === 'roles') {
+    return (await listRoles(context, tenantId)) as T;
+  }
+
+  if (scope === 'invitations') {
+    if (!resource) {
+      return (method === 'POST' ? await inviteMember(context, tenantId) : await listInvitations(context, tenantId)) as T;
+    }
+    if (resourceId === 'revoke') return (await revokeInvitation(context, tenantId, resource)) as T;
+    throw new Error(`Route inconnue : ${path}`);
+  }
+
+  if (scope === 'permissions' && resource) {
+    return (await hasPermission(context, tenantId, resource)) as T;
   }
 
   throw new Error(`Route inconnue : ${path}`);

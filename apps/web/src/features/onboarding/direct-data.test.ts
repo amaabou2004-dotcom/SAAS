@@ -375,3 +375,125 @@ describe('mode direct — ventes', () => {
     expect(sale.status).toBe('completed');
   });
 });
+
+describe('mode direct — équipe', () => {
+  const MEMBERSHIP_ID = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
+  const ROLE_ID = 'ffffffff-ffff-4fff-8fff-ffffffffffff';
+  const INVITATION_ID = '12345678-1234-4234-8234-123456789012';
+
+  it('reconnaît les routes de l’équipe', () => {
+    expect(isDirectRoute(`/tenants/${TENANT_ID}/members`)).toBe(true);
+    expect(isDirectRoute(`/tenants/${TENANT_ID}/members/${MEMBERSHIP_ID}`)).toBe(true);
+    expect(isDirectRoute(`/tenants/${TENANT_ID}/roles`)).toBe(true);
+    expect(isDirectRoute(`/tenants/${TENANT_ID}/invitations`)).toBe(true);
+    expect(isDirectRoute(`/tenants/${TENANT_ID}/invitations/${INVITATION_ID}/revoke`)).toBe(true);
+    expect(isDirectRoute(`/tenants/${TENANT_ID}/permissions/members.manage`)).toBe(true);
+    expect(isDirectRoute('/invitations/accept')).toBe(true);
+    expect(isDirectRoute('/invitations')).toBe(false);
+  });
+
+  it('liste les membres et les rôles via les RPC', async () => {
+    const memberRow = {
+      membership_id: MEMBERSHIP_ID,
+      user_id: VARIANT_ID,
+      full_name: 'Aïcha',
+      email: 'aicha@exemple.com',
+      role_id: ROLE_ID,
+      role_name: 'Vendeur',
+      status: 'active',
+      created_at: '2026-11-03T10:00:00Z',
+    };
+
+    const members = makeClient({}, [memberRow]);
+    const rows = await directApiFetch<Array<{ role_name: string; email: string }>>(
+      `/tenants/${TENANT_ID}/members`,
+      undefined,
+      members.client,
+    );
+
+    expect(members.rpcCalls[0]).toEqual({ name: 'list_tenant_members', args: { p_tenant_id: TENANT_ID } });
+    expect(rows[0]).toMatchObject({ role_name: 'Vendeur', email: 'aicha@exemple.com' });
+
+    const roles = makeClient({}, [{
+      id: ROLE_ID,
+      name: 'Vendeur',
+      description: 'Encaisse les ventes.',
+      is_system: true,
+      permissions: ['sales.read', 'sales.manage'],
+      member_count: '1',
+    }]);
+    const roleRows = await directApiFetch<Array<{ name: string; member_count: number; permissions: string[] }>>(
+      `/tenants/${TENANT_ID}/roles`,
+      undefined,
+      roles.client,
+    );
+
+    expect(roles.rpcCalls[0]).toEqual({ name: 'list_tenant_roles', args: { p_tenant_id: TENANT_ID } });
+    expect(roleRows[0]).toEqual({
+      id: ROLE_ID,
+      name: 'Vendeur',
+      description: 'Encaisse les ventes.',
+      is_system: true,
+      permissions: ['sales.read', 'sales.manage'],
+      member_count: 1,
+    });
+  });
+
+  it('invite, annule, change un rôle et retire un membre', async () => {
+    const invite = makeClient({}, { status: 'invited', invitation_id: INVITATION_ID });
+    const invited = await directApiFetch<{ status: string }>(
+      `/tenants/${TENANT_ID}/invitations`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ email: 'nouveau@exemple.com', role_id: ROLE_ID, full_name: '  Nouveau  ' }),
+      },
+      invite.client,
+    );
+    expect(invite.rpcCalls[0]).toEqual({
+      name: 'invite_member',
+      args: { p_tenant_id: TENANT_ID, p_email: 'nouveau@exemple.com', p_role_id: ROLE_ID, p_full_name: 'Nouveau' },
+    });
+    expect(invited.status).toBe('invited');
+
+    const revoke = makeClient({}, null);
+    await directApiFetch(`/tenants/${TENANT_ID}/invitations/${INVITATION_ID}/revoke`, { method: 'POST' }, revoke.client);
+    expect(revoke.rpcCalls[0]!.name).toBe('revoke_invitation');
+
+    const role = makeClient({}, null);
+    await directApiFetch(
+      `/tenants/${TENANT_ID}/members/${MEMBERSHIP_ID}`,
+      { method: 'PATCH', body: JSON.stringify({ role_id: ROLE_ID }) },
+      role.client,
+    );
+    expect(role.rpcCalls[0]).toEqual({
+      name: 'update_member_role',
+      args: { p_tenant_id: TENANT_ID, p_membership_id: MEMBERSHIP_ID, p_role_id: ROLE_ID },
+    });
+
+    const removal = makeClient({}, null);
+    await directApiFetch(`/tenants/${TENANT_ID}/members/${MEMBERSHIP_ID}`, { method: 'DELETE' }, removal.client);
+    expect(removal.rpcCalls[0]).toEqual({
+      name: 'remove_member',
+      args: { p_tenant_id: TENANT_ID, p_membership_id: MEMBERSHIP_ID },
+    });
+  });
+
+  it('vérifie un droit et accepte les invitations', async () => {
+    const permission = makeClient({}, true);
+    const allowed = await directApiFetch<{ allowed: boolean }>(
+      `/tenants/${TENANT_ID}/permissions/members.manage`,
+      undefined,
+      permission.client,
+    );
+    expect(permission.rpcCalls[0]).toEqual({
+      name: 'has_tenant_permission',
+      args: { target_tenant_id: TENANT_ID, target_permission: 'members.manage' },
+    });
+    expect(allowed).toEqual({ allowed: true });
+
+    const accept = makeClient({}, { accepted: 2 });
+    const result = await directApiFetch<{ accepted: number }>('/invitations/accept', { method: 'POST' }, accept.client);
+    expect(accept.rpcCalls[0]!.name).toBe('accept_my_invitations');
+    expect(result.accepted).toBe(2);
+  });
+});

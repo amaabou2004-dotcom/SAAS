@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeftRight, Building2, History, LoaderCircle, LogOut, MapPin, Package, Receipt, Tags, Warehouse } from 'lucide-react';
+import { ArrowLeftRight, Building2, History, LoaderCircle, LogOut, MapPin, Package, Receipt, Tags, Users, Warehouse } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { NavLink, Navigate, Outlet, useNavigate } from 'react-router-dom';
 import { Brand } from '../../components/brand';
@@ -8,6 +8,7 @@ import { Button } from '../../components/ui/button';
 import { useAuth } from '../auth/auth-context';
 import { signOut } from '../auth/auth-service';
 import { listTenants } from '../onboarding/tenant-api';
+import { acceptMyInvitations } from '../team/team-api';
 import { WorkspaceContext } from './workspace-context';
 
 const navigation = [
@@ -17,6 +18,7 @@ const navigation = [
   { to: '/workspace/emplacements', label: 'Emplacements', icon: MapPin },
   { to: '/workspace/stock', label: 'Stock & opérations', icon: ArrowLeftRight },
   { to: '/workspace/mouvements', label: 'Mouvements', icon: History },
+  { to: '/workspace/equipe', label: 'Équipe', icon: Users },
 ];
 
 export function WorkspaceLayout() {
@@ -27,7 +29,16 @@ export function WorkspaceLayout() {
   const accessToken = session?.access_token;
   const tenantsQuery = useQuery({
     queryKey: ['tenants', user?.id],
-    queryFn: () => listTenants(accessToken ?? ''),
+    // Les invitations reçues deviennent des adhésions réelles avant la liste :
+    // une personne invitée voit ainsi son entreprise dès sa première connexion.
+    queryFn: async () => {
+      try {
+        await acceptMyInvitations(accessToken ?? '');
+      } catch {
+        // Une invitation non acceptée ne doit jamais bloquer l'accès à l'espace.
+      }
+      return listTenants(accessToken ?? '');
+    },
     enabled: Boolean(accessToken),
     retry: 1,
   });
