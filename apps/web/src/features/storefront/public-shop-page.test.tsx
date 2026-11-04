@@ -17,6 +17,7 @@ const shop: ShopInfo = {
   slug: 'boutique-test',
   display_name: 'Chez Aïcha',
   whatsapp: '+22790000001',
+  logo_url: null,
   currency_code: 'XOF',
   timezone: 'Africa/Niamey',
   tenant_name: 'Aïcha SARL',
@@ -69,6 +70,18 @@ beforeEach(() => {
 });
 
 describe('boutique publique', () => {
+  it('affiche le logo de la boutique quand il existe', async () => {
+    vi.mocked(getShopInfo).mockResolvedValue({
+      ...shop,
+      logo_url: 'https://exemple.test/storage/v1/object/public/shop-logos/tenant/logo.jpg',
+    });
+
+    renderShop();
+
+    const logo = await screen.findByAltText('Logo de Chez Aïcha');
+    expect(logo).toHaveAttribute('src', 'https://exemple.test/storage/v1/object/public/shop-logos/tenant/logo.jpg');
+  });
+
   it('affiche un produit en rupture sans permettre de le commander', async () => {
     vi.mocked(getShopCatalog).mockResolvedValue([
       {

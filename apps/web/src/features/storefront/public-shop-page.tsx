@@ -37,6 +37,17 @@ function ShopUnavailable({ reason }: { reason: string }) {
   );
 }
 
+/** Repli sans logo : les initiales du nom, comme une vraie enseigne. */
+function shopInitials(name: string) {
+  const letters = name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((word) => word.charAt(0).toUpperCase())
+    .join('');
+  return letters || 'B';
+}
+
 function formatPrice(value: number, currency: string) {
   return formatMoney(value, currency);
 }
@@ -174,7 +185,20 @@ export function PublicShopPage() {
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3 px-5 py-4">
           <div className="flex min-w-0 items-center gap-3">
-            <Store className="size-6 shrink-0 text-mint-dark" aria-hidden="true" />
+            {info.logo_url ? (
+              <img
+                src={info.logo_url}
+                alt={`Logo de ${info.display_name}`}
+                className="size-11 shrink-0 rounded-xl border border-slate-200 bg-white object-cover"
+              />
+            ) : (
+              <span
+                className="grid size-11 shrink-0 place-items-center rounded-xl bg-teal-50 text-base font-bold text-mint-dark"
+                aria-hidden="true"
+              >
+                {shopInitials(info.display_name)}
+              </span>
+            )}
             <div className="min-w-0">
               <p className="truncate text-base font-bold text-ink">{info.display_name}</p>
               <p className="text-xs text-slate-500">Boutique en ligne · {info.tenant_name}</p>

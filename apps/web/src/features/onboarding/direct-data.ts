@@ -724,6 +724,7 @@ async function saveStorefrontSettings({ client, body }: RouteContext, tenantId: 
     p_whatsapp: typeof body.whatsapp === 'string' && body.whatsapp.trim() ? body.whatsapp.trim() : null,
     p_published: body.published === true,
     p_default_location_id: typeof locationId === 'string' && UUID.test(locationId) ? locationId : null,
+    p_logo_url: typeof body.logo_url === 'string' && body.logo_url.trim() ? body.logo_url.trim() : null,
   });
   if (error) fail(error.message, 'La boutique n’a pas pu être enregistrée.');
   return asRow(data);

@@ -9,6 +9,7 @@ const shopInfoSchema = z.object({
   slug: z.string(),
   display_name: z.string(),
   whatsapp: z.string().nullable(),
+  logo_url: z.string().nullable().default(null),
   currency_code: z.string(),
   timezone: z.string(),
   tenant_name: z.string(),
@@ -111,6 +112,7 @@ const settingsSchema = z.object({
   published: z.boolean(),
   default_location_id: z.uuid().nullable(),
   public_path: z.string().nullable(),
+  logo_url: z.string().nullable().default(null),
   currency_code: z.string(),
 });
 
@@ -152,6 +154,8 @@ export interface StorefrontSettingsInput {
   whatsapp: string | null;
   published: boolean;
   default_location_id: string | null;
+  /** Adresse publique du logo ; `null` retire le logo de la boutique. */
+  logo_url?: string | null;
 }
 
 const base = (tenantId: string) => `/tenants/${tenantId}/storefront`;
