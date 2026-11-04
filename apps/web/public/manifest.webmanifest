@@ -1,0 +1,33 @@
+{
+  "name": "Stokari — Gestion de stock et boutique",
+  "short_name": "Stokari",
+  "description": "Vos produits, votre stock, vos ventes et votre boutique en ligne dans un seul espace.",
+  "lang": "fr",
+  "dir": "ltr",
+  "start_url": "/workspace/accueil",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f8fafc",
+  "theme_color": "#0b1f46",
+  "categories": ["business", "productivity"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/stokari-logo.png",
+      "sizes": "964x252",
+      "type": "image/png"
+    }
+  ]
+}

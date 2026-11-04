@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { AlertTriangle, ArrowRight, BarChart3, PackagePlus, Receipt, ShoppingBag, Store, Wallet } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { InstallAppCard } from '../../components/install-app-card';
 import { Alert } from '../../components/ui/alert';
 import { Button } from '../../components/ui/button';
 import { periodRange, getReport } from '../reports/reports-api';
@@ -259,6 +260,8 @@ export function DashboardPage() {
           </ul>
         </section>
       ) : null}
+
+      <InstallAppCard />
 
       <section className="mt-6">
         <h2 className="text-sm font-bold text-ink">Actions rapides</h2>

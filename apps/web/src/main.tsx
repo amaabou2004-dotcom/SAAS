@@ -14,6 +14,16 @@ const queryClient = new QueryClient({
   },
 });
 
+// Le service worker ne sert qu'en production : en développement, il gênerait
+// le rechargement immédiat.
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    void navigator.serviceWorker.register('/sw.js').catch(() => {
+      // Une installation refusée ne doit jamais empêcher l'application de tourner.
+    });
+  });
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
