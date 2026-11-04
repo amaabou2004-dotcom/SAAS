@@ -14,6 +14,9 @@ Plateforme multi-entreprises de gestion commerciale, de stock et de boutiques en
 | `GET /api/v1/health` | état du service |
 | `/api/docs` | Swagger (développement) |
 
+> **Vous reprenez le projet ?** Lisez d'abord [`docs/REPRENDRE.md`](./docs/REPRENDRE.md) :
+> une page unique qui dit ce qui est le projet, ce qui marche, ce qui manque, et par quoi continuer.
+
 ## Modes d’accès aux données
 
 Le front n’a qu’un seul point d’entrée réseau (`apiFetch`), ce qui permet deux modes :
