@@ -32,6 +32,17 @@ Aucune carte bancaire n'est demandée.
 
 ---
 
+## 1 bis. Deux façons de publier
+
+| Méthode | Transfert de fichier | Mise à jour automatique | Recommandé |
+| --- | --- | --- | --- |
+| **Connexion au dépôt GitHub** (Import from Git) | ❌ aucun | ✅ à chaque `git push` | ⭐ oui, surtout sur téléphone |
+| **Archive ZIP** (`deploiements/stokari-netlify.zip` ou générée par `./scripts/pack-netlify.sh`) | ✅ un fichier à glisser | ❌ à refaire à chaque version | si tu ne veux pas lier ton GitHub |
+
+Le ZIP est aussi présent dans le dépôt :
+`deploiements/stokari-netlify.zip` (327 Ko). Sur GitHub, ouvre-le puis clique sur
+**Download**.
+
 ## 2. Déploiement (2 minutes, une seule fois)
 
 1. Ouvrez <https://app.netlify.com/start>.
