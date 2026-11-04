@@ -171,7 +171,9 @@ async function cleanup() {
  */
 async function openMore(page, label) {
   await page.getByRole('button', { name: 'Plus', exact: true }).click();
-  await page.getByRole('link', { name: label, exact: true }).click();
+  // Le nom accessible du lien comprend aussi sa description : cibler le
+  // libellé visible exact à l'intérieur du menu, plutôt que le nom complet.
+  await page.locator('#more-navigation').getByText(label, { exact: true }).click();
 }
 
 test('Auth, catalogue, stock et isolation fonctionnent avec Supabase local et Mailpit', async ({ page, browser }) => {
