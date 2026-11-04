@@ -42,7 +42,15 @@ const product: Product = {
   image_url: null,
   category: null,
   variants: [
-    { id: variantId, product_id: '44444444-4444-4444-8444-444444444444', sku: 'BAG-001', barcode: null, attributes: {}, active: true },
+    {
+      id: variantId,
+      tenant_id: tenant.id,
+      product_id: '44444444-4444-4444-8444-444444444444',
+      sku: 'BAG-001',
+      barcode: null,
+      attributes: {},
+      active: true,
+    },
   ],
 };
 
@@ -96,7 +104,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(listProducts).mockResolvedValue([product]);
   vi.mocked(listLocations).mockResolvedValue([
-    { id: locationId, tenant_id: tenant.id, name: 'Boutique', code: 'BOUT', active: true, created_at: new Date(0).toISOString() },
+    { id: locationId, tenant_id: tenant.id, name: 'Boutique', code: 'BOUT', active: true },
   ]);
   vi.mocked(listStock).mockResolvedValue([
     {

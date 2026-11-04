@@ -24,6 +24,7 @@ import { ReportsPage } from '../features/reports/reports-page';
 import { SalesPage } from '../features/sales/sales-page';
 import { DashboardPage } from '../features/dashboard/dashboard-page';
 import { StorefrontPage } from '../features/storefront/storefront-page';
+import { OrderTrackingPage } from '../features/storefront/order-tracking-page';
 import { PublicShopPage } from '../features/storefront/public-shop-page';
 import { TeamPage } from '../features/team/team-page';
 
@@ -92,6 +93,7 @@ export function App() {
         <Route path="/conditions" element={<TermsPage />} />
         {/* Boutique publique : aucun compte requis, hors de l'espace de travail. */}
         <Route path="/b/:slug" element={<PublicShopPage />} />
+        <Route path="/b/:slug/suivi" element={<OrderTrackingPage />} />
         <Route
           path="/workspace"
           element={

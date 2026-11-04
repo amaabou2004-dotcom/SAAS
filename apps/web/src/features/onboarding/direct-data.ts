@@ -652,6 +652,12 @@ async function shopCatalog({ client }: RouteContext, slug: string) {
   }));
 }
 
+async function trackShopOrder({ client }: RouteContext, slug: string, number: string) {
+  const { data, error } = await client.rpc('storefront_order_track', { p_slug: slug, p_number: number });
+  if (error) fail(error.message, 'Le suivi de commande est momentanément indisponible.');
+  return data ?? null;
+}
+
 async function placeShopOrder({ client, body, idempotencyKey }: RouteContext, slug: string) {
   const items = Array.isArray(body.items) ? body.items : [];
   const { data, error } = await client.rpc('place_storefront_order', {
@@ -793,7 +799,7 @@ export function isDirectRoute(path: string): boolean {
       '^/tenants/[0-9a-f-]{36}/invitations/[0-9a-f-]{36}/revoke$',
       '^/tenants/[0-9a-f-]{36}/permissions/[a-z][a-z._]*$',
       '^/tenants/[0-9a-f-]{36}/reports([?][^#]*)?$',
-      '^/shop/[a-z0-9][a-z0-9-]{1,38}[a-z0-9](/catalog|/orders)?$',
+      '^/shop/[a-z0-9][a-z0-9-]{1,38}[a-z0-9](/catalog|/orders|/track/[A-Za-z0-9%.-]{3,20})?$',
       '^/tenants/[0-9a-f-]{36}/storefront(/orders(/[0-9a-f-]{36}/(confirm|cancel|delivered))?)?$',
       '^/invitations/accept$',
     ].join('|'),
@@ -829,6 +835,9 @@ export async function directApiFetch<T>(
     if (segments.length === 3 && segments[2] === 'orders') {
       if (method !== 'POST') throw new Error(`Route inconnue : ${path}`);
       return (await placeShopOrder(context, slug)) as T;
+    }
+    if (segments.length === 4 && segments[2] === 'track') {
+      return (await trackShopOrder(context, slug, decodeURIComponent(segments[3] ?? ''))) as T;
     }
     throw new Error(`Route inconnue : ${path}`);
   }

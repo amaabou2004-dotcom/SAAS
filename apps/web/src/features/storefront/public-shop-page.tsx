@@ -1,8 +1,8 @@
 import { friendlyError } from '../../lib/friendly-error';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { LoaderCircle, Minus, Plus, Search, ShoppingBag, Store, Trash2 } from 'lucide-react';
+import { LoaderCircle, Minus, PackageCheck, Plus, Search, ShoppingBag, Store, Trash2 } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { Brand } from '../../components/brand';
 import { Alert } from '../../components/ui/alert';
 import { SiteFooter } from '../../components/site-footer';
@@ -121,6 +121,16 @@ export function PublicShopPage() {
     });
   };
 
+  /** « Commander » : un article, un geste, le formulaire s'ouvre déjà rempli. */
+  const orderNow = (item: ShopItem) => {
+    setReceipt(null);
+    setFormError(null);
+    keyRef.current = null;
+    setQuantities({ [item.variant_id]: 1 });
+    setCheckoutOpen(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const submit = async () => {
     setFormError(null);
     if (!name.trim()) {
@@ -216,6 +226,12 @@ export function PublicShopPage() {
                 </a>
               </Button>
             ) : null}
+            <Link
+              to={`/b/${slug}/suivi`}
+              className="text-xs font-semibold text-slate-600 underline-offset-4 hover:text-mint-dark hover:underline"
+            >
+              Suivre ma commande
+            </Link>
             <span className="hidden text-xs text-slate-400 sm:block">
               <Brand className="w-24" />
             </span>
@@ -235,7 +251,13 @@ export function PublicShopPage() {
               La boutique va vous appeler au numéro indiqué pour confirmer la livraison.
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
-              <Button variant="mint" onClick={() => setReceipt(null)}>Commander autre chose</Button>
+              <Button asChild variant="mint">
+                <Link to={`/b/${slug}/suivi?numero=${encodeURIComponent(receipt.number)}`}>
+                  <PackageCheck className="size-4" aria-hidden="true" />
+                  Suivre ma commande
+                </Link>
+              </Button>
+              <Button variant="outline" onClick={() => setReceipt(null)}>Commander autre chose</Button>
               {info.whatsapp ? (
                 <Button asChild variant="outline">
                   <a
@@ -314,8 +336,8 @@ export function PublicShopPage() {
                         Indisponible
                       </span>
                     ) : quantity === 0 ? (
-                      <Button size="sm" variant="mint" type="button" onClick={() => add(item, 1)}>
-                        <Plus className="size-4" aria-hidden="true" />Ajouter
+                      <Button size="sm" variant="mint" type="button" onClick={() => orderNow(item)}>
+                        <ShoppingBag className="size-4" aria-hidden="true" />Commander
                       </Button>
                     ) : (
                       <div className="flex items-center gap-2">
