@@ -1,0 +1,53 @@
+# -----------------------------------------------------------------------------
+# Stokari — configuration Netlify (site statique Vite + Supabase)
+# -----------------------------------------------------------------------------
+# Rien à régler dans le tableau de bord : ce fichier contient la commande de
+# build, le dossier publié, la réécriture SPA, les en-têtes de cache/sécurité
+# et les variables PUBLIQUES (clé « publishable ») utilisées par le navigateur.
+#
+# Les variables ci-dessous peuvent être remplacées sans toucher au dépôt :
+# Netlify → Site configuration → Environment variables (elles sont prioritaires).
+# -----------------------------------------------------------------------------
+
+[build]
+  base = "."
+  command = "pnpm --filter @saas/web build"
+  publish = "apps/web/dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+  PNPM_VERSION = "10.22.0"
+  # Valeurs publiques (visibles dans le navigateur) — jamais de clé secrète ici.
+  VITE_SUPABASE_URL = "https://suuchdahpftxwbvwhbyq.supabase.co"
+  VITE_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_-zxno-IY7ZlBHBM9L_cbNw_QJxtaD0q"
+  VITE_DATA_MODE = "direct"
+  VITE_GOOGLE_AUTH_ENABLED = "true"
+
+# Application monopage : toute route inconnue renvoie l'application.
+# Les fichiers réellement présents (JS, CSS, images) sont servis normalement.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Fichiers de build horodatés : cache long autorisé.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# En-têtes de sécurité sur tout le site.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Frame-Options = "SAMEORIGIN"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+# Aperçus de branche : indexables ? non — on évite le contenu dupliqué.
+[context.deploy-preview]
+  [[context.deploy-preview.headers]]
+    for = "/*"
+    [context.deploy-preview.headers.values]
+      X-Robots-Tag = "noindex"

@@ -1,0 +1,3 @@
+-- Local development seed.
+-- Authentication users must be created through Supabase Auth, never by inserting
+-- plaintext passwords into application tables. No commercial demo figures are seeded.

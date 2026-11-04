@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "arena/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  application:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.22.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+
+  database:
+    # Image épinglée : la CI base de données dépend de Docker, présent de façon
+    # fiable sur 24.04 (ubuntu-latest a changé de version d'image).
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.22.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Seuls les services utiles aux tests sont lancés : moins de conteneurs à
+      # télécharger, donc un démarrage plus rapide et plus fiable en CI.
+      # Les images Supabase viennent de registres publics : un tirage peut être
+      # refusé temporairement (limite de débit). On réessaie, puis on affiche
+      # l'état des conteneurs pour diagnostiquer.
+      - name: Démarrer Supabase local
+        # Les journaux de la CI ne sont pas toujours téléchargeables : en cas
+        # d'échec, la fin du journal est publiée en annotation (visible dans
+        # l'onglet « Checks » et via l'API), ce qui suffit à diagnostiquer.
+        run: |
+          set -o pipefail
+          log=/tmp/supabase-start.log
+          : > "$log"
+          for attempt in 1 2 3; do
+            echo "Tentative $attempt" | tee -a "$log"
+            if pnpm exec supabase start --exclude studio,imgproxy,postgres-meta,realtime,edge-runtime,logflare,vector 2>&1 | tee -a "$log"; then
+              exit 0
+            fi
+            docker ps -a | tee -a "$log" || true
+            sleep 20
+          done
+          pnpm exec supabase status 2>&1 | tee -a "$log" || true
+          {
+            echo "Espace disque :"; df -h / . || true
+            echo "Images présentes :"; docker images --format '{{.Repository}}:{{.Tag}}' || true
+          } | tee -a "$log" || true
+          detail=$(tail -c 4000 "$log" | tr '\r' ' ' | tr '\n' ' ' | sed 's/%/%25/g')
+          echo "::error title=Supabase local n'a pas démarré::${detail}"
+          exit 1
+      - run: pnpm test:db
+      - run: pnpm test:db:concurrency
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-e2e-results
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 7

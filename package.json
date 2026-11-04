@@ -1,0 +1,46 @@
+{
+  "name": "saas-commerce",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.22.0",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter @saas/web --filter @saas/api dev",
+    "dev:web": "pnpm --filter @saas/web dev",
+    "dev:api": "pnpm --filter @saas/api dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "eslint .",
+    "test": "pnpm -r test",
+    "test:coverage": "pnpm -r test:coverage",
+    "test:db": "supabase test db",
+    "test:db:concurrency": "node supabase/tests/stock-concurrency.mjs",
+    "test:e2e": "node e2e/run.mjs",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "db:start": "supabase db start",
+    "db:reset": "supabase db reset",
+    "db:lint": "supabase db lint"
+  },
+  "pnpm": {
+    "overrides": {
+      "multer": "^2.5.0",
+      "js-yaml": "^5.4.1",
+      "minimatch": "^11.0.1"
+    }
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.64.1",
+    "eslint": "^10.14.0",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.5.0",
+    "pg": "^8.23.1",
+    "supabase": "^2.58.5",
+    "typescript-eslint": "^8.48.0"
+  }
+}
