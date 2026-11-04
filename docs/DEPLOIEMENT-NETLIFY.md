@@ -149,3 +149,6 @@ Express) ou un hébergeur Node, puis repasser `VITE_DATA_MODE=api`.
 | Page blanche, message « configuration manquante » | variables `VITE_*` absentes du build | vérifier `[build.environment]` puis relancer un build avec **Clear cache** |
 | Connexion Google : `redirect_uri_mismatch` | origine absente dans Google Cloud | étape 4.b |
 | Lien de réinitialisation invalide | domaine absent de Supabase | ajouter l'URL dans **Redirect URLs** |
+| **« Page not found »** (page 404 de Netlify) après *Import from Git* | la **branche déployée est `main`**, qui ne contient que `LICENSE` et `README.md` : aucun `index.html`, aucun `netlify.toml` | dans Netlify : **Site configuration → Build & deploy → Branches → Production branch** = `arena/a1588569-saas`, puis **Deploys → Trigger deploy → Clear cache and deploy site** |
+| **« Page not found »** après un glisser-déposer | le dossier envoyé est **imbriqué** (`stokari-netlify/` ou `dist/` contenant les fichiers) | renvoyer le **fichier `.zip` lui-même** sur <https://app.netlify.com/drop> : Netlify le décompresse à la racine. Le bon contenu a `index.html` **au premier niveau**, à côté de `assets/`, `_redirects`, `_headers` |
+| Le site répond mais l'écran reste vide | `index.html` présent, dossier `assets/` absent | reconstruire avec `scripts/pack-netlify.sh`, renvoyer l'archive |
