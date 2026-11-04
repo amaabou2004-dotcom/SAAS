@@ -159,6 +159,7 @@ Deux façons de brancher le front à la base, sans changer un écran :
 | Les règles métier du serveur | `apps/api/src/*/‑service.ts` |
 | Les tables et la sécurité | `supabase/migrations/*.sql` |
 | **Le dernier audit complet** (sécurité, tests, reste à faire) | `docs/AUDIT.md` |
+| La mise en ligne du site (Netlify) | `netlify.toml` + `docs/DEPLOIEMENT-NETLIFY.md` |
 
 ---
 

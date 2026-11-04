@@ -19,18 +19,21 @@ Plateforme multi-entreprises de gestion commerciale, de stock et de boutiques en
 > (voir l'étape 5, reportée, dans [`docs/ROADMAP.md`](./docs/ROADMAP.md)).
 > L’interface ne présente aucune donnée commerciale fictive.
 
-## Déploiement sur Vercel
+## Déploiement
 
-Le dépôt est prêt : `vercel.json` décrit le build du front (`apps/web/dist`), la réécriture
-SPA et les en-têtes de cache.
+**Netlify (cible principale)** — tout est déjà décrit dans `netlify.toml` : commande de build,
+dossier publié (`apps/web/dist`), réécriture SPA, en-têtes de cache et de sécurité, et les
+variables publiques du front. Il ne reste qu'à connecter le dépôt :
 
-1. <https://vercel.com/new> → import du dépôt `amaabou2004-dotcom/SAAS` ;
-2. Framework **Vite**, Root Directory **vide**, Node **22.x** ;
-3. Variables : `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_DATA_MODE=direct`,
-   `VITE_GOOGLE_AUTH_ENABLED=true` ;
+1. <https://app.netlify.com/start> → **Import from Git** → `amaabou2004-dotcom/SAAS` ;
+2. Branche de production : `arena/a1588569-saas` (puis `main` après fusion) ;
+3. Rien d'autre à régler : Netlify lit `netlify.toml` ;
 4. Deploy.
 
-Guide détaillé, vérifications et configuration Google/Supabase :
+Guide détaillé (nom du site, Google, Supabase, vérifications) :
+[`docs/DEPLOIEMENT-NETLIFY.md`](./docs/DEPLOIEMENT-NETLIFY.md).
+
+**Vercel (alternative)** : `vercel.json` reste valable, voir
 [`docs/DEPLOIEMENT-VERCEL.md`](./docs/DEPLOIEMENT-VERCEL.md).
 
 ## Endpoints de service

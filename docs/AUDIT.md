@@ -145,7 +145,8 @@ Par ordre d'importance :
    → Débloque « mot de passe oublié » et les e-mails d'invitation.
 2. **Vault : `brevo_api_key` + `mail_from`** (alerte e-mail à chaque commande) — voir `docs/EMAIL-COMMANDES.md`. Tant que ces deux secrets manquent, la file d'attente reste vide et aucune alerte ne part.
 3. **Réglages Auth à cocher** : confirmation d'e-mail ON (une fois le SMTP en place), mot de passe minimum 8, inscriptions anonymes OFF.
-4. **Déploiement Vercel** — reporté à ta demande ; la procédure est prête dans `docs/DEPLOIEMENT-VERCEL.md`.
+4. **Mise en ligne Netlify** — tout est configuré (`netlify.toml`, Supabase, guide) ; il ne reste
+   que l'import du dépôt sur <https://app.netlify.com/start> (voir `docs/DEPLOIEMENT-NETLIFY.md`).
 5. **Sauvegardes** : vérifier que le plan Supabase actif inclut les sauvegardes quotidiennes (ou exporter régulièrement la base).
 6. **Objets hérités** : décider du sort de la table `suppliers` et des fonctions `save_supplier` / `delete_supplier` (voir §2, point 4).
 

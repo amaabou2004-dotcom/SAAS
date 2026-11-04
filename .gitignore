@@ -18,6 +18,9 @@ apps/*/.env.*
 !apps/*/.env.example
 !apps/*/.env.*.example
 
+# Netlify (état local du CLI)
+.netlify/
+
 # Supabase local state
 supabase/.branches/
 supabase/.temp/

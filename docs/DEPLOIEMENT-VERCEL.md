@@ -1,4 +1,7 @@
-# Déployer Stokari sur Vercel
+# Déployer Stokari sur Vercel (alternative)
+
+> **Cible actuelle : Netlify.** Voir [`DEPLOIEMENT-NETLIFY.md`](./DEPLOIEMENT-NETLIFY.md).
+> Ce guide reste valable si tu préfères Vercel : `vercel.json` est conservé et à jour.
 
 > Tout est prêt dans le dépôt : `vercel.json` à la racine, Supabase déjà autorisé pour le
 > domaine Vercel. Il ne reste que l'import du projet.
