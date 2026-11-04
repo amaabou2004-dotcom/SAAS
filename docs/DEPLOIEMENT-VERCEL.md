@@ -64,6 +64,15 @@ Le dépôt GitHub est public : l'import direct est le plus simple.
    | `VITE_DATA_MODE` | `direct` | Production, Preview, Development |
    | `VITE_GOOGLE_AUTH_ENABLED` | `true` | Production, Preview, Development |
 
+   Copier-coller (nom = valeur, une par ligne) :
+
+   ```text
+   VITE_SUPABASE_URL=https://suuchdahpftxwbvwhbyq.supabase.co
+   VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_-zxno-IY7ZlBHBM9L_cbNw_QJxtaD0q
+   VITE_DATA_MODE=direct
+   VITE_GOOGLE_AUTH_ENABLED=true
+   ```
+
    ⚠️ Ce sont des valeurs **publiques** (clé `publishable`). Ne jamais mettre la clé
    `service_role` dans une variable `VITE_*`.
 
@@ -75,14 +84,22 @@ Le dépôt GitHub est public : l'import direct est le plus simple.
 ## 3. Déploiement — option B (Arena)
 
 Le connecteur Vercel d'Arena peut créer le projet et déployer **si le jeton a les
-permissions « projets / déploiements »**. Aujourd'hui il répond :
+permissions « projets / déploiements »**.
+
+État au 4 novembre 2026 : le jeton **authentifie bien le compte** (profil, équipes, domaines
+et journal d'activité répondent — compte `amaabou2004-dotcom`, plan Hobby), mais **tous les
+points d'entrée « projets / déploiements » répondent `Authentication failed`** :
 
 ```
-Access denied. Your token may not have the required permissions.
+GET  /v11/projects              -> Authentication failed
+POST /v11/projects              -> Authentication failed
+POST /v13/deployments           -> Authentication failed
 ```
 
-→ Reconnectez Vercel dans Arena (connexions) en acceptant l'ensemble des portées, puis
-demandez simplement « déploie sur Vercel ».
+Autrement dit, la portée « projets » manque au jeton. → Dans Arena, **déconnectez puis
+reconnectez Vercel** en acceptant toutes les portées demandées ; il suffit ensuite de dire
+« déploie sur Vercel ». Rien d'autre à préparer : `vercel.json`, les variables et les URL
+Supabase sont déjà en place.
 
 ---
 
