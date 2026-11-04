@@ -5,6 +5,15 @@ Plateforme multi-entreprises de gestion commerciale, de stock et de boutiques en
 > **État actuel : itération 2 — identité, entreprise, catalogue et stock.**
 > Les ventes, réservations, boutiques publiques et rapports ne sont pas encore implémentés. L’interface ne présente aucune donnée commerciale fictive.
 
+## Endpoints de service
+
+| Route | Rôle |
+| --- | --- |
+| `GET /` | page de découverte (service, version, liens) — évite une 404 sur l’URL racine |
+| `GET /api/v1` | même contenu, sous le préfixe de l’API |
+| `GET /api/v1/health` | état du service |
+| `/api/docs` | Swagger (développement) |
+
 ## Modes d’accès aux données
 
 Le front n’a qu’un seul point d’entrée réseau (`apiFetch`), ce qui permet deux modes :

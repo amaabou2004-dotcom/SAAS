@@ -12,7 +12,17 @@ async function bootstrap() {
   const config = app.get(ConfigService);
   const logger = new Logger('Bootstrap');
 
-  app.use(helmet());
+  const isProduction = config.get<string>('NODE_ENV') === 'production';
+  app.use(
+    helmet({
+      // En développement, l'aperçu intégré affiche l'API dans un cadre : on autorise
+      // l'hébergement des aperçus. En production, on conserve les valeurs par défaut.
+      frameguard: isProduction,
+      contentSecurityPolicy: isProduction
+        ? undefined
+        : { directives: { frameAncestors: ["'self'", 'https://*.e2b.app'] } },
+    }),
+  );
   app.enableCors({
     origin: (origin: string | undefined, callback: (error: Error | null, allow?: boolean) => void) => {
       if (!origin) {

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { AppController } from './app.controller.js';
 import { AuthModule } from './auth/auth.module.js';
 import { CatalogModule } from './catalog/catalog.module.js';
 import { HealthModule } from './health/health.module.js';
@@ -28,6 +29,7 @@ import { TenantsModule } from './tenants/tenants.module.js';
     CatalogModule,
     InventoryModule,
   ],
+  controllers: [AppController],
   providers: [
     {
       provide: APP_GUARD,
