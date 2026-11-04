@@ -44,9 +44,21 @@ jobs:
       - run: pnpm install --frozen-lockfile
       # Seuls les services utiles aux tests sont lancés : moins de conteneurs à
       # télécharger, donc un démarrage plus rapide et plus fiable en CI.
+      # Les images Supabase viennent de registres publics : un tirage peut être
+      # refusé temporairement (limite de débit). On réessaie, puis on affiche
+      # l'état des conteneurs pour diagnostiquer.
       - name: Démarrer Supabase local
         run: |
-          pnpm exec supabase start --exclude studio,imgproxy,postgres-meta,realtime,edge-runtime,logflare,vector
+          for attempt in 1 2 3; do
+            echo "Tentative $attempt"
+            if pnpm exec supabase start --exclude studio,imgproxy,postgres-meta,realtime,edge-runtime,logflare,vector; then
+              exit 0
+            fi
+            docker ps -a || true
+            sleep 20
+          done
+          pnpm exec supabase status || true
+          exit 1
       - run: pnpm test:db
       - run: pnpm test:db:concurrency
       - run: pnpm exec playwright install --with-deps chromium
