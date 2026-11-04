@@ -111,7 +111,7 @@ function SettingsForm({
           </h2>
           <p className="mt-1 max-w-xl text-sm leading-6 text-slate-600">
             Partagez ce lien sur WhatsApp : vos clients voient le catalogue sans créer de compte et vous envoient leur
-            commande.
+            commande. Les photos ajoutées dans « Produits » s’affichent ici et sur la page publique.
           </p>
         </div>
         <StatusBadge status={published ? 'confirmed' : 'cancelled'} />

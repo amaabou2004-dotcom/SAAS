@@ -1,6 +1,7 @@
 # La suite du projet — feuille de route
 
-> État au dernier commit : **étapes 1 (ventes), 2 (rapports) et 4 (équipe) terminées** — la
+> État au dernier commit : **étapes 1 (ventes), 2 (rapports), 3 (boutique publique) et 4
+> (équipe) terminées**, plus les **photos produits** ajoutées depuis le téléphone — la
 > caisse fonctionne (panier, ticket, encaissement, annulation, sortie de stock automatique),
 > les rapports répondent (CA, marge, top produits, produits dormants, export CSV) et l'équipe
 > se gère dans l'application (invitation par e-mail, rôles, retrait), en plus du socle
@@ -11,19 +12,21 @@
 
 ## Où en est le produit, en une image
 
-Stokari sait aujourd'hui **ranger, compter, vendre, mesurer et travailler à plusieurs** :
-produits, catégories, emplacements, stock, mouvements, caisse (ticket numéroté, stock qui
-baisse tout seul, annulation tracée), rapports (CA, marge, top produits, dormants, CSV) et
-gestion de l'équipe par rôles. C'est testé (132 tests) et isolé par entreprise.
+Stokari sait aujourd'hui **ranger, compter, vendre, mesurer, travailler à plusieurs et vendre
+hors du magasin** : produits illustrés par une photo, catégories, emplacements, stock,
+mouvements, caisse (ticket numéroté, stock qui baisse tout seul, annulation tracée), rapports
+(CA, marge, top produits, dormants, CSV), boutique publique partageable sur WhatsApp avec
+commandes à confirmer, et gestion de l'équipe par rôles. C'est testé (185 tests) et isolé par
+entreprise.
 
-Ce qui manque maintenant, c'est **la vente hors du magasin** (la boutique publique), puis
-l'abonnement.
+Ce qui manque maintenant, c'est **l'abonnement**.
 
 ```
    [FAIT] Catalogue + Stock + Mouvements + Sécurité + VENTES + RAPPORTS + ÉQUIPE
+                          + BOUTIQUE PUBLIQUE + PHOTOS PRODUITS
               │
               ▼
-   [3] BOUTIQUE PUBLIQUE ──► [5] ABONNEMENT
+   [5] ABONNEMENT
 ```
 
 ---
@@ -119,8 +122,8 @@ partageable transforme Stokari en vitrine, sans application à installer côté 
 
 **Ce qui est livré (le lien à partager)**
 
-- Un lien public : `/b/<adresse>` — catalogue avec prix et disponibilité, **sans compte**,
-  sans coût d'achat et sans accès aux autres entreprises.
+- Un lien public : `/b/<adresse>` — catalogue avec **photo**, prix et disponibilité, **sans
+  compte**, sans coût d'achat et sans accès aux autres entreprises.
 - Un panier côté client, puis un formulaire **nom + téléphone WhatsApp + précision**.
 - La commande arrive **dans l'application**, onglet **Boutique** (`/workspace/commandes`),
   avec un numéro `CMD-000123`.
@@ -146,9 +149,37 @@ partageable transforme Stokari en vitrine, sans application à installer côté 
 
 **Reste à faire sur cette étape (plus tard)**
 
-- **Photos produits** (Supabase Storage) : le catalogue est aujourd'hui textuel.
 - Notifications (SMS ou WhatsApp) envoyées au commerçant à l'arrivée d'une commande.
 - Page de suivi pour le client (« où en est ma commande ? ») à partir du numéro de commande.
+
+---
+
+## Photos produits — ✅ TERMINÉE (ajout demandé en cours de route)
+
+**Pourquoi :** un catalogue sans photo se vend mal sur WhatsApp, et le commerçant travaille
+depuis son téléphone : la photo doit venir de la **galerie ou de l'appareil photo**, sans
+passer par un ordinateur.
+
+**Ce qui est livré**
+
+- Bouton **« Choisir une photo »** dans le formulaire produit : le téléphone propose la
+  galerie ou l'appareil photo (`accept="image/*"`), avec aperçu, remplacement et retrait.
+- La photo est **réduite dans le navigateur** (1 600 px de côté, JPEG qualité 0,85) avant
+  l'envoi : une photo de 4 Mo part en quelques centaines de Ko sur un réseau mobile.
+- Rangement Supabase Storage, bucket **public `product-images`** (lecture libre, l'adresse de
+  la photo est publique par nature) ; plafond **8 Mo**, formats JPEG / PNG / WebP.
+- Chemin `{entreprise}/{fichier aléatoire}.jpg` : la politique de sécurité lit l'entreprise
+  dans le chemin et exige `catalog.manage`, donc une entreprise **ne peut pas** écrire dans le
+  dossier d'une autre. Un chemin piégé (`../…`) est refusé par le contrôle de format.
+- La photo est enregistrée avec la fiche (`upsert_product(..., p_image_url)`), s'efface en
+  envoyant `null`, et l'ancienne photo est supprimée du rangement quand elle est remplacée.
+- Vignette dans la liste des produits, et photo dans le **catalogue public** (`image_url`
+  ajouté à `storefront_catalog`).
+
+**Critère de réussite (vérifié en base) :** enregistrer une fiche avec photo → `image_url`
+enregistrée ; adresse `javascript:` refusée (`Invalid product image`) ; envoi dans le dossier
+de son entreprise accepté, dans celui d'une autre entreprise **refusé**, mauvais bucket
+**refusé** ; `storefront_catalog` renvoie bien la colonne `image_url`.
 
 ---
 
@@ -211,8 +242,9 @@ webhook de paiement, écran de facturation.
 | 4 | **Équipe** ✅ | ⭐⭐ | débloque les boutiques à plusieurs vendeurs |
 | 5 | **Abonnement** | ⭐⭐ | transforme l'usage en revenus |
 
-**Recommandation :** les étapes 1, 2, 3 et 4 sont faites — la prochaine chantier utile est
-l'**étape 5 (abonnement)**, une fois quelques boutiques utilisatrices.
+**Recommandation :** les étapes 1, 2, 3 et 4 sont faites, ainsi que les photos produits — le
+prochain chantier utile est l'**étape 5 (abonnement)**, une fois quelques boutiques
+utilisatrices.
 
 ---
 
@@ -222,7 +254,6 @@ l'**étape 5 (abonnement)**, une fois quelques boutiques utilisatrices.
 | --- | --- | --- |
 | API dans une image Docker + hébergeur Node | l'API n'est pas déployée aujourd'hui (mode direct) | avant la production payante |
 | Tests de bout en bout (Playwright déjà configuré) | vérifier les parcours réels à chaque déploiement | étape 5 |
-| Photos produits (Supabase Storage) | la boutique publique est aujourd'hui textuelle | juste après l'étape 3 |
 | Sauvegardes et plan de reprise | un commerce ne perd pas son stock | avant la mise en production payante |
 | Journal d'audit exploitable | qui a fait quoi, quand | étape 5 |
 | Test de bout en bout (Playwright) dans la CI | le métier est couvert par les tests unitaires, mais le parcours complet échoue encore en CI ; à rejouer avec Docker/Supabase local | avant la mise en production |

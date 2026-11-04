@@ -34,6 +34,7 @@ export interface ProductRecord {
   sale_price: number;
   cost_price: number;
   active: boolean;
+  image_url: string | null;
   created_at: string;
   updated_at: string;
   category: CategoryRecord | null;
@@ -41,7 +42,7 @@ export interface ProductRecord {
 }
 
 const categoryColumns = 'id, tenant_id, name, active, created_at, updated_at';
-const productColumns = 'id, tenant_id, category_id, name, description, sale_price, cost_price, active, created_at, updated_at';
+const productColumns = 'id, tenant_id, category_id, name, description, sale_price, cost_price, active, image_url, created_at, updated_at';
 const variantColumns = 'id, tenant_id, product_id, sku, barcode, attributes, active, created_at, updated_at';
 
 @Injectable()
@@ -161,6 +162,7 @@ export class CatalogService {
       p_barcode: input.barcode ?? null,
       p_attributes: input.attributes ?? {},
       p_active: active,
+      p_image_url: input.image_url ?? null,
     });
     if (error) this.fail(error, 'L’enregistrement du produit a échoué.');
     const payload: unknown = data;

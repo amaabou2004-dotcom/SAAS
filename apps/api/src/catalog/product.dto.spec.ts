@@ -33,4 +33,21 @@ describe('CreateProductDto', () => {
       expect.arrayContaining(['sale_price', 'cost_price']),
     );
   });
+
+  it('accepte l’adresse d’une photo et refuse une adresse dangereuse', async () => {
+    const base = { name: 'Produit', sale_price: '500', cost_price: '300', sku: 'SKU-001' };
+
+    const withPhoto = plainToInstance(CreateProductDto, {
+      ...base,
+      image_url: 'https://projet.supabase.co/storage/v1/object/public/product-images/p.jpg',
+    });
+    expect(await validate(withPhoto)).toHaveLength(0);
+
+    const cleared = plainToInstance(CreateProductDto, { ...base, image_url: '   ' });
+    expect(await validate(cleared)).toHaveLength(0);
+    expect(cleared.image_url).toBeNull();
+
+    const dangerous = plainToInstance(CreateProductDto, { ...base, image_url: 'javascript:alert(1)' });
+    expect((await validate(dangerous)).map((error) => error.property)).toContain('image_url');
+  });
 });

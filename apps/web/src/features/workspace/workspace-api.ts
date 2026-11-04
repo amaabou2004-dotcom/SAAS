@@ -27,6 +27,7 @@ const productSchema = z.object({
   sale_price: z.number(),
   cost_price: z.number(),
   active: z.boolean(),
+  image_url: z.string().nullable(),
   category: categorySchema.nullable(),
   variants: z.array(variantSchema),
 });
@@ -93,6 +94,7 @@ export interface ProductInput {
   sku: string;
   barcode: string | null;
   attributes: Record<string, unknown>;
+  image_url: string | null;
 }
 
 export interface StockOperationInput {
@@ -153,6 +155,7 @@ export async function setProductActive(token: string, tenantId: string, product:
       sku: variant.sku,
       barcode: variant.barcode,
       attributes: variant.attributes,
+      image_url: product.image_url,
       active,
       variant_id: variant.id,
     }),

@@ -34,7 +34,22 @@ describe('CatalogService', () => {
       p_barcode: null,
       p_attributes: {},
       p_active: true,
+      p_image_url: null,
     });
+  });
+
+  it('enregistre la photo du produit quand elle est fournie', async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: { product: { id: 'product' }, variant: { id: 'variant' } }, error: null });
+    const service = new CatalogService({ createUserClient: vi.fn().mockReturnValue({ rpc }) } as unknown as SupabaseService);
+
+    await service.createProduct('user-token', 'tenant-id', {
+      ...input,
+      image_url: 'https://exemple.test/storage/v1/object/public/product-images/photo.jpg',
+    });
+
+    expect(rpc).toHaveBeenCalledWith('upsert_product', expect.objectContaining({
+      p_image_url: 'https://exemple.test/storage/v1/object/public/product-images/photo.jpg',
+    }));
   });
 
   it('combines products with their own variants', async () => {

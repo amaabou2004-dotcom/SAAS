@@ -278,7 +278,7 @@ async function listProducts({ client }: RouteContext, tenantId: string) {
   const [productsRes, variantsRes, categoriesRes] = await Promise.all([
     client
       .from('products')
-      .select('id, tenant_id, category_id, name, description, sale_price, cost_price, active')
+      .select('id, tenant_id, category_id, name, description, sale_price, cost_price, active, image_url')
       .eq('tenant_id', tenantId)
       .order('name', { ascending: true }),
     client
@@ -303,6 +303,7 @@ async function listProducts({ client }: RouteContext, tenantId: string) {
     sale_price: asNumber(product.sale_price),
     cost_price: asNumber(product.cost_price),
     active: Boolean(product.active),
+    image_url: (product.image_url as string | null) ?? null,
     category: categories.find((category) => category.id === product.category_id) ?? null,
     variants: variants
       .filter((variant) => variant.product_id === product.id)
@@ -335,11 +336,9 @@ async function saveProduct({ client, body }: RouteContext, tenantId: string, pro
     p_barcode: typeof body.barcode === 'string' && body.barcode.trim() ? body.barcode.trim() : null,
     p_attributes: attributes,
     p_active: typeof body.active === 'boolean' ? body.active : true,
-    p_supplier_id: null,
-    p_unit: null,
-    p_reorder_point: null,
-    p_reorder_qty: null,
-    p_storage_label: null,
+    // Photo déjà envoyée dans le bucket `product-images` : on n'enregistre que
+    // son adresse (une chaîne vide efface la photo).
+    p_image_url: body.image_url === null ? null : typeof body.image_url === 'string' && body.image_url.trim() ? body.image_url.trim() : null,
   });
 
   if (error) fail(error.message, 'Le produit n’a pas pu être enregistré.');
@@ -640,6 +639,7 @@ async function shopCatalog({ client }: RouteContext, slug: string) {
     unit_price: asNumber(row.unit_price),
     available: asNumber(row.available),
     currency_code: asText(row.currency_code),
+    image_url: (row.image_url as string | null) ?? null,
   }));
 }
 

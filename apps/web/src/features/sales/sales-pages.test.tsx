@@ -51,6 +51,7 @@ const product = {
   sale_price: 1200,
   cost_price: 500,
   active: true,
+  image_url: null,
   category: null,
   variants: [{
     id: variantId,

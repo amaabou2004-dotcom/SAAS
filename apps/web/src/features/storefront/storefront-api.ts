@@ -24,6 +24,7 @@ const shopItemSchema = z.object({
   unit_price: z.number(),
   available: z.number(),
   currency_code: z.string(),
+  image_url: z.string().nullable(),
 });
 
 const shopOrderReceiptSchema = z.object({

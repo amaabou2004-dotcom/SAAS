@@ -6,7 +6,15 @@ import { WorkspaceContext } from './workspace-context';
 import { ProductsPage } from './products-page';
 import { StockPage } from './stock-page';
 import { MovementsPage } from './movements-page';
+import { uploadProductImage } from './product-image';
 import { createCategory, listCategories, listLocations, listMovements, listProducts, listStock, postStockOperation, reverseStockOperation, saveProduct, setCategoryActive, setProductActive, createLocation } from './workspace-api';
+
+vi.mock('./product-image', () => ({
+  deleteProductImage: vi.fn(),
+  productImagePath: vi.fn(() => null),
+  uploadProductImage: vi.fn(),
+  validateProductImage: vi.fn(() => null),
+}));
 
 vi.mock('./workspace-api', () => ({
   createCategory: vi.fn(),
@@ -41,6 +49,7 @@ const product = {
   sale_price: 500,
   cost_price: 300,
   active: true,
+  image_url: null,
   category: null,
   variants: [{
     id: '7c1ee4d1-28f1-4f77-b67e-21ceac76b636',
@@ -104,6 +113,48 @@ describe('Workspace pages', () => {
     expect(vi.mocked(saveProduct).mock.calls[0]?.[0]).toBe('user-token');
     expect(vi.mocked(saveProduct).mock.calls[0]?.[1]).toBe(tenant.id);
     expect(vi.mocked(saveProduct).mock.calls[0]?.[2]).toMatchObject({ name: 'Eau minérale', sku: 'EAU-001', sale_price: '500', cost_price: '300' });
+  });
+
+  it('envoie la photo choisie dans la galerie avec la fiche produit', async () => {
+    const user = userEvent.setup();
+    vi.mocked(uploadProductImage).mockClear();
+    vi.mocked(saveProduct).mockClear();
+    vi.mocked(uploadProductImage).mockResolvedValue({ path: `${tenant.id}/photo.jpg`, url: 'https://exemple.test/photo.jpg' });
+    renderWithWorkspace(<ProductsPage />);
+
+    await user.type(await screen.findByLabelText('Nom du produit'), 'Eau minérale');
+    await user.type(screen.getByLabelText('SKU de la variante'), 'EAU-001');
+    await user.type(screen.getByLabelText(/Prix de vente/), '500');
+    await user.type(screen.getByLabelText(/Prix de revient/), '300');
+    const photo = new File(['image'], 'photo.jpg', { type: 'image/jpeg' });
+    await user.upload(screen.getByLabelText(/Photo du produit/), photo);
+    await user.click(screen.getByRole('button', { name: 'Créer le produit' }));
+
+    await waitFor(() => expect(saveProduct).toHaveBeenCalled());
+    expect(uploadProductImage).toHaveBeenCalledWith(tenant.id, photo, expect.any(Function));
+    expect(vi.mocked(saveProduct).mock.calls[0]?.[2]).toMatchObject({
+      name: 'Eau minérale',
+      sku: 'EAU-001',
+      image_url: 'https://exemple.test/photo.jpg',
+    });
+  });
+
+  it('retire la photo d’un produit existant quand on la supprime', async () => {
+    const user = userEvent.setup();
+    vi.mocked(uploadProductImage).mockClear();
+    vi.mocked(saveProduct).mockClear();
+    vi.mocked(listProducts).mockResolvedValue([
+      { ...product, image_url: 'https://exemple.test/storage/v1/object/public/product-images/photo.jpg' },
+    ]);
+    renderWithWorkspace(<ProductsPage />);
+
+    await user.click(await screen.findByRole('button', { name: 'Modifier Eau minérale' }));
+    await user.click(screen.getByRole('button', { name: 'Retirer' }));
+    await user.click(screen.getByRole('button', { name: 'Enregistrer les modifications' }));
+
+    await waitFor(() => expect(saveProduct).toHaveBeenCalled());
+    expect(uploadProductImage).not.toHaveBeenCalled();
+    expect(vi.mocked(saveProduct).mock.calls[0]?.[2]).toMatchObject({ image_url: null });
   });
 
   it('posts a balanced transfer with a stable idempotency key', async () => {

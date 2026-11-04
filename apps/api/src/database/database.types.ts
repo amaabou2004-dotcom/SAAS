@@ -28,6 +28,7 @@ type ProductRow = {
   sale_price: number;
   cost_price: number;
   active: boolean;
+  image_url: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -202,6 +203,7 @@ type StorefrontCatalogRow = {
   unit_price: number;
   available: number;
   currency_code: string;
+  image_url: string | null;
 }
 
 type SaleOverviewRow = SaleRow & {
@@ -274,6 +276,7 @@ export interface Database {
           p_barcode: string | null;
           p_attributes: Record<string, unknown>;
           p_active: boolean;
+          p_image_url?: string | null;
         };
         Returns: unknown;
       };

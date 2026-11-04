@@ -94,6 +94,7 @@ describe('boutique publique', () => {
         unit_price: 400,
         available: 12,
         currency_code: 'XOF',
+        image_url: null,
       },
     ]);
 

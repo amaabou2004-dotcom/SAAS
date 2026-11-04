@@ -2,13 +2,15 @@
 
 Plateforme multi-entreprises de gestion commerciale, de stock et de boutiques en ligne.
 
-> **État actuel : itération 7 — accueil du jour, identité, entreprise, catalogue, stock, ventes, rapports, équipe et boutique publique.**
+> **État actuel : itération 8 — accueil du jour, identité, entreprise, catalogue illustré, stock, ventes, rapports, équipe et boutique publique.**
 > La caisse est en place (panier, ticket numéroté, encaissement espèces / Mobile Money / crédit,
 > annulation tracée), les rapports aussi (CA, marge, top produits, produits dormants, export
 > CSV), la gestion de l’équipe (invitations, rôles, acceptation automatique à la connexion) et
 > la **boutique publique** : un lien `/b/<adresse>` à partager sur WhatsApp, un catalogue lisible
 > sans compte, un panier, et des commandes qui deviennent des ventes en un clic côté commerçant.
-> Les abonnements et les photos produits ne sont pas encore implémentés.
+> Chaque produit peut porter une **photo choisie dans la galerie du téléphone** (réduite avant
+> envoi, bucket Supabase Storage `product-images` isolé par entreprise), affichée dans
+> l’application et dans le catalogue public. Les abonnements ne sont pas encore implémentés.
 > L’interface ne présente aucune donnée commerciale fictive.
 
 ## Déploiement sur Vercel

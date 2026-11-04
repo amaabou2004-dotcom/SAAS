@@ -34,6 +34,7 @@ Plusieurs personnes peuvent travailler dans la même entreprise, chacune avec un
 | Rôles et permissions à la création | ✅ | automatique |
 | Catégories de produits | ✅ | `/workspace/categories` |
 | Produits et variantes (SKU, code-barres) | ✅ | `/workspace/produits` |
+| **Photo du produit** choisie dans la galerie ou prise avec l'appareil photo | ✅ | `/workspace/produits` |
 | Emplacements de stock | ✅ | `/workspace/emplacements` |
 | Niveaux de stock (physique, réservé, disponible) | ✅ | `/workspace/stock` |
 | Réceptions, ajustements, transferts | ✅ | `/workspace/mouvements` |
@@ -47,7 +48,7 @@ Plusieurs personnes peuvent travailler dans la même entreprise, chacune avec un
 | **Équipe** : membres, rôles, invitations en attente | ✅ | `/workspace/equipe` |
 | Inviter une personne par e-mail et lui donner un rôle | ✅ | `/workspace/equipe` |
 | Retirer un membre (jamais le dernier propriétaire) | ✅ | `/workspace/equipe` |
-| **Boutique publique** : lien `/b/adresse`, catalogue, panier, commande sans compte | ✅ | `/b/<adresse>` |
+| **Boutique publique** : lien `/b/adresse`, catalogue illustré, panier, commande sans compte | ✅ | `/b/<adresse>` |
 | Réglages de la boutique (adresse, nom, WhatsApp, stock, ouverture) | ✅ | `/workspace/commandes` |
 | **Commandes reçues** : confirmer (crée la vente), annuler, marquer livrée | ✅ | `/workspace/commandes` |
 | Lien copiable + envoi WhatsApp prérempli | ✅ | `/workspace/commandes` |
@@ -59,7 +60,9 @@ enregistrer son stock, suivre les mouvements, **vendre au comptoir** (ticket num
 qui baisse tout seul, annulation qui remet le stock), **voir ce qui rapporte** (rapports et
 export CSV), **inviter son vendeur** avec un rôle limité, et **vendre en ligne** : il partage
 un lien sur WhatsApp, ses clients commandent sans compte, et la commande devient une vente en
-un clic. C'est un socle solide et testé (172 tests).
+un clic. Il peut aussi **mettre une photo sur chaque produit depuis son téléphone** : elle
+apparaît dans l'application et dans le catalogue public. C'est un socle solide et testé
+(185 tests).
 
 ---
 
@@ -67,7 +70,6 @@ un clic. C'est un socle solide et testé (172 tests).
 
 | À construire | Pourquoi c'est important |
 | --- | --- |
-| **Photos produits** dans la boutique publique | un catalogue illustré vend beaucoup mieux |
 | Notifications à l'arrivée d'une commande (SMS / WhatsApp) | ne pas rater une commande |
 | Suivi de commande pour le client | répondre à « où en est ma commande ? » |
 | **Abonnements / facturation** | gagner de l'argent avec le SaaS |
@@ -84,7 +86,9 @@ un clic. C'est un socle solide et testé (172 tests).
 5. Vous êtes dans l'espace, sur l'**Accueil** : ventes et marge du jour, commandes en ligne à
    confirmer, produits épuisés, actions rapides. Commencez par **Emplacements** (un dépôt est
    déjà créé),
-   puis **Catégories**, puis **Produits**.
+   puis **Catégories**, puis **Produits**. Dans **Produits**, le bouton **Choisir une photo**
+   ouvre la galerie (ou l'appareil photo) : la photo s'affiche en aperçu, puis dans la liste et
+   dans le catalogue public.
 6. Onglet **Stock** : saisissez une quantité d'ouverture via **Mouvements** → réception.
 7. Onglet **Mouvements** : chaque opération est horodatée, attribuée et annulable.
 8. Onglet **Ventes** → **Nouvelle vente** : ajoutez un produit, ajustez la quantité,
@@ -139,6 +143,7 @@ Deux façons de brancher le front à la base, sans changer un écran :
 | Rapports, CSV | `apps/web/src/features/reports/` |
 | Accueil du jour (tableau de bord) | `apps/web/src/features/dashboard/` |
 | Boutique publique (page client) | `apps/web/src/features/storefront/` |
+| Photos produits (envoi dans le rangement) | `apps/web/src/features/workspace/product-image.ts` |
 | Les routes du serveur | `apps/api/src/*/‑controller.ts` |
 | Les règles métier du serveur | `apps/api/src/*/‑service.ts` |
 | Les tables et la sécurité | `supabase/migrations/*.sql` |
@@ -149,7 +154,7 @@ Deux façons de brancher le front à la base, sans changer un écran :
 
 ```bash
 pnpm install          # installer les dépendances
-pnpm test             # 172 tests (API + web)
+pnpm test             # 185 tests (API + web)
 pnpm typecheck        # vérification TypeScript
 pnpm lint             # qualité du code
 pnpm dev              # lancer l'interface (5173) et l'API (3001)
@@ -162,13 +167,9 @@ pnpm dev              # lancer l'interface (5173) et l'API (3001)
 
 ## 8. La prochaine étape recommandée
 
-**Les photos dans la boutique, puis l'abonnement.** Les quatre premières étapes sont livrées :
-le socle commercial est complet. Deux chantiers utiles maintenant :
-
-- **Photos produits** : un catalogue illustré (Supabase Storage) — c'est ce qui fait
-  convertir un lien WhatsApp.
-- **Abonnements** : un plan gratuit limité, puis un plan payant (Mobile Money), pour que
-  Stokari gagne de l'argent.
+**L'abonnement.** Les quatre premières étapes sont livrées, et les photos produits aussi :
+le socle commercial est complet. Le prochain chantier utile est l'abonnement — un plan gratuit
+limité, puis un plan payant (Mobile Money), pour que Stokari gagne de l'argent.
 
 Ordre proposé :
 
@@ -177,4 +178,6 @@ Ordre proposé :
 3. ~~Boutique publique~~ ✅ — lien à partager, catalogue, panier, commande reçue dans l'app,
    confirmation qui crée la vente.
 4. ~~Invitations d'équipe~~ ✅ — membres, rôles, invitations, acceptation automatique.
-5. **Photos produits** puis **abonnements** — vitrine illustrée, puis modèle économique.
+5. ~~Photos produits~~ ✅ — photo choisie dans la galerie du téléphone, réduite avant envoi,
+   affichée dans l'application et dans le catalogue public.
+6. **Abonnements** — modèle économique.

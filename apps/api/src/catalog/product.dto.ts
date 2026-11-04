@@ -51,6 +51,17 @@ export class CreateProductDto {
   @IsOptional()
   @IsObject()
   attributes?: Record<string, unknown>;
+
+  // Photo du produit (Supabase Storage). `null` efface la photo.
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) => {
+    if (typeof value !== 'string') return value ?? null;
+    const trimmed = value.trim();
+    return trimmed ? trimmed : null;
+  })
+  @IsString()
+  @Matches(/^https?:\/\/\S{1,780}$/)
+  image_url?: string | null;
 }
 
 export class UpdateProductDto extends CreateProductDto {

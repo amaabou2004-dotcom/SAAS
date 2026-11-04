@@ -257,6 +257,14 @@ export function PublicShopPage() {
               const quantity = quantities[item.variant_id] ?? 0;
               return (
                 <li key={item.variant_id} className={cardClass}>
+                  {item.image_url ? (
+                    <img
+                      src={item.image_url}
+                      alt={item.name}
+                      loading="lazy"
+                      className="mb-3 aspect-[4/3] w-full rounded-xl bg-slate-100 object-cover"
+                    />
+                  ) : null}
                   <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
                     {item.category_name ?? 'Produit'}
                   </p>

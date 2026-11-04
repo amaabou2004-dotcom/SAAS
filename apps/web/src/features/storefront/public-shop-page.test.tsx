@@ -33,6 +33,7 @@ const items: ShopItem[] = [
     unit_price: 400,
     available: 12,
     currency_code: 'XOF',
+    image_url: 'https://exemple.test/photo-eau.jpg',
   },
   {
     product_id: '77777777-7777-4777-8777-777777777777',
@@ -44,6 +45,7 @@ const items: ShopItem[] = [
     unit_price: 250,
     available: 4,
     currency_code: 'XOF',
+    image_url: null,
   },
 ];
 
