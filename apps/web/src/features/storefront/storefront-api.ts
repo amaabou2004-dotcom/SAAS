@@ -36,6 +36,21 @@ const shopOrderReceiptSchema = z.object({
   status: z.string(),
 });
 
+const shopOrderTrackingSchema = z.object({
+  number: z.string(),
+  status: z.enum(['pending', 'confirmed', 'cancelled', 'delivered']),
+  item_count: z.number(),
+  total: z.number(),
+  currency_code: z.string(),
+  shop_name: z.string(),
+  created_at: z.string(),
+  confirmed_at: z.string().nullable(),
+  delivered_at: z.string().nullable(),
+  cancelled_at: z.string().nullable(),
+  cancel_reason: z.string().nullable(),
+});
+
+export type ShopOrderTracking = z.infer<typeof shopOrderTrackingSchema>;
 export type ShopInfo = z.infer<typeof shopInfoSchema>;
 export type ShopItem = z.infer<typeof shopItemSchema>;
 export type ShopOrderReceipt = z.infer<typeof shopOrderReceiptSchema>;
@@ -80,6 +95,14 @@ export function whatsappShareUrl(text: string, phone?: string | null): string {
 export async function getShopInfo(slug: string): Promise<ShopInfo | null> {
   const payload = await apiFetch<unknown>(`/shop/${slug}`, '');
   return payload === null ? null : shopInfoSchema.parse(payload);
+}
+
+/** Suivi d'une commande par son numéro (CMD-000123), sans compte. */
+export async function trackShopOrder(slug: string, number: string): Promise<ShopOrderTracking | null> {
+  const reference = number.trim().toUpperCase();
+  const payload = await apiFetch<unknown>(`/shop/${slug}/track/${encodeURIComponent(reference)}`, '');
+  if (payload === null || payload === undefined) return null;
+  return shopOrderTrackingSchema.parse(payload);
 }
 
 export async function getShopCatalog(slug: string): Promise<ShopItem[]> {

@@ -189,12 +189,20 @@ export function SalesPage() {
       title="Ventes"
       description="Chaque vente retire le stock de l’emplacement choisi, calcule la marge et peut être annulée sans jamais effacer l’historique."
       action={
-        <Button asChild variant="mint" size="lg">
-          <Link to="/workspace/ventes/nouvelle">
-            <Plus className="size-4" aria-hidden="true" />
-            Nouvelle vente
-          </Link>
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button asChild variant="mint" size="lg">
+            <Link to="/workspace/ventes/caisse">
+              <ShoppingCart className="size-4" aria-hidden="true" />
+              Ouvrir la caisse
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="lg">
+            <Link to="/workspace/ventes/nouvelle">
+              <Plus className="size-4" aria-hidden="true" />
+              Vente détaillée
+            </Link>
+          </Button>
+        </div>
       }
     >
       <div className="mb-6 grid gap-3 sm:grid-cols-3">

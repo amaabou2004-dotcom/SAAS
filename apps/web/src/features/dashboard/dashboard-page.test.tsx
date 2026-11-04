@@ -143,9 +143,10 @@ describe('accueil du commerçant', () => {
     expect(await screen.findByText('commande(s) à confirmer')).toBeInTheDocument();
     expect(await screen.findByText('Savon parfumé')).toBeInTheDocument();
     expect(screen.getByText('À réapprovisionner')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Nouvelle vente/ })).toHaveAttribute(
+    // Le bouton principal ouvre la caisse : une vente se fait en trois gestes.
+    expect(screen.getByRole('link', { name: /Encaisser une vente/ })).toHaveAttribute(
       'href',
-      '/workspace/ventes/nouvelle',
+      '/workspace/ventes/caisse',
     );
   });
 

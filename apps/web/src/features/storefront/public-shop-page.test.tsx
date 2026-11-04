@@ -102,7 +102,7 @@ describe('boutique publique', () => {
     expect(await screen.findByText('Riz parfumé 5 kg')).toBeInTheDocument();
     expect(screen.getByText('rupture de stock')).toBeInTheDocument();
     expect(screen.getByText('Indisponible')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Ajouter' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Commander' })).not.toBeInTheDocument();
   });
 
 
@@ -113,17 +113,15 @@ describe('boutique publique', () => {
     expect(await screen.findByText('Eau minérale 1,5 L')).toBeInTheDocument();
     expect(screen.getByText('Savon parfumé')).toBeInTheDocument();
 
-    await userEvent.click(screen.getAllByRole('button', { name: 'Ajouter' })[0]!);
-    expect(await screen.findByText('1 article(s)')).toBeInTheDocument();
-
-    await userEvent.click(screen.getByRole('button', { name: /Commander/ }));
+    // « Commander » ajoute l'article ET ouvre le formulaire : deux gestes suffisent.
+    await userEvent.click(screen.getAllByRole('button', { name: 'Commander' })[0]!);
     expect(await screen.findByText('Vos coordonnées')).toBeInTheDocument();
+    expect(await screen.findByText('1 article(s)')).toBeInTheDocument();
   });
 
   it('refuse un téléphone invalide sans envoyer la commande', async () => {
     renderShop();
-    await userEvent.click((await screen.findAllByRole('button', { name: 'Ajouter' }))[0]!);
-    await userEvent.click(screen.getByRole('button', { name: /Commander/ }));
+    await userEvent.click((await screen.findAllByRole('button', { name: 'Commander' }))[0]!);
 
     await userEvent.type(screen.getByLabelText('Votre nom'), 'Aïcha Diallo');
     await userEvent.type(screen.getByLabelText('Téléphone (WhatsApp)'), 'abc');
@@ -143,9 +141,8 @@ describe('boutique publique', () => {
     });
 
     renderShop();
-    await userEvent.click((await screen.findAllByRole('button', { name: 'Ajouter' }))[0]!);
+    await userEvent.click((await screen.findAllByRole('button', { name: 'Commander' }))[0]!);
     await userEvent.click(screen.getByRole('button', { name: 'Ajouter un Eau minérale 1,5 L' }));
-    await userEvent.click(screen.getByRole('button', { name: /Commander/ }));
 
     await userEvent.type(screen.getByLabelText('Votre nom'), 'Aïcha Diallo');
     await userEvent.type(screen.getByLabelText('Téléphone (WhatsApp)'), '+227 90 00 00 01');

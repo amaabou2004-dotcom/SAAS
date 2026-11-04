@@ -19,10 +19,13 @@ import { ProductsPage } from '../features/workspace/products-page';
 import { StockPage } from '../features/workspace/stock-page';
 import { WorkspaceLayout } from '../features/workspace/workspace-layout';
 import { NewSalePage } from '../features/sales/new-sale-page';
+import { CreditsPage } from '../features/sales/credits-page';
+import { QuickSalePage } from '../features/sales/quick-sale-page';
 import { ReportsPage } from '../features/reports/reports-page';
 import { SalesPage } from '../features/sales/sales-page';
 import { DashboardPage } from '../features/dashboard/dashboard-page';
 import { StorefrontPage } from '../features/storefront/storefront-page';
+import { OrderTrackingPage } from '../features/storefront/order-tracking-page';
 import { PublicShopPage } from '../features/storefront/public-shop-page';
 import { TeamPage } from '../features/team/team-page';
 
@@ -91,6 +94,7 @@ export function App() {
         <Route path="/conditions" element={<TermsPage />} />
         {/* Boutique publique : aucun compte requis, hors de l'espace de travail. */}
         <Route path="/b/:slug" element={<PublicShopPage />} />
+        <Route path="/b/:slug/suivi" element={<OrderTrackingPage />} />
         <Route
           path="/workspace"
           element={
@@ -103,6 +107,8 @@ export function App() {
           <Route path="accueil" element={<DashboardPage />} />
           <Route path="ventes" element={<SalesPage />} />
           <Route path="ventes/nouvelle" element={<NewSalePage />} />
+          <Route path="ventes/caisse" element={<QuickSalePage />} />
+          <Route path="credits" element={<CreditsPage />} />
           <Route path="rapports" element={<ReportsPage />} />
           <Route path="produits" element={<ProductsPage />} />
           <Route path="categories" element={<CategoriesPage />} />
