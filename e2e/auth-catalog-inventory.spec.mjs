@@ -253,6 +253,9 @@ test('Auth, catalogue, stock et isolation fonctionnent avec Supabase local et Ma
     await signUpAndVerify(secondPage, secondEmail);
     await waitForOnboardingForm(secondPage);
     await createTenantAndOpenWorkspace(secondPage, secondTenantName, secondTenantSlug);
+    // Comme pour la première entreprise : l'espace s'ouvre sur l'accueil du
+    // jour, le catalogue s'atteint par l'onglet « Produits ».
+    await secondPage.getByRole('link', { name: 'Produits', exact: true }).click();
     await expect(secondPage.getByRole('heading', { name: 'Catalogue produits' })).toBeVisible();
     await expect(secondPage.getByText('Aucun produit pour le moment')).toBeVisible();
     const secondToken = await accessToken(secondPage);
