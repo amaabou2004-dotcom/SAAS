@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import { hasPermission } from '../team/team-api';
@@ -67,6 +67,7 @@ const settings: StorefrontSettings = {
   published: true,
   default_location_id: locationId,
   public_path: '/b/boutique-test',
+  logo_url: null,
   currency_code: 'XOF',
 };
 
@@ -207,6 +208,24 @@ describe('écran boutique du commerçant', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Confirmer l’annulation' }));
 
     expect(cancelStorefrontOrder).toHaveBeenCalledWith('token', tenant.id, orderId, 'Client injoignable');
+  });
+
+  it('propose d’ajouter un logo et l’enregistre avec les réglages', async () => {
+    renderPage();
+
+    expect(await screen.findByText('Logo de la boutique')).toBeInTheDocument();
+    expect(screen.getByText('Ajouter le logo')).toBeInTheDocument();
+    expect(screen.getByLabelText('Choisir le logo de la boutique')).toHaveAttribute('accept', 'image/*');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
+
+    await waitFor(() =>
+      expect(saveStorefrontSettings).toHaveBeenCalledWith(
+        'token',
+        tenant.id,
+        expect.objectContaining({ logo_url: null }),
+      ),
+    );
   });
 
   it('cache l’enregistrement sans le droit de gérer la boutique', async () => {

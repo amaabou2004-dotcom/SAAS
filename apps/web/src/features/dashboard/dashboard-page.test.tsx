@@ -106,6 +106,7 @@ const shopSettings: StorefrontSettings = {
   published: true,
   default_location_id: locationId,
   public_path: '/b/aicha-sarl',
+  logo_url: null,
   currency_code: 'XOF',
 };
 

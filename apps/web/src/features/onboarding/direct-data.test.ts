@@ -661,6 +661,7 @@ describe('mode direct — boutique du commerçant', () => {
         p_whatsapp: null,
         p_published: true,
         p_default_location_id: LOCATION_ID,
+        p_logo_url: null,
       },
     });
   });

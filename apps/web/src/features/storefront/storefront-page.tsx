@@ -1,7 +1,7 @@
 import { friendlyError } from '../../lib/friendly-error';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Check, Copy, ExternalLink, LoaderCircle, MapPin, Package, Phone, Send, Store, Truck, X } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { Check, Copy, ExternalLink, ImagePlus, LoaderCircle, MapPin, Package, Phone, Send, Store, Trash2, Truck, X } from 'lucide-react';
+import { useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { Alert } from '../../components/ui/alert';
 import { Button } from '../../components/ui/button';
@@ -13,6 +13,7 @@ import { useWorkspace } from '../workspace/workspace-context';
 import { EmptyWorkspace, WorkspaceSection } from '../workspace/workspace-layout';
 import { hasPermission } from '../team/team-api';
 import { OrderNotificationsCard } from './order-notifications-card';
+import { SHOP_LOGO_ACCEPT, deleteShopLogo, uploadShopLogo, validateShopLogo } from './shop-logo';
 import {
   cancelStorefrontOrder,
   confirmStorefrontOrder,
@@ -60,6 +61,11 @@ function SettingsForm({
   const [whatsapp, setWhatsapp] = useState(settings.whatsapp ?? '');
   const [locationId, setLocationId] = useState(settings.default_location_id ?? '');
   const [published, setPublished] = useState(settings.published);
+  const [logoUrl, setLogoUrl] = useState<string | null>(settings.logo_url);
+  const [logoBusy, setLogoBusy] = useState(false);
+  const [logoStatus, setLogoStatus] = useState<string | null>(null);
+  const [logoError, setLogoError] = useState<string | null>(null);
+  const previousLogo = useRef<string | null>(settings.logo_url);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -82,12 +88,50 @@ function SettingsForm({
         whatsapp: whatsapp.trim() || null,
         published,
         default_location_id: locationId || null,
+        logo_url: logoUrl,
       });
       onSaved(next);
+      // Le logo remplacé ou retiré ne doit pas rester stocké pour rien.
+      if (previousLogo.current && previousLogo.current !== logoUrl) {
+        await deleteShopLogo(previousLogo.current);
+      }
+      previousLogo.current = logoUrl;
       setSaved(true);
     } catch (caught) {
       setError(errorMessage(caught, 'La boutique n’a pas pu être enregistrée.'));
     }
+  };
+
+  const pickLogo = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    // Le champ est vidé : choisir deux fois la même photo doit fonctionner.
+    event.target.value = '';
+    if (!file) return;
+
+    const invalid = validateShopLogo(file);
+    if (invalid) {
+      setLogoError(invalid);
+      return;
+    }
+
+    setLogoError(null);
+    setSaved(false);
+    setLogoBusy(true);
+    try {
+      const uploaded = await uploadShopLogo(tenant.id, file, setLogoStatus);
+      setLogoUrl(uploaded.url);
+    } catch (caught) {
+      setLogoError(errorMessage(caught, 'Le logo n’a pas pu être envoyé.'));
+    } finally {
+      setLogoBusy(false);
+      setLogoStatus(null);
+    }
+  };
+
+  const removeLogo = () => {
+    setLogoUrl(null);
+    setSaved(false);
+    setLogoError(null);
   };
 
   const copy = async () => {
@@ -121,6 +165,50 @@ function SettingsForm({
           traiter les commandes.
         </Alert>
       ) : null}
+
+      <div className="mt-5 flex flex-wrap items-center gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+        <div className="grid size-20 shrink-0 place-items-center overflow-hidden rounded-xl border border-slate-200 bg-white">
+          {logoUrl ? (
+            <img src={logoUrl} alt="Logo de la boutique" className="size-full object-cover" />
+          ) : (
+            <Store className="size-8 text-slate-300" aria-hidden="true" />
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-ink">Logo de la boutique</p>
+          <p className="mt-0.5 text-xs leading-5 text-slate-600">
+            Il s’affiche en haut de votre boutique en ligne, à la place de l’icône. Une photo carrée rend mieux.
+          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <label
+              className={`inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-ink ${
+                !canManage || logoBusy ? 'cursor-not-allowed opacity-55' : 'cursor-pointer hover:bg-slate-50'
+              }`}
+            >
+              <ImagePlus className="size-4" aria-hidden="true" />
+              {logoBusy ? 'Envoi…' : logoUrl ? 'Changer le logo' : 'Ajouter le logo'}
+              <input
+                type="file"
+                accept={SHOP_LOGO_ACCEPT}
+                className="sr-only"
+                aria-label="Choisir le logo de la boutique"
+                disabled={!canManage || logoBusy}
+                onChange={(event) => { void pickLogo(event); }}
+              />
+            </label>
+            {logoUrl ? (
+              <Button type="button" size="sm" variant="ghost" disabled={!canManage || logoBusy} onClick={removeLogo}>
+                <Trash2 className="size-4" aria-hidden="true" />Retirer
+              </Button>
+            ) : null}
+          </div>
+          {logoStatus ? <p className="mt-2 text-xs text-slate-500" role="status">{logoStatus}</p> : null}
+          {logoError ? <p className="mt-2 text-xs font-semibold text-red-700">{logoError}</p> : null}
+          {logoUrl && logoUrl !== settings.logo_url ? (
+            <p className="mt-2 text-xs text-amber-700">Cliquez sur « Enregistrer » pour appliquer le nouveau logo.</p>
+          ) : null}
+        </div>
+      </div>
 
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
@@ -520,7 +608,7 @@ export function StorefrontPage() {
         </Alert>
       ) : settings ? (
         <SettingsForm
-          key={`${settings.slug}|${settings.display_name}|${settings.whatsapp ?? ''}|${settings.published}|${settings.default_location_id ?? ''}`}
+          key={`${settings.slug}|${settings.display_name}|${settings.whatsapp ?? ''}|${settings.published}|${settings.default_location_id ?? ''}|${settings.logo_url ?? ''}`}
           settings={settings}
           canManage={permissionQuery.data === true}
           locations={locations}

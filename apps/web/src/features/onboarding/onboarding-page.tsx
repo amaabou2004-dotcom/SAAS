@@ -24,13 +24,13 @@ const currencies = [
   ['MAD', 'Dirham marocain (MAD)'],
 ];
 
+// Libellés sans nom de ville : le commerçant choisit un décalage horaire, pas
+// une adresse géographique.
 const timezones = [
-  ['Africa/Niamey', 'Niamey (UTC+1)'],
-  ['Africa/Abidjan', 'Abidjan (UTC)'],
-  ['Africa/Dakar', 'Dakar (UTC)'],
-  ['Africa/Douala', 'Douala (UTC+1)'],
-  ['Europe/Paris', 'Paris'],
-  ['UTC', 'Temps universel coordonné (UTC)'],
+  ['Africa/Niamey', 'UTC+1 (heure locale)'],
+  ['Africa/Abidjan', 'UTC+0 (GMT)'],
+  ['Europe/Paris', 'UTC+1 en hiver, UTC+2 en été'],
+  ['UTC', 'Temps universel (UTC)'],
 ];
 
 export function OnboardingPage() {
