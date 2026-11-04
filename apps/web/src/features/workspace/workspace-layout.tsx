@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeftRight, BarChart3, Building2, History, LayoutDashboard, LoaderCircle, LogOut, MapPin, Package, Receipt, Store, Tags, Users, Warehouse } from 'lucide-react';
-import { useState, type ReactNode } from 'react';
-import { NavLink, Navigate, Outlet, useNavigate } from 'react-router-dom';
+import { ArrowLeftRight, BarChart3, Building2, ChevronDown, History, LayoutDashboard, LoaderCircle, LogOut, MapPin, Package, Receipt, Store, Tags, Users, Warehouse } from 'lucide-react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Brand } from '../../components/brand';
 import { Alert } from '../../components/ui/alert';
 import { Button } from '../../components/ui/button';
@@ -11,17 +11,25 @@ import { listTenants } from '../onboarding/tenant-api';
 import { acceptMyInvitations } from '../team/team-api';
 import { WorkspaceContext } from './workspace-context';
 
+/**
+ * Cinq écrans suffisent au quotidien. Tout le reste (stock détaillé, historique,
+ * dépôts, catégories, équipe) est rangé dans « Plus » pour ne pas encombrer.
+ * Les libellés sont volontairement des mots courants, pas du jargon.
+ */
 const navigation = [
   { to: '/workspace/accueil', label: 'Accueil', icon: LayoutDashboard },
   { to: '/workspace/ventes', label: 'Ventes', icon: Receipt },
+  { to: '/workspace/produits', label: 'Produits', icon: Package },
   { to: '/workspace/commandes', label: 'Boutique', icon: Store },
   { to: '/workspace/rapports', label: 'Rapports', icon: BarChart3 },
-  { to: '/workspace/produits', label: 'Produits', icon: Package },
-  { to: '/workspace/categories', label: 'Catégories', icon: Tags },
-  { to: '/workspace/emplacements', label: 'Emplacements', icon: MapPin },
-  { to: '/workspace/stock', label: 'Stock & opérations', icon: ArrowLeftRight },
-  { to: '/workspace/mouvements', label: 'Mouvements', icon: History },
-  { to: '/workspace/equipe', label: 'Équipe', icon: Users },
+];
+
+const moreNavigation = [
+  { to: '/workspace/stock', label: 'Stock', icon: ArrowLeftRight, hint: 'Ce qu’il reste, par dépôt' },
+  { to: '/workspace/mouvements', label: 'Historique', icon: History, hint: 'Toutes les entrées et sorties' },
+  { to: '/workspace/emplacements', label: 'Dépôts', icon: MapPin, hint: 'Boutique, réserve, magasin' },
+  { to: '/workspace/categories', label: 'Catégories', icon: Tags, hint: 'Ranger les produits' },
+  { to: '/workspace/equipe', label: 'Équipe', icon: Users, hint: 'Qui a accès à l’entreprise' },
 ];
 
 export function WorkspaceLayout() {
@@ -29,6 +37,12 @@ export function WorkspaceLayout() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
+  // Le menu « Plus » retient le chemin sur lequel il a été ouvert : dès que la
+  // route change, il se referme tout seul, sans effet ni rendu en cascade.
+  const [moreOpenAt, setMoreOpenAt] = useState<string | null>(null);
+  const location = useLocation();
+  const moreOpen = moreOpenAt === location.pathname;
+  const moreRef = useRef<HTMLDivElement | null>(null);
   const accessToken = session?.access_token;
   const tenantsQuery = useQuery({
     queryKey: ['tenants', user?.id],
@@ -47,6 +61,22 @@ export function WorkspaceLayout() {
   });
   const tenants = tenantsQuery.data ?? [];
   const tenant = tenants.find((item) => item.id === selectedTenantId) ?? tenants[0];
+
+  useEffect(() => {
+    if (!moreOpen) return;
+    const closeOnOutside = (event: MouseEvent) => {
+      if (!moreRef.current?.contains(event.target as Node)) setMoreOpenAt(null);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMoreOpenAt(null);
+    };
+    document.addEventListener('mousedown', closeOnOutside);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('mousedown', closeOnOutside);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [moreOpen]);
 
   const logout = async () => {
     await signOut();
@@ -99,17 +129,51 @@ export function WorkspaceLayout() {
               </Button>
             </div>
           </div>
-          <nav aria-label="Navigation de l’espace" className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-3 pb-2 sm:px-6">
-            {navigation.map(({ to, label, icon: Icon }) => (
-              <NavLink
-                key={to}
-                to={to}
-                className={({ isActive }) => `flex min-h-10 shrink-0 items-center gap-2 rounded-lg px-3 text-sm font-semibold transition-colors ${isActive ? 'bg-teal-50 text-mint-dark' : 'text-slate-600 hover:bg-slate-100 hover:text-ink'}`}
+          <div className="mx-auto flex max-w-7xl items-center gap-2 px-3 pb-2 sm:px-6">
+            <nav aria-label="Navigation de l’espace" className="flex min-w-0 flex-1 gap-1 overflow-x-auto">
+              {navigation.map(({ to, label, icon: Icon }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  className={({ isActive }) => `flex min-h-10 shrink-0 items-center gap-2 rounded-lg px-3 text-sm font-semibold transition-colors ${isActive ? 'bg-teal-50 text-mint-dark' : 'text-slate-600 hover:bg-slate-100 hover:text-ink'}`}
+                >
+                  <Icon className="size-4" aria-hidden="true" />{label}
+                </NavLink>
+              ))}
+            </nav>
+            <div className="relative shrink-0" ref={moreRef}>
+              <button
+                type="button"
+                aria-expanded={moreOpen}
+                aria-controls="more-navigation"
+                onClick={() => setMoreOpenAt(moreOpen ? null : location.pathname)}
+                className={`flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-semibold transition-colors ${moreOpen ? 'bg-slate-100 text-ink' : 'text-slate-600 hover:bg-slate-100 hover:text-ink'}`}
               >
-                <Icon className="size-4" aria-hidden="true" />{label}
-              </NavLink>
-            ))}
-          </nav>
+                Plus
+                <ChevronDown className={`size-4 transition-transform ${moreOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
+              </button>
+              {moreOpen ? (
+                <div
+                  id="more-navigation"
+                  className="absolute right-0 z-30 mt-1 w-64 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg"
+                >
+                  {moreNavigation.map(({ to, label, icon: Icon, hint }) => (
+                    <NavLink
+                      key={to}
+                      to={to}
+                      className={({ isActive }) => `flex items-start gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${isActive ? 'bg-teal-50 text-mint-dark' : 'text-slate-700 hover:bg-slate-100'}`}
+                    >
+                      <Icon className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                      <span className="min-w-0">
+                        <span className="block font-semibold">{label}</span>
+                        <span className="block text-xs text-slate-500">{hint}</span>
+                      </span>
+                    </NavLink>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          </div>
         </header>
         <main className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10">
           <Outlet />

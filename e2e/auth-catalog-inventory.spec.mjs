@@ -165,6 +165,15 @@ async function cleanup() {
   }
 }
 
+/**
+ * Les écrans secondaires (stock, historique, dépôts, catégories, équipe) sont
+ * rangés dans le menu « Plus » pour garder une navigation courte.
+ */
+async function openMore(page, label) {
+  await page.getByRole('button', { name: 'Plus', exact: true }).click();
+  await page.getByRole('link', { name: label, exact: true }).click();
+}
+
 test('Auth, catalogue, stock et isolation fonctionnent avec Supabase local et Mailpit', async ({ page, browser }) => {
   let secondContext;
   try {
@@ -175,7 +184,7 @@ test('Auth, catalogue, stock et isolation fonctionnent avec Supabase local et Ma
     await page.getByRole('link', { name: 'Produits', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Produits', exact: true })).toBeVisible();
 
-    await page.getByRole('link', { name: 'Catégories', exact: true }).click();
+    await openMore(page, 'Catégories');
     await page.getByLabel('Nom', { exact: true }).fill(categoryName);
     await page.getByRole('button', { name: 'Créer la catégorie' }).click();
     await expect(page.getByText(categoryName, { exact: true })).toBeVisible();
@@ -190,13 +199,13 @@ test('Auth, catalogue, stock et isolation fonctionnent avec Supabase local et Ma
     await expect(page.getByRole('heading', { name: productName, exact: true })).toBeVisible();
     await expect(page.getByText(sku, { exact: true })).toBeVisible();
 
-    await page.getByRole('link', { name: 'Emplacements', exact: true }).click();
+    await openMore(page, 'Dépôts');
     await page.getByLabel('Nom', { exact: true }).fill(secondLocationName);
     await page.getByLabel('Code unique').fill(secondLocationCode);
     await page.getByRole('button', { name: 'Créer l’emplacement' }).click();
     await expect(page.getByRole('heading', { name: secondLocationName, exact: true })).toBeVisible();
 
-    await page.getByRole('link', { name: 'Stock & opérations', exact: true }).click();
+    await openMore(page, 'Stock');
     await page.getByLabel('Produit / variante').selectOption({ label: `${productName} — ${sku}` });
     await page.getByLabel('Emplacement', { exact: true }).selectOption({ label: 'Dépôt principal (PRINCIPAL)' });
     await page.getByLabel('Quantité (positive)').fill('10');
@@ -224,7 +233,7 @@ test('Auth, catalogue, stock et isolation fonctionnent avec Supabase local et Ma
     const destinationRow = page.locator('tbody tr').filter({ hasText: productName }).filter({ hasText: secondLocationCode });
     await expect(destinationRow.locator('td').nth(1)).toHaveText('4');
 
-    await page.getByRole('link', { name: 'Mouvements', exact: true }).click();
+    await openMore(page, 'Historique');
     const transferCard = page.locator('article').filter({ hasText: 'E2E-TRANSFER' });
     await expect(transferCard).toBeVisible();
     await transferCard.getByLabel('Motif de la contre-passation').fill('Correction du transfert E2E');
@@ -234,7 +243,7 @@ test('Auth, catalogue, stock et isolation fonctionnent avec Supabase local et Ma
     await expect(transferCard).toContainText('E2E-TRANSFER');
     await expect(page.locator('article').filter({ hasText: 'Correction du transfert E2E' })).toBeVisible();
 
-    await page.getByRole('link', { name: 'Stock & opérations', exact: true }).click();
+    await openMore(page, 'Stock');
     row = page.locator('tbody tr').filter({ hasText: productName }).filter({ hasText: 'PRINCIPAL' });
     await expect(row.locator('td').nth(1)).toHaveText('10');
     await expect(row.locator('td').nth(3)).toHaveText('10');

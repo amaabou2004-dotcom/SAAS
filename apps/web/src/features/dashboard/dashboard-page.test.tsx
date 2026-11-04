@@ -1,9 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { getReport, type Report } from '../reports/reports-api';
-import { listStorefrontOrders, type StorefrontOrder } from '../storefront/storefront-api';
-import { listStock } from '../workspace/workspace-api';
+import { getStorefrontSettings, listStorefrontOrders, type StorefrontOrder, type StorefrontSettings } from '../storefront/storefront-api';
+import { listProducts, listStock, type Product } from '../workspace/workspace-api';
 import { WorkspaceContext } from '../workspace/workspace-context';
 import { DashboardPage } from './dashboard-page';
 
@@ -14,12 +14,12 @@ vi.mock('../reports/reports-api', async (importOriginal) => {
 
 vi.mock('../workspace/workspace-api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../workspace/workspace-api')>();
-  return { ...actual, listStock: vi.fn() };
+  return { ...actual, listStock: vi.fn(), listProducts: vi.fn() };
 });
 
 vi.mock('../storefront/storefront-api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../storefront/storefront-api')>();
-  return { ...actual, listStorefrontOrders: vi.fn() };
+  return { ...actual, listStorefrontOrders: vi.fn(), getStorefrontSettings: vi.fn() };
 });
 
 const tenant = {
@@ -84,6 +84,31 @@ const order = (status: StorefrontOrder['status'], id: string): StorefrontOrder =
   items: [],
 });
 
+const product: Product = {
+  id: '22222222-2222-4222-8222-222222222222',
+  tenant_id: tenant.id,
+  category_id: null,
+  name: 'Savon parfumé',
+  description: null,
+  sale_price: 250,
+  cost_price: 0,
+  active: true,
+  image_url: null,
+  category: null,
+  variants: [],
+};
+
+const shopSettings: StorefrontSettings = {
+  tenant_id: tenant.id,
+  slug: 'aicha-sarl',
+  display_name: 'Aïcha SARL',
+  whatsapp: null,
+  published: true,
+  default_location_id: locationId,
+  public_path: '/b/aicha-sarl',
+  currency_code: 'XOF',
+};
+
 function renderPage() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
@@ -99,6 +124,8 @@ function renderPage() {
 
 beforeEach(() => {
   vi.mocked(getReport).mockResolvedValue(report);
+  vi.mocked(listProducts).mockResolvedValue([product]);
+  vi.mocked(getStorefrontSettings).mockResolvedValue(shopSettings);
   vi.mocked(listStock).mockResolvedValue([stockRow()]);
   vi.mocked(listStorefrontOrders).mockResolvedValue([
     order('pending', '55555555-5555-4555-8555-555555555555'),
@@ -119,6 +146,42 @@ describe('accueil du commerçant', () => {
       'href',
       '/workspace/ventes/nouvelle',
     );
+  });
+
+  it('guide le commerçant tant que le parcours de départ n’est pas fini', async () => {
+    vi.mocked(listProducts).mockResolvedValue([]);
+    vi.mocked(listStock).mockResolvedValue([]);
+    vi.mocked(getStorefrontSettings).mockResolvedValue({ ...shopSettings, published: false });
+
+    renderPage();
+
+    expect(await screen.findByText('Vos premiers pas · 0/3 fait')).toBeInTheDocument();
+    const heading = screen.getByRole('heading', { name: 'Ajoutez un produit' });
+    const guide = heading.closest('section');
+    expect(guide).not.toBeNull();
+    expect(within(guide as HTMLElement).getByRole('link', { name: /Ajouter un produit/ })).toHaveAttribute(
+      'href',
+      '/workspace/produits',
+    );
+  });
+
+  it('reste sur « ouvrir la boutique » quand les produits et le stock sont prêts', async () => {
+    vi.mocked(listStock).mockResolvedValue([stockRow({ available: 12, on_hand: 12 })]);
+    vi.mocked(getStorefrontSettings).mockResolvedValue({ ...shopSettings, published: false });
+
+    renderPage();
+
+    expect(await screen.findByText('Vos premiers pas · 2/3 fait')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Ouvrez votre boutique en ligne' })).toBeInTheDocument();
+  });
+
+  it('masque le parcours une fois tout terminé', async () => {
+    vi.mocked(listStock).mockResolvedValue([stockRow({ available: 12, on_hand: 12 })]);
+
+    renderPage();
+
+    expect(await screen.findByText(/4\s?800/)).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText(/Vos premiers pas/)).not.toBeInTheDocument());
   });
 
   it('signale l’absence de chiffres sans bloquer le reste', async () => {

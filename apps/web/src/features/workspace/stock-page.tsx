@@ -96,7 +96,7 @@ export function StockPage() {
   };
 
   return (
-    <WorkspaceSection title="Stock & opérations" description="Le stock disponible est calculé : physique moins réservé. Il n’est jamais modifié directement ; chaque entrée, sortie, ajustement ou transfert laisse une trace.">
+    <WorkspaceSection title="Stock" description="Ce qu’il vous reste, dépôt par dépôt. Chaque entrée, sortie ou transfert laisse une trace ; rien n’est écrasé.">
       <div className="grid gap-7 xl:grid-cols-[0.8fr_1.2fr]">
         <div className="h-fit rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <h2 className="mb-2 flex items-center gap-2 font-bold text-ink"><ArrowLeftRight className="size-5 text-mint-dark" aria-hidden="true" />Nouvelle opération</h2>
