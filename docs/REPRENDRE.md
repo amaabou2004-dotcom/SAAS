@@ -202,6 +202,9 @@ pnpm lint             # qualité du code
 pnpm dev              # lancer l'interface (5173) et l'API (3001)
 ```
 
+La CI GitHub est verte sur la branche de reprise : lint, types, 238 tests, build, tests pgTAP,
+concurrence du stock et parcours navigateur E2E avec Supabase local et Mailpit.
+
 ---
 
 > **La suite détaillée du projet** (5 étapes, effort, critères de réussite) :

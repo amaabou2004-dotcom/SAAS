@@ -22,8 +22,8 @@ WhatsApp, les crédits acceptent des règlements partiels et le client suit sa c
 testé (**238 tests** : 64 API + 174 web) et isolé par entreprise.
 
 Le paiement n'est **pas** au programme : **Stokari est gratuit pour le moment**. Les prochains
-chantiers servent les boutiques qui l'utilisent (notifications de commande, suivi client,
-fiabilité), pas la facturation.
+chantiers servent les boutiques qui l'utilisent (notifications SMS / WhatsApp, sauvegardes,
+journal d’audit), pas la facturation.
 
 ```
    [FAIT] Catalogue + Stock + Mouvements + Sécurité + VENTES + RAPPORTS + ÉQUIPE
@@ -281,7 +281,7 @@ utiles sont donc ceux qui servent les utilisateurs d'aujourd'hui, pas la factura
 
 1. ~~Notifications à l'arrivée d'une commande~~ ✅ **e-mail gratuit** ; restent **SMS / WhatsApp**.
 2. ~~Suivi de commande pour le client~~ ✅ page publique par numéro `CMD-…`.
-3. **Fiabilité** : test e2e en CI, sauvegardes, journal d'audit exploitable.
+3. **Fiabilité** : ~~test e2e en CI~~ ✅ ; restent les sauvegardes et le journal d'audit exploitable.
 4. **Mobile Money réel** dans la caisse (aujourd'hui : référence de paiement saisie à la main).
 
 ---
@@ -291,10 +291,9 @@ utiles sont donc ceux qui servent les utilisateurs d'aujourd'hui, pas la factura
 | Sujet | Pourquoi | Quand |
 | --- | --- | --- |
 | API dans une image Docker + hébergeur Node | l'API n'est pas déployée aujourd'hui (mode direct) | avant l'ouverture au public |
-| Tests de bout en bout (Playwright déjà configuré) | vérifier les parcours réels à chaque déploiement | prochains chantiers |
+| Tests de bout en bout (Playwright) | ✅ exécutés en CI avec Supabase local et Mailpit | terminé |
 | Sauvegardes et plan de reprise | un commerce ne perd pas son stock | avant l'ouverture au public |
 | Journal d'audit exploitable | qui a fait quoi, quand | prochains chantiers |
-| Test de bout en bout (Playwright) dans la CI | le métier est couvert par les tests unitaires, mais le parcours complet échoue encore en CI ; à rejouer avec Docker/Supabase local | avant la mise en production |
 
 ---
 
