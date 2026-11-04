@@ -19,7 +19,7 @@ Ce document répond à trois questions, dans cet ordre :
 | Mots de passe, sessions, Google | ✅ correct |
 | E-mails de compte (mot de passe oublié, invitation) | ❌ pas de serveur SMTP → **le point bloquant** |
 | Tests automatiques (code) | ✅ 194 tests verts |
-| Test de bout en bout (navigateur) | ✅ réparé aujourd'hui (vérification en cours en CI) |
+| Test de bout en bout (navigateur) | ✅ réparé aujourd'hui, CI entièrement verte |
 | Performance | ✅ bon niveau, index en place |
 | Failles connues dans les dépendances | ✅ 0 (`pnpm audit`) |
 
@@ -47,6 +47,7 @@ Ce document répond à trois questions, dans cet ordre :
 2. **Envoi d'e-mails et contenu des commandes** (`dispatch_notifications`, `sync_notification_status`, `order_notification_body`) : réservés au service interne. Plus aucun navigateur ne peut lire le détail d'une commande à partir de son identifiant.
 3. **Générateurs de données de démonstration** (`seed_demo_data`, `seed_demo_history`) : service uniquement → l'application ne peut plus injecter de **données commerciales factices**, conformément à la règle fixée.
 4. **Table `suppliers`** : elle avait gardé un ancien « tous les droits » (14 droits, y compris pour les visiteurs). → lecture seule.
+   ⚠️ Cette table (et les fonctions `save_supplier` / `delete_supplier`) **n'est utilisée par aucun écran et ne figure dans aucune migration** : c'est un reste d'une première version. Elle ne gêne pas, mais il faudra décider de la supprimer définitivement (ou de la documenter si un écran « fournisseurs » est prévu).
 5. **Vue `sales_overview`** : lecture seule.
 6. **Sécurité par défaut** : toute nouvelle table ou fonction créée dans le schéma public sera désormais **fermée au rôle visiteur** ; il faudra l'autoriser explicitement (fini les oublis).
 7. **Index ajouté** sur `notification_outbox` : la liste des alertes e-mail reste rapide quand l'historique grossit.
@@ -100,14 +101,28 @@ Ces réglages ne sont pas tous modifiables depuis ici : Supabase → **Authentic
 | Site (`apps/web`) | 130 tests / 23 fichiers ✅ |
 | Base de données (pgTAP + concurrence du stock) | ✅ |
 | Lint, vérification des types, build | ✅ |
-| Test navigateur de bout en bout (e2e) | ❌ **corrigé aujourd'hui** |
+| Test navigateur de bout en bout (e2e) | ✅ **réparé aujourd'hui — CI verte** |
 
 ### Pourquoi le test navigateur échouait
 
 Depuis plusieurs jours, la CI échouait toujours à la même étape. Cause exacte trouvée aujourd'hui :
 le test créait une **deuxième** entreprise et attendait immédiatement le catalogue, alors que l'espace s'ouvre désormais sur **« Accueil du jour »** (changement fait lors de l'ajout du tableau de bord). Le premier compte cliquait bien sur l'onglet « Produits » ; le second, non.
 
-→ Correction : le test clique lui aussi sur « Produits » avant de vérifier le catalogue. La CI est relancée sur ce correctif.
+→ Correction : le test clique lui aussi sur « Produits » avant de vérifier le catalogue.
+
+**Deuxième problème trouvé au passage :** la migration de durcissement faisait référence à
+`rls_auto_enable`, une fonction qui n'existe **que** sur le projet hébergé, pas dans Supabase local.
+Résultat : la CI ne pouvait plus créer sa base de test. La migration passe désormais par une boucle
+sur les fonctions réellement présentes (et ignore celles des extensions) : elle fonctionne sur les
+deux environnements.
+
+**Résultat :** la CI est **entièrement verte** (contrôles `application` et `database`, dont le test
+navigateur complet) sur le commit `c290cd1` — première fois depuis le début de l'itération.
+
+**Troisième amélioration :** les journaux de la CI n'étaient pas téléchargeables (erreur EOF côté
+stockage GitHub). La CI publie donc maintenant la fin du journal de démarrage dans les
+« annotations » du contrôle, lisibles directement — c'est ce qui a permis de trouver les deux causes
+ci-dessus.
 
 ---
 
@@ -132,6 +147,7 @@ Par ordre d'importance :
 3. **Réglages Auth à cocher** : confirmation d'e-mail ON (une fois le SMTP en place), mot de passe minimum 8, inscriptions anonymes OFF.
 4. **Déploiement Vercel** — reporté à ta demande ; la procédure est prête dans `docs/DEPLOIEMENT-VERCEL.md`.
 5. **Sauvegardes** : vérifier que le plan Supabase actif inclut les sauvegardes quotidiennes (ou exporter régulièrement la base).
+6. **Objets hérités** : décider du sort de la table `suppliers` et des fonctions `save_supplier` / `delete_supplier` (voir §2, point 4).
 
 ---
 
