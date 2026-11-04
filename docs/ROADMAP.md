@@ -6,7 +6,8 @@
 > les rapports répondent (CA, marge, top produits, produits dormants, export CSV) et l'équipe
 > se gère dans l'application (invitation par e-mail, rôles, retrait), en plus du socle
 > technique (authentification, entreprises, catalogue, stock, mouvements, sécurité).
-> Ce document décrit **ce qui reste**, dans l'ordre, avec le pourquoi de chaque étape.
+> La caisse rapide, les crédits clients, le suivi public des commandes, le logo de boutique et
+> la PWA ont été ajoutés ensuite. Ce document décrit **ce qui reste**, dans l'ordre.
 
 ---
 
@@ -16,8 +17,9 @@ Stokari sait aujourd'hui **ranger, compter, vendre, mesurer, travailler à plusi
 hors du magasin** : produits illustrés par une photo, catégories, emplacements, stock,
 mouvements, caisse (ticket numéroté, stock qui baisse tout seul, annulation tracée), rapports
 (CA, marge, top produits, dormants, CSV), boutique publique partageable sur WhatsApp avec
-commandes à confirmer, et gestion de l'équipe par rôles. C'est testé (194 tests) et isolé par
-entreprise.
+commandes à confirmer, et gestion de l'équipe par rôles. La caisse rapide envoie aussi un reçu
+WhatsApp, les crédits acceptent des règlements partiels et le client suit sa commande. C'est
+testé (**238 tests** : 64 API + 174 web) et isolé par entreprise.
 
 Le paiement n'est **pas** au programme : **Stokari est gratuit pour le moment**. Les prochains
 chantiers servent les boutiques qui l'utilisent (notifications de commande, suivi client,
@@ -25,7 +27,7 @@ fiabilité), pas la facturation.
 
 ```
    [FAIT] Catalogue + Stock + Mouvements + Sécurité + VENTES + RAPPORTS + ÉQUIPE
-                          + BOUTIQUE PUBLIQUE + PHOTOS PRODUITS
+             + BOUTIQUE PUBLIQUE + PHOTOS + CAISSE RAPIDE + CRÉDITS + SUIVI + PWA
               │
               ▼
    [GRATUIT] Aucun abonnement, aucune limite — par décision, pour le moment
@@ -72,7 +74,7 @@ stock restauré, double annulation → refus.
 
 - Douchette code-barres (le champ `barcode` existe déjà) et raccourcis clavier.
 - Remise globale ou par ligne (aujourd'hui : prix unitaire modifiable).
-- Table `payments` dédiée si l'on encaisse un ticket en plusieurs fois (utile pour le crédit).
+- ~~Table de règlements dédiée~~ ✅ `sale_payments` gère désormais les règlements partiels des crédits.
 
 ---
 
@@ -155,7 +157,7 @@ partageable transforme Stokari en vitrine, sans application à installer côté 
 - ~~Notification à l'arrivée d'une commande~~ ✅ **e-mail gratuit** (Brevo 300/jour, envoi par
   la base via `pg_net` + `pg_cron`, clé dans Vault — voir [`docs/EMAIL-COMMANDES.md`](./EMAIL-COMMANDES.md)).
 - Notifications **SMS ou WhatsApp** (le canal que tout le monde lit au Niger).
-- Page de suivi pour le client (« où en est ma commande ? ») à partir du numéro de commande.
+- ~~Page de suivi pour le client~~ ✅ `/b/<adresse>/suivi` affiche l’état à partir du numéro `CMD-…`.
 
 ---
 
@@ -224,6 +226,20 @@ base ; il manquait l'écran pour ajouter des personnes.
 
 ---
 
+## Itération 10 — Caisse rapide, crédits, suivi et PWA — ✅ TERMINÉE
+
+- **Caisse rapide** (`/workspace/ventes/caisse`) : gros boutons produits, panier tactile et reçu
+  WhatsApp prérempli après l’encaissement.
+- **Ventes à crédit** (`/workspace/credits`) : total restant dû, encaissement total ou partiel en
+  espèces ou Mobile Money ; `sale_payments` conserve chaque règlement et la base revérifie les montants.
+- **Commande en un geste** depuis chaque article de la vitrine et **suivi public** du statut avec
+  le numéro `CMD-…`, sans exposer les coordonnées du client.
+- **Logo de boutique** stocké dans Supabase Storage et affiché dans la vitrine.
+- **Application installable (PWA)** : manifeste, icônes, service worker et carte d’installation ;
+  le shell reste accessible hors ligne, tandis que les données commerciales nécessitent le réseau.
+
+---
+
 ## Étape 5 — L'abonnement — ⏸️ REPORTÉE (l'application est gratuite pour le moment)
 
 **Décision du propriétaire du produit : Stokari est gratuit pour le moment.** Aucun plan
@@ -264,7 +280,7 @@ l'abonnement est **volontairement reporté** (application gratuite). Les prochai
 utiles sont donc ceux qui servent les utilisateurs d'aujourd'hui, pas la facturation :
 
 1. ~~Notifications à l'arrivée d'une commande~~ ✅ **e-mail gratuit** ; restent **SMS / WhatsApp**.
-2. **Suivi de commande pour le client** — répondre à « où en est ma commande ? ».
+2. ~~Suivi de commande pour le client~~ ✅ page publique par numéro `CMD-…`.
 3. **Fiabilité** : test e2e en CI, sauvegardes, journal d'audit exploitable.
 4. **Mobile Money réel** dans la caisse (aujourd'hui : référence de paiement saisie à la main).
 

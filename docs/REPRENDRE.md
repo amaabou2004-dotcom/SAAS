@@ -1,8 +1,9 @@
 # Reprendre le projet — la page unique
 
 > Vous ne savez plus où vous en êtes ? Lisez cette page, elle fait le point.
-> Dernière mise à jour : version `0.1.0` — itération 9 (accueil du jour, caisse, rapports, équipe,
-> **boutique publique** et **photos produits**). **Stokari est gratuit pour le moment.**
+> Dernière mise à jour : version `0.1.0` — itération 10 (**caisse rapide**, **crédits clients**,
+> **suivi de commande**, **logo de boutique** et **application installable**), en plus de l’accueil,
+> du catalogue, du stock, des rapports et de l’équipe. **Stokari est gratuit pour le moment.**
 
 ---
 
@@ -43,7 +44,9 @@ Plusieurs personnes peuvent travailler dans la même entreprise, chacune avec un
 | Historique immuable + contre-passation (annulation) | ✅ | `/workspace/mouvements` |
 | **Ventes** : liste, total et marge du jour, ticket détaillé | ✅ | `/workspace/ventes` |
 | **Nouvelle vente** : panier, prix modifiable, ticket imprimable | ✅ | `/workspace/ventes/nouvelle` |
-| Encaissement espèces / Mobile Money / crédit | ✅ | écran Nouvelle vente |
+| **Caisse rapide** : produits en gros boutons, encaissement tactile et reçu WhatsApp | ✅ | `/workspace/ventes/caisse` |
+| Encaissement espèces / Mobile Money / crédit | ✅ | écrans de vente |
+| **Crédits clients** : reste dû, règlement total ou partiel | ✅ | `/workspace/credits` |
 | Annulation d'une vente avec retour du stock | ✅ | détail d'une vente |
 | **Rapports** : CA, marge, graphique, top produits, dormants | ✅ | `/workspace/rapports` |
 | Export CSV du rapport (compatible Excel français) | ✅ | bouton sur les rapports |
@@ -54,6 +57,9 @@ Plusieurs personnes peuvent travailler dans la même entreprise, chacune avec un
 | **Tous les produits actifs visibles dans la boutique**, y compris en rupture (badge « indisponible ») | ✅ | `/b/<adresse>` |
 | Réglages de la boutique (adresse, nom, WhatsApp, stock, ouverture) | ✅ | `/workspace/commandes` |
 | **Commandes reçues** : confirmer (crée la vente), annuler, marquer livrée | ✅ | `/workspace/commandes` |
+| **Suivi client** : état de la commande à partir du numéro `CMD-…` | ✅ | `/b/<adresse>/suivi` |
+| **Logo de la boutique** dans la vitrine publique | ✅ | `/workspace/commandes` |
+| **Application installable (PWA)** sur l’écran d’accueil du téléphone | ✅ | carte sur `/workspace/accueil` |
 | Lien copiable + envoi WhatsApp prérempli | ✅ | `/workspace/commandes` |
 | **Alerte e-mail gratuite** à chaque commande (adresse + historique d'envoi) | ✅ | `/workspace/commandes` |
 | Idempotence (pas de double saisie) | ✅ | toutes les opérations |
@@ -65,8 +71,9 @@ qui baisse tout seul, annulation qui remet le stock), **voir ce qui rapporte** (
 export CSV), **inviter son vendeur** avec un rôle limité, et **vendre en ligne** : il partage
 un lien sur WhatsApp, ses clients commandent sans compte, et la commande devient une vente en
 un clic. Il peut aussi **mettre une photo sur chaque produit depuis son téléphone** : elle
-apparaît dans l'application et dans le catalogue public. C'est un socle solide et testé
-(199 tests).
+apparaît dans l'application et dans le catalogue public. La caisse rapide, les règlements de
+crédit, le suivi client et l’installation sur téléphone complètent ce parcours. C'est un socle
+solide et testé (**238 tests** : 64 API + 174 web).
 
 ### Saisie simplifiée (4 novembre)
 
@@ -92,7 +99,6 @@ refusait les produits.
 | À construire | Pourquoi c'est important |
 | --- | --- |
 | Notifications **SMS / WhatsApp** (l'e-mail, lui, est déjà en place) | joindre un commerçant qui ne lit pas ses e-mails |
-| Suivi de commande pour le client | répondre à « où en est ma commande ? » |
 
 > **L'abonnement n'est pas au programme :** l'application est **gratuite pour le moment**.
 > Aucun plan payant, aucune limite, aucun paiement n'est demandé — il n'y a donc rien à
@@ -116,8 +122,10 @@ refusait les produits.
    dans le catalogue public.
 6. Onglet **Stock** : saisissez une quantité d'ouverture via **Mouvements** → réception.
 7. Onglet **Mouvements** : chaque opération est horodatée, attribuée et annulable.
-8. Onglet **Ventes** → **Nouvelle vente** : ajoutez un produit, ajustez la quantité,
-   choisissez le paiement, **Encaissez**. Le ticket s'affiche avec son numéro `VTE-…`.
+8. Onglet **Ventes** → **Caisse rapide** : touchez les produits puis **Encaissez**. Le ticket
+   `VTE-…` peut être imprimé ou envoyé sur WhatsApp. L’écran **Nouvelle vente** reste disponible
+   pour le panier détaillé et les prix modifiables. Pour une vente à crédit, ouvrez ensuite
+   **Crédits** afin d’enregistrer un règlement total ou partiel.
 9. Revenez sur **Ventes** : le ticket est dans la liste. Ouvrez **Détails** pour annuler
    (le stock revient) — l'annulation demande un motif.
 10. Onglet **Rapports** : choisissez 7 / 30 / 90 jours, vérifiez que le CA du jour correspond
@@ -133,7 +141,8 @@ refusait les produits.
     commande** → un numéro `CMD-…` s'affiche.
 14. Revenez dans **Boutique** : la commande est là, « À confirmer » → **Confirmer en vente**.
     Elle passe en « Confirmée », une vente `VTE-…` est créée et le stock baisse. **Marquer
-    comme livrée** clôt le cycle ; **Annuler la commande** demande un motif.
+    comme livrée** clôt le cycle ; **Annuler la commande** demande un motif. Le client suit ces
+    étapes sur `/b/<adresse>/suivi` avec son numéro `CMD-…`.
 15. Sous les réglages, carte **« Alertes e-mail des commandes »** : saisissez l'adresse à
     prévenir et **Enregistrer l'alerte**. Sans clé installée, les alertes restent
     « En attente d'envoi » — la mise en route gratuite (5 minutes) est décrite dans
@@ -167,11 +176,12 @@ Deux façons de brancher le front à la base, sans changer un écran :
 | La connexion / inscription | `apps/web/src/features/auth/` |
 | La création d'entreprise | `apps/web/src/features/onboarding/` |
 | Produits, stock, mouvements | `apps/web/src/features/workspace/` |
-| Ventes, ticket, panier | `apps/web/src/features/sales/` |
+| Ventes, caisse rapide, ticket, crédits | `apps/web/src/features/sales/` |
 | Équipe, invitations, rôles | `apps/web/src/features/team/` |
 | Rapports, CSV | `apps/web/src/features/reports/` |
 | Accueil du jour (tableau de bord) | `apps/web/src/features/dashboard/` |
-| Boutique publique (page client) | `apps/web/src/features/storefront/` |
+| Boutique publique et suivi client | `apps/web/src/features/storefront/` |
+| Installation PWA | `apps/web/src/components/install-app-card.tsx` + `apps/web/public/sw.js` |
 | Photos produits (envoi dans le rangement) | `apps/web/src/features/workspace/product-image.ts` |
 | Alertes e-mail des commandes | `apps/web/src/features/storefront/order-notifications-card.tsx` + `supabase/migrations/*notifications*.sql` |
 | Les routes du serveur | `apps/api/src/*/‑controller.ts` |
@@ -186,7 +196,7 @@ Deux façons de brancher le front à la base, sans changer un écran :
 
 ```bash
 pnpm install          # installer les dépendances
-pnpm test             # 194 tests (API + web)
+pnpm test             # 238 tests (64 API + 174 web)
 pnpm typecheck        # vérification TypeScript
 pnpm lint             # qualité du code
 pnpm dev              # lancer l'interface (5173) et l'API (3001)
@@ -203,13 +213,12 @@ pnpm dev              # lancer l'interface (5173) et l'API (3001)
 **gratuite pour le moment**, décision assumée. Les quatre étapes sont livrées, les photos
 produits aussi, et l'abonnement est **volontairement reporté**.
 
-Trois chantiers utiles, dans cet ordre :
+Les chantiers utiles, dans cet ordre :
 
 1. ~~Ne pas rater une commande~~ ✅ : l'**e-mail gratuit** est en place
    (`docs/EMAIL-COMMANDES.md`) ; reste à faire côté **SMS / WhatsApp**.
-2. **Rassurer le client** : une page de suivi de commande à partir du numéro `CMD-…`.
-3. **Fiabiliser** : sauvegardes et journal d'audit lisible (le test de bout en bout a été
-   réparé le 4 novembre 2026, voir `docs/AUDIT.md`).
+2. ~~Rassurer le client~~ ✅ : le suivi par numéro `CMD-…` est en place.
+3. **Fiabiliser** : sauvegardes et journal d'audit lisible.
 
 Ordre proposé :
 
@@ -220,5 +229,6 @@ Ordre proposé :
 4. ~~Invitations d'équipe~~ ✅ — membres, rôles, invitations, acceptation automatique.
 5. ~~Photos produits~~ ✅ — photo choisie dans la galerie du téléphone, réduite avant envoi,
    affichée dans l'application et dans le catalogue public.
-6. **Abonnements** — ⏸️ reporté : Stokari est **gratuit** pour le moment, rien à payer ni à
+6. ~~Caisse rapide, crédits, suivi client et PWA~~ ✅ — livrés dans l’itération 10.
+7. **Abonnements** — ⏸️ reporté : Stokari est **gratuit** pour le moment, rien à payer ni à
    désactiver. À rouvrir quand plusieurs boutiques l'utiliseront vraiment.
