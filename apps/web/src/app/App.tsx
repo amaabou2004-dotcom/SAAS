@@ -19,6 +19,8 @@ import { WorkspaceLayout } from '../features/workspace/workspace-layout';
 import { NewSalePage } from '../features/sales/new-sale-page';
 import { ReportsPage } from '../features/reports/reports-page';
 import { SalesPage } from '../features/sales/sales-page';
+import { StorefrontPage } from '../features/storefront/storefront-page';
+import { PublicShopPage } from '../features/storefront/public-shop-page';
 import { TeamPage } from '../features/team/team-page';
 
 function FullPageLoader() {
@@ -77,6 +79,8 @@ export function App() {
             </RequireVerifiedUser>
           }
         />
+        {/* Boutique publique : aucun compte requis, hors de l'espace de travail. */}
+        <Route path="/b/:slug" element={<PublicShopPage />} />
         <Route
           path="/workspace"
           element={
@@ -95,6 +99,7 @@ export function App() {
           <Route path="stock" element={<StockPage />} />
           <Route path="mouvements" element={<MovementsPage />} />
           <Route path="equipe" element={<TeamPage />} />
+          <Route path="commandes" element={<StorefrontPage />} />
         </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

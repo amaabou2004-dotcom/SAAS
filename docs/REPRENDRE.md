@@ -1,7 +1,7 @@
 # Reprendre le projet — la page unique
 
 > Vous ne savez plus où vous en êtes ? Lisez cette page, elle fait le point.
-> Dernière mise à jour : version `0.1.0` — itération 5 (caisse, rapports et équipe en place).
+> Dernière mise à jour : version `0.1.0` — itération 6 (caisse, rapports, équipe et **boutique publique**).
 
 ---
 
@@ -11,8 +11,9 @@
 vous y gérez vos **produits**, vos **stock** (entrées, sorties, transferts), vos
 **catégories**, vos **emplacements** — vous y **encaissez vos ventes** (panier, ticket,
 Mobile Money, annulation), vous y **suivez vos chiffres** (CA, marge, meilleurs produits,
-produits dormants, export CSV) et vous y **gérez votre équipe** (invitations, rôles) — chaque
-entreprise étant totalement isolée des autres.
+produits dormants, export CSV) et vous y **gérez votre équipe** (invitations, rôles) — et vous
+partagez une **boutique en ligne** dont le lien s'envoie sur WhatsApp, où vos clients commandent
+**sans créer de compte**. Chaque entreprise est totalement isolée des autres.
 
 Plusieurs personnes peuvent travailler dans la même entreprise, chacune avec un rôle
 (propriétaire, gestionnaire, vendeur…).
@@ -45,14 +46,19 @@ Plusieurs personnes peuvent travailler dans la même entreprise, chacune avec un
 | **Équipe** : membres, rôles, invitations en attente | ✅ | `/workspace/equipe` |
 | Inviter une personne par e-mail et lui donner un rôle | ✅ | `/workspace/equipe` |
 | Retirer un membre (jamais le dernier propriétaire) | ✅ | `/workspace/equipe` |
+| **Boutique publique** : lien `/b/adresse`, catalogue, panier, commande sans compte | ✅ | `/b/<adresse>` |
+| Réglages de la boutique (adresse, nom, WhatsApp, stock, ouverture) | ✅ | `/workspace/commandes` |
+| **Commandes reçues** : confirmer (crée la vente), annuler, marquer livrée | ✅ | `/workspace/commandes` |
+| Lien copiable + envoi WhatsApp prérempli | ✅ | `/workspace/commandes` |
 | Idempotence (pas de double saisie) | ✅ | toutes les opérations |
 | Isolation entre entreprises (RLS PostgreSQL) | ✅ | base de données |
 
 **En clair :** quelqu'un peut s'inscrire, créer sa boutique, saisir ses produits,
 enregistrer son stock, suivre les mouvements, **vendre au comptoir** (ticket numéroté, stock
 qui baisse tout seul, annulation qui remet le stock), **voir ce qui rapporte** (rapports et
-export CSV) **et inviter son vendeur** avec un rôle limité. C'est un socle solide et testé
-(132 tests).
+export CSV), **inviter son vendeur** avec un rôle limité, et **vendre en ligne** : il partage
+un lien sur WhatsApp, ses clients commandent sans compte, et la commande devient une vente en
+un clic. C'est un socle solide et testé (169 tests).
 
 ---
 
@@ -60,7 +66,9 @@ export CSV) **et inviter son vendeur** avec un rôle limité. C'est un socle sol
 
 | À construire | Pourquoi c'est important |
 | --- | --- |
-| **Boutiques publiques** (catalogue partageable, lien client) | vendre hors du magasin, sur WhatsApp |
+| **Photos produits** dans la boutique publique | un catalogue illustré vend beaucoup mieux |
+| Notifications à l'arrivée d'une commande (SMS / WhatsApp) | ne pas rater une commande |
+| Suivi de commande pour le client | répondre à « où en est ma commande ? » |
 | **Abonnements / facturation** | gagner de l'argent avec le SaaS |
 
 ---
@@ -84,6 +92,16 @@ export CSV) **et inviter son vendeur** avec un rôle limité. C'est un socle sol
     à vos tickets, puis **Exportez en CSV**.
 11. Onglet **Équipe** : invitez une adresse avec le rôle **Vendeur**. Si cette personne crée
     un compte avec cette adresse, l'entreprise apparaîtra chez elle dès sa connexion.
+12. Onglet **Boutique** : choisissez une adresse (ex. `ma-boutique`), un nom affiché, votre
+    WhatsApp et l'emplacement qui sort le stock, cochez **Boutique ouverte au public**, puis
+    **Enregistrer**. Le lien `…/b/ma-boutique` apparaît : **Copier le lien** ou **Envoyer sur
+    WhatsApp**.
+13. Ouvrez ce lien dans un autre onglet (ou sur un téléphone) : le catalogue s'affiche
+    **sans connexion**. Ajoutez des produits, remplissez nom + téléphone, **Envoyer la
+    commande** → un numéro `CMD-…` s'affiche.
+14. Revenez dans **Boutique** : la commande est là, « À confirmer » → **Confirmer en vente**.
+    Elle passe en « Confirmée », une vente `VTE-…` est créée et le stock baisse. **Marquer
+    comme livrée** clôt le cycle ; **Annuler la commande** demande un motif.
 
 ---
 
@@ -116,6 +134,7 @@ Deux façons de brancher le front à la base, sans changer un écran :
 | Ventes, ticket, panier | `apps/web/src/features/sales/` |
 | Équipe, invitations, rôles | `apps/web/src/features/team/` |
 | Rapports, CSV | `apps/web/src/features/reports/` |
+| Boutique publique (page client) | `apps/web/src/features/storefront/` |
 | Les routes du serveur | `apps/api/src/*/‑controller.ts` |
 | Les règles métier du serveur | `apps/api/src/*/‑service.ts` |
 | Les tables et la sécurité | `supabase/migrations/*.sql` |
@@ -126,7 +145,7 @@ Deux façons de brancher le front à la base, sans changer un écran :
 
 ```bash
 pnpm install          # installer les dépendances
-pnpm test             # 132 tests (API + web)
+pnpm test             # 169 tests (API + web)
 pnpm typecheck        # vérification TypeScript
 pnpm lint             # qualité du code
 pnpm dev              # lancer l'interface (5173) et l'API (3001)
@@ -139,13 +158,19 @@ pnpm dev              # lancer l'interface (5173) et l'API (3001)
 
 ## 8. La prochaine étape recommandée
 
-**La boutique publique.** Ventes, rapports et équipe sont en place : il reste à vendre
-**hors du magasin**, avec un lien à partager sur WhatsApp (le réflexe commercial local).
+**Les photos dans la boutique, puis l'abonnement.** Les quatre premières étapes sont livrées :
+le socle commercial est complet. Deux chantiers utiles maintenant :
+
+- **Photos produits** : un catalogue illustré (Supabase Storage) — c'est ce qui fait
+  convertir un lien WhatsApp.
+- **Abonnements** : un plan gratuit limité, puis un plan payant (Mobile Money), pour que
+  Stokari gagne de l'argent.
 
 Ordre proposé :
 
 1. ~~Ventes~~ ✅ — panier, ticket, encaissement, stock automatique, annulation.
 2. ~~Rapports~~ ✅ — CA, marge, top produits, dormants, export CSV.
-3. **Boutique publique** — un lien à partager, catalogue, panier, commande reçue dans l'app.
+3. ~~Boutique publique~~ ✅ — lien à partager, catalogue, panier, commande reçue dans l'app,
+   confirmation qui crée la vente.
 4. ~~Invitations d'équipe~~ ✅ — membres, rôles, invitations, acceptation automatique.
-5. **Abonnements** — offrir un plan gratuit limité, puis un plan payant.
+5. **Photos produits** puis **abonnements** — vitrine illustrée, puis modèle économique.

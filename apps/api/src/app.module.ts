@@ -9,6 +9,7 @@ import { HealthModule } from './health/health.module.js';
 import { InventoryModule } from './inventory/inventory.module.js';
 import { ReportsModule } from './reports/reports.module.js';
 import { SalesModule } from './sales/sales.module.js';
+import { StorefrontModule } from './storefront/storefront.module.js';
 import { TeamModule } from './team/team.module.js';
 import { TenantsModule } from './tenants/tenants.module.js';
 
@@ -34,6 +35,7 @@ import { TenantsModule } from './tenants/tenants.module.js';
     SalesModule,
     TeamModule,
     ReportsModule,
+    StorefrontModule,
   ],
   controllers: [AppController],
   providers: [

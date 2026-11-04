@@ -149,6 +149,61 @@ type SaleItemRow = {
   created_at: string;
 }
 
+type StorefrontSettingsRow = {
+  tenant_id: string;
+  slug: string;
+  display_name: string | null;
+  whatsapp: string | null;
+  published: boolean;
+  default_location_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+type StorefrontOrderRow = {
+  id: string;
+  tenant_id: string;
+  status: string;
+  customer_name: string;
+  customer_phone: string;
+  note: string | null;
+  subtotal: number;
+  total: number;
+  item_count: number;
+  idempotency_key: string;
+  sale_id: string | null;
+  cancel_reason: string | null;
+  created_at: string;
+  confirmed_at: string | null;
+  delivered_at: string | null;
+  cancelled_at: string | null;
+}
+
+type StorefrontOrderItemRow = {
+  id: string;
+  tenant_id: string;
+  order_id: string;
+  variant_id: string;
+  product_name: string;
+  sku: string;
+  unit_price: number;
+  quantity: number;
+  line_total: number;
+  created_at: string;
+}
+
+type StorefrontCatalogRow = {
+  product_id: string;
+  variant_id: string;
+  name: string;
+  description: string | null;
+  sku: string;
+  category_name: string | null;
+  unit_price: number;
+  available: number;
+  currency_code: string;
+}
+
 type SaleOverviewRow = SaleRow & {
   number: string;
   location_name: string;
@@ -177,6 +232,9 @@ export interface Database {
       stock_movements: Table<StockMovementRow>;
       sales: Table<SaleRow>;
       sale_items: Table<SaleItemRow>;
+      storefront_settings: Table<StorefrontSettingsRow>;
+      storefront_orders: Table<StorefrontOrderRow>;
+      storefront_order_items: Table<StorefrontOrderItemRow>;
     };
     Views: {
       stock_overview: View<StockOverviewRow>;
@@ -244,6 +302,56 @@ export interface Database {
           p_reverses_operation_id: string | null;
         };
         Returns: string;
+      };
+      storefront_info: {
+        Args: { p_slug: string };
+        Returns: Record<string, unknown> | null;
+      };
+      storefront_catalog: {
+        Args: { p_slug: string };
+        Returns: StorefrontCatalogRow[];
+      };
+      place_storefront_order: {
+        Args: {
+          p_slug: string;
+          p_idempotency_key: string;
+          p_customer_name: string;
+          p_customer_phone: string;
+          p_note: string | null;
+          p_items: Array<{ variant_id: string; quantity: number }>;
+        };
+        Returns: Record<string, unknown>;
+      };
+      storefront_settings_get: {
+        Args: { p_tenant_id: string };
+        Returns: Record<string, unknown>;
+      };
+      storefront_settings_save: {
+        Args: {
+          p_tenant_id: string;
+          p_slug: string;
+          p_display_name: string | null;
+          p_whatsapp: string | null;
+          p_published: boolean;
+          p_default_location_id: string | null;
+        };
+        Returns: Record<string, unknown>;
+      };
+      storefront_orders_list: {
+        Args: { p_tenant_id: string };
+        Returns: Array<Record<string, unknown>>;
+      };
+      storefront_confirm_order: {
+        Args: { p_tenant_id: string; p_order_id: string; p_location_id: string | null };
+        Returns: Record<string, unknown>;
+      };
+      storefront_cancel_order: {
+        Args: { p_tenant_id: string; p_order_id: string; p_reason: string };
+        Returns: void;
+      };
+      storefront_mark_delivered: {
+        Args: { p_tenant_id: string; p_order_id: string };
+        Returns: void;
       };
       post_sale: {
         Args: {

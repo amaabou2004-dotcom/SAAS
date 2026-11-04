@@ -112,21 +112,43 @@ top produit = 3 unités ; 10 dormants détectés.
 
 ---
 
-## Étape 3 — La boutique publique (le différenciateur)
+## Étape 3 — La boutique publique — ✅ TERMINÉE
 
 **Pourquoi :** au Niger et en Afrique de l'Ouest, on vend sur WhatsApp. Un lien de catalogue
 partageable transforme Stokari en vitrine, sans application à installer côté client.
 
-**Ce que l'utilisateur voit**
-- Un lien public : `stokari.vercel.app/b/<slug>` — catalogue avec photos, prix, disponibilité.
-- Un panier simple côté client → la commande arrive **dans l'application**, à confirmer.
-- Le stock est réservé à la confirmation, la vente suit le circuit normal.
+**Ce qui est livré (le lien à partager)**
 
-**Technique :** route publique en lecture seule (pas d'authentification, pas d'exposition
-des coûts ni des autres entreprises) + table `storefront_orders`. Photos via Supabase Storage.
+- Un lien public : `/b/<adresse>` — catalogue avec prix et disponibilité, **sans compte**,
+  sans coût d'achat et sans accès aux autres entreprises.
+- Un panier côté client, puis un formulaire **nom + téléphone WhatsApp + précision**.
+- La commande arrive **dans l'application**, onglet **Boutique** (`/workspace/commandes`),
+  avec un numéro `CMD-000123`.
+- **Confirmer** la commande crée la vente (stock retiré, ticket numéroté `VTE-…` dans l'onglet
+  Ventes) ; **Annuler** demande un motif ; **Marquer livrée** clôt la commande.
+- Écran de réglages : adresse de la boutique, nom affiché, numéro WhatsApp, emplacement de
+  sortie du stock, ouverture/fermeture au public. Boutons **copier le lien** et **envoyer sur
+  WhatsApp** (message prérempli).
 
-**Critère de réussite :** partager un lien, passer une commande depuis un téléphone,
-la voir apparaître côté commerçant.
+**Garde-fous côté base (vérifiés en SQL)**
+
+- le prix d'une commande est **toujours recalculé** par la base : un prix envoyé par le client
+  est ignoré ; le panier est refusé si le stock a baissé entre-temps ;
+- l'envoi porte une **clé d'idempotence** : un réseau qui coupe et un client qui renvoie ne
+  créent pas de doublon ; renvoyer une clé avec d'autres informations est refusé ;
+- une boutique fermée renvoie « introuvable » (informations vides, catalogue vide, commande
+  refusée) ;
+- le rôle `anon` n'a **aucun** droit direct sur les trois tables (`storefront_settings`,
+  `storefront_orders`, `storefront_order_items`) : tout passe par des fonctions
+  `security definer` ; un tiers authentifié est refusé (42501) ;
+- anti-abus : 50 lignes maximum par commande et 500 commandes en attente maximum par boutique ;
+- 100 commandes les plus récentes affichées côté commerçant.
+
+**Reste à faire sur cette étape (plus tard)**
+
+- **Photos produits** (Supabase Storage) : le catalogue est aujourd'hui textuel.
+- Notifications (SMS ou WhatsApp) envoyées au commerçant à l'arrivée d'une commande.
+- Page de suivi pour le client (« où en est ma commande ? ») à partir du numéro de commande.
 
 ---
 
@@ -185,12 +207,12 @@ webhook de paiement, écran de facturation.
 | --- | --- | --- | --- |
 | 1 | **Ventes** ✅ | ⭐⭐⭐⭐ | transforme l'outil en caisse : indispensable |
 | 2 | **Rapports** ✅ | ⭐⭐⭐ | donne la raison de revenir chaque semaine |
-| 3 | **Boutique publique** | ⭐⭐⭐ | différencie sur le marché local |
+| 3 | **Boutique publique** ✅ | ⭐⭐⭐ | différencie sur le marché local |
 | 4 | **Équipe** ✅ | ⭐⭐ | débloque les boutiques à plusieurs vendeurs |
 | 5 | **Abonnement** | ⭐⭐ | transforme l'usage en revenus |
 
-**Recommandation :** les étapes 1, 2 et 4 sont faites — enchaîner sur **3 (boutique publique)**,
-le différenciateur commercial sur ce marché.
+**Recommandation :** les étapes 1, 2, 3 et 4 sont faites — la prochaine chantier utile est
+l'**étape 5 (abonnement)**, une fois quelques boutiques utilisatrices.
 
 ---
 
@@ -198,21 +220,20 @@ le différenciateur commercial sur ce marché.
 
 | Sujet | Pourquoi | Quand |
 | --- | --- | --- |
-| API dans une image Docker + hébergeur Node | l'API n'est pas déployée aujourd'hui (mode direct) | avec l'étape 3 |
-| Tests de bout en bout (Playwright déjà configuré) | vérifier les parcours réels à chaque déploiement | étape 2 |
-| Photos produits (Supabase Storage) | indispensable pour la boutique publique | étape 3 |
+| API dans une image Docker + hébergeur Node | l'API n'est pas déployée aujourd'hui (mode direct) | avant la production payante |
+| Tests de bout en bout (Playwright déjà configuré) | vérifier les parcours réels à chaque déploiement | étape 5 |
+| Photos produits (Supabase Storage) | la boutique publique est aujourd'hui textuelle | juste après l'étape 3 |
 | Sauvegardes et plan de reprise | un commerce ne perd pas son stock | avant la mise en production payante |
-| Journal d'audit exploitable | qui a fait quoi, quand | étape 2 |
+| Journal d'audit exploitable | qui a fait quoi, quand | étape 5 |
 
 ---
 
-## Découpage de l'étape 3 (la boutique publique)
+## Découpage de l'étape 3 (la boutique publique) — fait
 
-1. Table `storefront_settings` (slug public, nom affiché, WhatsApp) + politique RLS publique
-   en lecture seule sur les produits actifs et le stock disponible.
-2. Table `storefront_orders` (panier client, coordonnées, statut) + fonction
-   `place_storefront_order` (aucune donnée de coût exposée).
-3. Route publique `/b/:slug` côté front : catalogue, recherche, panier, envoi de commande.
-4. Écran commerçant « Commandes » : confirmer (réserve le stock), refuser, marquer livrée.
-5. Tests : une commande passée sans session ne crée que des données autorisées, et la
-   confirmation réserve le stock sans le vendre deux fois.
+1. ✅ `storefront_settings` (adresse publique, nom affiché, WhatsApp, emplacement, ouverture).
+2. ✅ `storefront_orders` / `storefront_order_items` + `place_storefront_order` (aucune donnée
+   de coût exposée, prix recalculé, clé d'idempotence).
+3. ✅ Route publique `/b/:slug` : catalogue, recherche, panier, envoi de commande.
+4. ✅ Écran commerçant « Boutique » : réglages, lien à partager, confirmer / annuler / livrée.
+5. ✅ Tests : 169 tests (dont 8 sur le contrat de la boutique et le mode direct) + vérification
+   SQL de bout en bout (commande → confirmation → vente → stock, fermeture, tiers refusé).

@@ -2,11 +2,13 @@
 
 Plateforme multi-entreprises de gestion commerciale, de stock et de boutiques en ligne.
 
-> **État actuel : itération 5 — identité, entreprise, catalogue, stock, ventes, rapports et équipe.**
+> **État actuel : itération 6 — identité, entreprise, catalogue, stock, ventes, rapports, équipe et boutique publique.**
 > La caisse est en place (panier, ticket numéroté, encaissement espèces / Mobile Money / crédit,
 > annulation tracée), les rapports aussi (CA, marge, top produits, produits dormants, export
-> CSV), ainsi que la gestion de l’équipe (invitations, rôles, acceptation automatique à la
-> connexion). Les boutiques publiques et les abonnements ne sont pas encore implémentés.
+> CSV), la gestion de l’équipe (invitations, rôles, acceptation automatique à la connexion) et
+> la **boutique publique** : un lien `/b/<adresse>` à partager sur WhatsApp, un catalogue lisible
+> sans compte, un panier, et des commandes qui deviennent des ventes en un clic côté commerçant.
+> Les abonnements et les photos produits ne sont pas encore implémentés.
 > L’interface ne présente aucune donnée commerciale fictive.
 
 ## Déploiement sur Vercel
@@ -48,8 +50,13 @@ En mode `direct`, les garanties ne changent pas de nature : la RLS filtre les le
 (`is_tenant_member`, `has_tenant_permission`, vues en `security_invoker`) et **aucune écriture
 directe en table n’est possible** — tout passe par les RPC `security definer`
 (`create_tenant`, `upsert_category`, `upsert_product`, `upsert_stock_location`,
-`post_stock_operation`). Le contrat de données est identique (mêmes formes, validées par zod),
-les deux modes sont donc interchangeables sans toucher aux écrans.
+`post_stock_operation`, `post_sale`, `void_sale`, `place_storefront_order`…). Le contrat de
+données est identique (mêmes formes, validées par zod), les deux modes sont donc interchangeables
+sans toucher aux écrans.
+
+La vitrine publique (`/shop/<adresse>`) est la seule zone sans jeton : elle repose sur des
+fonctions `security definer` qui n’exposent ni les coûts, ni les autres entreprises, et
+recalculent toujours le prix de la commande.
 
 ## Parcours disponible dans le code
 
@@ -63,6 +70,10 @@ les deux modes sont donc interchangeables sans toucher aux écrans.
 - catégories, produits/variantes et emplacements tenant-scopés ;
 - stock physique, réservé et disponible calculé, avec réceptions, ajustements et transferts transactionnels ;
 - historique immuable et contre-passations avec motif et idempotence ;
+- ventes (panier, prix négocié, ticket numéroté, annulation qui remet le stock) ;
+- rapports (CA, marge, série quotidienne, top produits/catégories, dormants, export CSV) ;
+- équipe (membres, rôles, invitations, acceptation automatique) ;
+- boutique publique (`/b/<adresse>`), réglages et traitement des commandes reçues ;
 - API NestJS documentée avec Swagger en développement.
 
 Une instance Supabase configurée est indispensable pour exécuter réellement ces parcours. Sans elle, les formulaires d’authentification restent désactivés et affichent un message de configuration explicite.
@@ -162,7 +173,7 @@ Les tests SQL couvrent la structure, les contraintes, les privilèges, l’isola
 
 ```text
 apps/
-  web/                 React, authentification et onboarding
+  web/                 React, authentification, onboarding, caisse et boutique
   api/                 API NestJS
 supabase/
   migrations/          Schéma et fonctions transactionnelles
@@ -183,6 +194,8 @@ docs/                  Décisions et consignes de sécurité
 - Les helpers `SECURITY DEFINER` fixent `search_path` et exposent uniquement les opérations nécessaires.
 - L’API utilise le jeton de l’utilisateur et une clé publiable, pas une clé secrète contournant la RLS.
 - Les erreurs de base sensibles ne sont pas renvoyées au navigateur.
+- Le rôle `anon` n’a aucun droit direct sur les tables de la boutique : lecture par des fonctions
+  `security definer` filtrées, écriture uniquement via `place_storefront_order`.
 
 ## Avant la production
 

@@ -530,3 +530,184 @@ describe('mode direct — rapports', () => {
     expect(rpcCalls).toHaveLength(0);
   });
 });
+
+describe('mode direct — boutique publique', () => {
+  const ORDER_ID = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
+  const catalogRow = {
+    product_id: PRODUCT_ID,
+    variant_id: VARIANT_ID,
+    name: 'Eau minérale',
+    description: null,
+    sku: 'EAU-001',
+    category_name: 'Boissons',
+    unit_price: '400.0000',
+    available: '12.0000',
+    currency_code: 'XOF',
+  };
+
+  it('reconnaît les routes de la boutique', () => {
+    expect(isDirectRoute('/shop/boutique-test')).toBe(true);
+    expect(isDirectRoute('/shop/boutique-test/catalog')).toBe(true);
+    expect(isDirectRoute('/shop/boutique-test/orders')).toBe(true);
+    expect(isDirectRoute('/shop/a')).toBe(false);
+    expect(isDirectRoute(`/tenants/${TENANT_ID}/storefront`)).toBe(true);
+    expect(isDirectRoute(`/tenants/${TENANT_ID}/storefront/orders`)).toBe(true);
+    expect(isDirectRoute(`/tenants/${TENANT_ID}/storefront/orders/${ORDER_ID}/confirm`)).toBe(true);
+    expect(isDirectRoute(`/tenants/${TENANT_ID}/storefront/orders/${ORDER_ID}/supprimer`)).toBe(false);
+  });
+
+  it('charge les informations et le catalogue sans compte', async () => {
+    const info = makeClient({}, { slug: 'boutique-test', display_name: 'Chez Aïcha' });
+    const loaded = await directApiFetch<{ display_name: string } | null>(
+      '/shop/boutique-test',
+      undefined,
+      info.client,
+    );
+    expect(info.rpcCalls[0]).toEqual({ name: 'storefront_info', args: { p_slug: 'boutique-test' } });
+    expect(loaded?.display_name).toBe('Chez Aïcha');
+
+    const catalog = makeClient({}, [catalogRow]);
+    const items = await directApiFetch<Array<{ name: string; unit_price: number; available: number }>>(
+      '/shop/boutique-test/catalog',
+      undefined,
+      catalog.client,
+    );
+    expect(items[0]).toMatchObject({ name: 'Eau minérale', unit_price: 400, available: 12 });
+  });
+
+  it('envoie une commande sans jamais transmettre de prix', async () => {
+    const { client, rpcCalls } = makeClient({}, { id: ORDER_ID, number: 'CMD-000001', total: 800 });
+
+    const receipt = await directApiFetch<{ number: string }>(
+      '/shop/boutique-test/orders',
+      {
+        method: 'POST',
+        headers: { 'Idempotency-Key': 'cle-commande-0001' },
+        body: JSON.stringify({
+          customer_name: 'Aïcha',
+          customer_phone: '+22790000001',
+          note: null,
+          items: [{ variant_id: VARIANT_ID, quantity: 2, unit_price: 1 }],
+        }),
+      },
+      client,
+    );
+
+    expect(rpcCalls[0]).toEqual({
+      name: 'place_storefront_order',
+      args: {
+        p_slug: 'boutique-test',
+        p_idempotency_key: 'cle-commande-0001',
+        p_customer_name: 'Aïcha',
+        p_customer_phone: '+22790000001',
+        p_note: null,
+        p_items: [{ variant_id: VARIANT_ID, quantity: 2 }],
+      },
+    });
+    expect(receipt.number).toBe('CMD-000001');
+  });
+
+  it('refuse une adresse de boutique invalide sans appeler la base', async () => {
+    const { client, rpcCalls } = makeClient({}, {});
+    await expect(directApiFetch('/shop/AB', undefined, client)).rejects.toThrow(/Adresse de boutique invalide/);
+    expect(rpcCalls).toHaveLength(0);
+  });
+});
+
+describe('mode direct — boutique du commerçant', () => {
+  const ORDER_ID = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
+  const settings = {
+    tenant_id: TENANT_ID,
+    slug: 'boutique-test',
+    display_name: 'Chez Aïcha',
+    whatsapp: null,
+    published: true,
+    default_location_id: LOCATION_ID,
+    public_path: '/b/boutique-test',
+    currency_code: 'XOF',
+  };
+
+  it('lit et enregistre les réglages via les RPC', async () => {
+    const read = makeClient({}, settings);
+    const loaded = await directApiFetch<{ slug: string; published: boolean }>(
+      `/tenants/${TENANT_ID}/storefront`,
+      undefined,
+      read.client,
+    );
+    expect(read.rpcCalls[0]).toEqual({ name: 'storefront_settings_get', args: { p_tenant_id: TENANT_ID } });
+    expect(loaded).toMatchObject({ slug: 'boutique-test', published: true });
+
+    const saved = makeClient({}, settings);
+    await directApiFetch(
+      `/tenants/${TENANT_ID}/storefront`,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          slug: 'boutique-test',
+          display_name: ' Chez Aïcha ',
+          whatsapp: '  ',
+          published: true,
+          default_location_id: LOCATION_ID,
+        }),
+      },
+      saved.client,
+    );
+    expect(saved.rpcCalls[0]).toEqual({
+      name: 'storefront_settings_save',
+      args: {
+        p_tenant_id: TENANT_ID,
+        p_slug: 'boutique-test',
+        p_display_name: 'Chez Aïcha',
+        p_whatsapp: null,
+        p_published: true,
+        p_default_location_id: LOCATION_ID,
+      },
+    });
+  });
+
+  it('liste les commandes reçues', async () => {
+    const { client, rpcCalls } = makeClient({}, [{ id: ORDER_ID, number: 'CMD-000001', status: 'pending' }]);
+    const orders = await directApiFetch<Array<{ number: string }>>(
+      `/tenants/${TENANT_ID}/storefront/orders`,
+      undefined,
+      client,
+    );
+    expect(rpcCalls[0]!.name).toBe('storefront_orders_list');
+    expect(orders[0]?.number).toBe('CMD-000001');
+  });
+
+  it('confirme, annule et livre une commande', async () => {
+    const confirm = makeClient({}, {});
+    await directApiFetch(
+      `/tenants/${TENANT_ID}/storefront/orders/${ORDER_ID}/confirm`,
+      { method: 'POST', body: JSON.stringify({ location_id: LOCATION_ID }) },
+      confirm.client,
+    );
+    expect(confirm.rpcCalls[0]).toEqual({
+      name: 'storefront_confirm_order',
+      args: { p_tenant_id: TENANT_ID, p_order_id: ORDER_ID, p_location_id: LOCATION_ID },
+    });
+
+    const cancel = makeClient({}, {});
+    await directApiFetch(
+      `/tenants/${TENANT_ID}/storefront/orders/${ORDER_ID}/cancel`,
+      { method: 'POST', body: JSON.stringify({ reason: ' Client injoignable ' }) },
+      cancel.client,
+    );
+    expect(cancel.rpcCalls[0]).toEqual({
+      name: 'storefront_cancel_order',
+      args: { p_tenant_id: TENANT_ID, p_order_id: ORDER_ID, p_reason: 'Client injoignable' },
+    });
+
+    const deliver = makeClient({}, {});
+    await directApiFetch(
+      `/tenants/${TENANT_ID}/storefront/orders/${ORDER_ID}/delivered`,
+      { method: 'POST' },
+      deliver.client,
+    );
+    expect(deliver.rpcCalls[0]).toEqual({
+      name: 'storefront_mark_delivered',
+      args: { p_tenant_id: TENANT_ID, p_order_id: ORDER_ID },
+    });
+  });
+});

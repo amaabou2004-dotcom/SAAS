@@ -612,6 +612,118 @@ async function reportSummary({ client }: RouteContext, tenantId: string, search:
   return asRow(data);
 }
 
+function storefrontSlug(raw: string): string {
+  if (!/^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$/.test(raw)) {
+    throw new Error('Adresse de boutique invalide.');
+  }
+  return raw;
+}
+
+/* Boutique publique — accessible sans compte (rôles `anon` et `authenticated`). */
+
+async function shopInfo({ client }: RouteContext, slug: string) {
+  const { data, error } = await client.rpc('storefront_info', { p_slug: slug });
+  if (error) fail(error.message, 'La boutique n’a pas pu être chargée.');
+  return data ?? null;
+}
+
+async function shopCatalog({ client }: RouteContext, slug: string) {
+  const { data, error } = await client.rpc('storefront_catalog', { p_slug: slug });
+  if (error) fail(error.message, 'Le catalogue de la boutique n’a pas pu être chargé.');
+  return asRows(data).map((row) => ({
+    product_id: row.product_id as string,
+    variant_id: row.variant_id as string,
+    name: asText(row.name),
+    description: (row.description as string | null) ?? null,
+    sku: asText(row.sku),
+    category_name: (row.category_name as string | null) ?? null,
+    unit_price: asNumber(row.unit_price),
+    available: asNumber(row.available),
+    currency_code: asText(row.currency_code),
+  }));
+}
+
+async function placeShopOrder({ client, body, idempotencyKey }: RouteContext, slug: string) {
+  const items = Array.isArray(body.items) ? body.items : [];
+  const { data, error } = await client.rpc('place_storefront_order', {
+    p_slug: slug,
+    p_idempotency_key: idempotencyKey ?? `boutique-${crypto.randomUUID()}`,
+    p_customer_name: body.customer_name,
+    p_customer_phone: body.customer_phone,
+    p_note: typeof body.note === 'string' && body.note.trim() ? body.note.trim() : null,
+    // Le prix n'est jamais envoyé par le client : la base le recalcule.
+    p_items: items.map((line) => {
+      const row = line as Payload;
+      return { variant_id: row.variant_id, quantity: asNumber(row.quantity) };
+    }),
+  });
+  if (error) fail(error.message, 'La commande n’a pas pu être envoyée.');
+  return asRow(data);
+}
+
+/* Boutique côté commerçant. */
+
+async function storefrontSettings({ client }: RouteContext, tenantId: string) {
+  const { data, error } = await client.rpc('storefront_settings_get', { p_tenant_id: tenantId });
+  if (error) fail(error.message, 'La boutique n’a pas pu être chargée.');
+  return asRow(data);
+}
+
+async function saveStorefrontSettings({ client, body }: RouteContext, tenantId: string) {
+  const locationId = body.default_location_id;
+  const { data, error } = await client.rpc('storefront_settings_save', {
+    p_tenant_id: tenantId,
+    p_slug: body.slug,
+    p_display_name: typeof body.display_name === 'string' && body.display_name.trim() ? body.display_name.trim() : null,
+    p_whatsapp: typeof body.whatsapp === 'string' && body.whatsapp.trim() ? body.whatsapp.trim() : null,
+    p_published: body.published === true,
+    p_default_location_id: typeof locationId === 'string' && UUID.test(locationId) ? locationId : null,
+  });
+  if (error) fail(error.message, 'La boutique n’a pas pu être enregistrée.');
+  return asRow(data);
+}
+
+async function listStorefrontOrders({ client }: RouteContext, tenantId: string) {
+  const { data, error } = await client.rpc('storefront_orders_list', { p_tenant_id: tenantId });
+  if (error) fail(error.message, 'Les commandes n’ont pas pu être chargées.');
+  return asRows(data);
+}
+
+async function storefrontOrderAction(
+  { client, body }: RouteContext,
+  tenantId: string,
+  orderId: string,
+  action: string,
+) {
+  if (action === 'confirm') {
+    const locationId = body.location_id;
+    const { error } = await client.rpc('storefront_confirm_order', {
+      p_tenant_id: tenantId,
+      p_order_id: orderId,
+      p_location_id: typeof locationId === 'string' && UUID.test(locationId) ? locationId : null,
+    });
+    if (error) fail(error.message, 'La commande n’a pas pu être confirmée.');
+    return { ok: true };
+  }
+
+  if (action === 'cancel') {
+    const { error } = await client.rpc('storefront_cancel_order', {
+      p_tenant_id: tenantId,
+      p_order_id: orderId,
+      p_reason: typeof body.reason === 'string' ? body.reason.trim() : '',
+    });
+    if (error) fail(error.message, 'La commande n’a pas pu être annulée.');
+    return { ok: true };
+  }
+
+  const { error } = await client.rpc('storefront_mark_delivered', {
+    p_tenant_id: tenantId,
+    p_order_id: orderId,
+  });
+  if (error) fail(error.message, 'La livraison n’a pas pu être enregistrée.');
+  return { ok: true };
+}
+
 /** `true` quand la route est gérée par le mode direct (sinon on garde l'API). */
 export function isDirectRoute(path: string): boolean {
   return new RegExp(
@@ -634,6 +746,8 @@ export function isDirectRoute(path: string): boolean {
       '^/tenants/[0-9a-f-]{36}/invitations/[0-9a-f-]{36}/revoke$',
       '^/tenants/[0-9a-f-]{36}/permissions/[a-z][a-z._]*$',
       '^/tenants/[0-9a-f-]{36}/reports([?][^#]*)?$',
+      '^/shop/[a-z0-9][a-z0-9-]{1,38}[a-z0-9](/catalog|/orders)?$',
+      '^/tenants/[0-9a-f-]{36}/storefront(/orders(/[0-9a-f-]{36}/(confirm|cancel|delivered))?)?$',
       '^/invitations/accept$',
     ].join('|'),
     'i',
@@ -660,6 +774,16 @@ export async function directApiFetch<T>(
   if (segments[0] === 'invitations' && segments[1] === 'accept') {
     if (method !== 'POST') throw new Error(`Route inconnue : ${path}`);
     return (await acceptMyInvitations(context)) as T;
+  }
+  if (segments[0] === 'shop') {
+    const slug = storefrontSlug(segments[1] ?? '');
+    if (segments.length === 2) return (await shopInfo(context, slug)) as T;
+    if (segments.length === 3 && segments[2] === 'catalog') return (await shopCatalog(context, slug)) as T;
+    if (segments.length === 3 && segments[2] === 'orders') {
+      if (method !== 'POST') throw new Error(`Route inconnue : ${path}`);
+      return (await placeShopOrder(context, slug)) as T;
+    }
+    throw new Error(`Route inconnue : ${path}`);
   }
   if (segments[0] !== 'tenants') throw new Error(`Route inconnue : ${path}`);
   if (segments[1] === 'me') return (await listTenants(context)) as T;
@@ -737,6 +861,19 @@ export async function directApiFetch<T>(
       return (method === 'POST' ? await inviteMember(context, tenantId) : await listInvitations(context, tenantId)) as T;
     }
     if (resourceId === 'revoke') return (await revokeInvitation(context, tenantId, resource)) as T;
+    throw new Error(`Route inconnue : ${path}`);
+  }
+
+  if (scope === 'storefront') {
+    if (!resource) {
+      return (method === 'POST'
+        ? await saveStorefrontSettings(context, tenantId)
+        : await storefrontSettings(context, tenantId)) as T;
+    }
+    if (resource === 'orders') {
+      if (!resourceId) return (await listStorefrontOrders(context, tenantId)) as T;
+      if (action) return (await storefrontOrderAction(context, tenantId, resourceId, action)) as T;
+    }
     throw new Error(`Route inconnue : ${path}`);
   }
 
