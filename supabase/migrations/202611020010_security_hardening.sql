@@ -26,6 +26,9 @@ begin
     from pg_proc p
     join pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'public'
+      and p.prokind = 'f'
+      -- on ne touche jamais aux fonctions apportées par une extension
+      and not exists (select 1 from pg_depend d where d.objid = p.oid and d.deptype = 'e')
       and p.proname not in ('storefront_catalog', 'storefront_info', 'place_storefront_order')
   loop
     execute format('revoke all on function %s from public, anon', signature);
@@ -40,6 +43,8 @@ begin
     from pg_proc p
     join pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'public'
+      and p.prokind = 'f'
+      and not exists (select 1 from pg_depend d where d.objid = p.oid and d.deptype = 'e')
       and p.proname in (
         'rls_auto_enable',
         'set_updated_at',
@@ -66,13 +71,22 @@ alter default privileges for role postgres in schema public grant execute on fun
 alter default privileges for role postgres in schema public grant execute on functions to service_role;
 
 -- 4. Droits de table : correction d'un ancien « GRANT ALL »
---    `suppliers` : le client ne fait que LIRE (écriture via save_supplier/delete_supplier)
-revoke all on table public.suppliers from anon, authenticated;
-grant select on table public.suppliers to authenticated;
+--    `suppliers` : table héritée (aucun écran ne l'utilise) présente uniquement
+--    sur le projet hébergé ; le client ne doit que LIRE.
+--    `sales_overview` (vue de rapports) : lecture seule.
+--    Les deux blocs sont conditionnels pour rester valables sur Supabase local.
+do $$
+begin
+  if to_regclass('public.suppliers') is not null then
+    execute 'revoke all on table public.suppliers from anon, authenticated';
+    execute 'grant select on table public.suppliers to authenticated';
+  end if;
 
---    `sales_overview` (vue de rapports) : lecture seule
-revoke all on table public.sales_overview from anon, authenticated;
-grant select on table public.sales_overview to authenticated;
+  if to_regclass('public.sales_overview') is not null then
+    execute 'revoke all on table public.sales_overview from anon, authenticated';
+    execute 'grant select on table public.sales_overview to authenticated';
+  end if;
+end $$;
 
 -- 5. Une nouvelle table du schéma public ne sera plus lisible ni modifiable
 --    automatiquement par « anon » (les tables publiques doivent l'accorder
