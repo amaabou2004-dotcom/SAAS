@@ -597,6 +597,21 @@ async function acceptMyInvitations({ client }: RouteContext) {
   return { accepted: asNumber(payload.accepted) };
 }
 
+async function reportSummary({ client }: RouteContext, tenantId: string, search: URLSearchParams) {
+  const from = search.get('from');
+  const to = search.get('to');
+  if (!from || !to || !/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) {
+    throw new Error('Période de rapport invalide : dates attendues au format AAAA-MM-JJ.');
+  }
+  const { data, error } = await client.rpc('report_summary', {
+    p_tenant_id: tenantId,
+    p_from: from,
+    p_to: to,
+  });
+  if (error) fail(error.message, 'Le rapport n’a pas pu être calculé.');
+  return asRow(data);
+}
+
 /** `true` quand la route est gérée par le mode direct (sinon on garde l'API). */
 export function isDirectRoute(path: string): boolean {
   return new RegExp(
@@ -618,6 +633,7 @@ export function isDirectRoute(path: string): boolean {
       '^/tenants/[0-9a-f-]{36}/invitations$',
       '^/tenants/[0-9a-f-]{36}/invitations/[0-9a-f-]{36}/revoke$',
       '^/tenants/[0-9a-f-]{36}/permissions/[a-z][a-z._]*$',
+      '^/tenants/[0-9a-f-]{36}/reports([?][^#]*)?$',
       '^/invitations/accept$',
     ].join('|'),
     'i',
@@ -637,7 +653,9 @@ export async function directApiFetch<T>(
     idempotencyKey: new Headers(init?.headers).get('Idempotency-Key'),
   };
 
-  const segments = path.replace(/\/+$/, '').split('/').filter(Boolean);
+  const [rawPath, rawQuery] = path.split('?');
+  const search = new URLSearchParams(rawQuery ?? '');
+  const segments = (rawPath ?? path).replace(/\/+$/, '').split('/').filter(Boolean);
 
   if (segments[0] === 'invitations' && segments[1] === 'accept') {
     if (method !== 'POST') throw new Error(`Route inconnue : ${path}`);
@@ -720,6 +738,10 @@ export async function directApiFetch<T>(
     }
     if (resourceId === 'revoke') return (await revokeInvitation(context, tenantId, resource)) as T;
     throw new Error(`Route inconnue : ${path}`);
+  }
+
+  if (scope === 'reports') {
+    return (await reportSummary(context, tenantId, search)) as T;
   }
 
   if (scope === 'permissions' && resource) {

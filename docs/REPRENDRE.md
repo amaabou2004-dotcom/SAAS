@@ -1,7 +1,7 @@
 # Reprendre le projet — la page unique
 
 > Vous ne savez plus où vous en êtes ? Lisez cette page, elle fait le point.
-> Dernière mise à jour : version `0.1.0` — itération 4 (la caisse et l'équipe sont en place).
+> Dernière mise à jour : version `0.1.0` — itération 5 (caisse, rapports et équipe en place).
 
 ---
 
@@ -10,7 +10,8 @@
 **Stokari** est une application web de **gestion commerciale pour les commerces** :
 vous y gérez vos **produits**, vos **stock** (entrées, sorties, transferts), vos
 **catégories**, vos **emplacements** — vous y **encaissez vos ventes** (panier, ticket,
-Mobile Money, annulation) et vous y **gérez votre équipe** (invitations, rôles) — chaque
+Mobile Money, annulation), vous y **suivez vos chiffres** (CA, marge, meilleurs produits,
+produits dormants, export CSV) et vous y **gérez votre équipe** (invitations, rôles) — chaque
 entreprise étant totalement isolée des autres.
 
 Plusieurs personnes peuvent travailler dans la même entreprise, chacune avec un rôle
@@ -39,6 +40,8 @@ Plusieurs personnes peuvent travailler dans la même entreprise, chacune avec un
 | **Nouvelle vente** : panier, prix modifiable, ticket imprimable | ✅ | `/workspace/ventes/nouvelle` |
 | Encaissement espèces / Mobile Money / crédit | ✅ | écran Nouvelle vente |
 | Annulation d'une vente avec retour du stock | ✅ | détail d'une vente |
+| **Rapports** : CA, marge, graphique, top produits, dormants | ✅ | `/workspace/rapports` |
+| Export CSV du rapport (compatible Excel français) | ✅ | bouton sur les rapports |
 | **Équipe** : membres, rôles, invitations en attente | ✅ | `/workspace/equipe` |
 | Inviter une personne par e-mail et lui donner un rôle | ✅ | `/workspace/equipe` |
 | Retirer un membre (jamais le dernier propriétaire) | ✅ | `/workspace/equipe` |
@@ -47,8 +50,9 @@ Plusieurs personnes peuvent travailler dans la même entreprise, chacune avec un
 
 **En clair :** quelqu'un peut s'inscrire, créer sa boutique, saisir ses produits,
 enregistrer son stock, suivre les mouvements, **vendre au comptoir** (ticket numéroté, stock
-qui baisse tout seul, annulation qui remet le stock) **et inviter son vendeur** avec un rôle
-limité. C'est un socle solide et testé (116 tests).
+qui baisse tout seul, annulation qui remet le stock), **voir ce qui rapporte** (rapports et
+export CSV) **et inviter son vendeur** avec un rôle limité. C'est un socle solide et testé
+(132 tests).
 
 ---
 
@@ -57,7 +61,6 @@ limité. C'est un socle solide et testé (116 tests).
 | À construire | Pourquoi c'est important |
 | --- | --- |
 | **Boutiques publiques** (catalogue partageable, lien client) | vendre hors du magasin, sur WhatsApp |
-| **Rapports** (chiffre d'affaires, marge, rotation) | savoir ce qui rapporte |
 | **Abonnements / facturation** | gagner de l'argent avec le SaaS |
 
 ---
@@ -77,7 +80,9 @@ limité. C'est un socle solide et testé (116 tests).
    choisissez le paiement, **Encaissez**. Le ticket s'affiche avec son numéro `VTE-…`.
 9. Revenez sur **Ventes** : le ticket est dans la liste. Ouvrez **Détails** pour annuler
    (le stock revient) — l'annulation demande un motif.
-10. Onglet **Équipe** : invitez une adresse avec le rôle **Vendeur**. Si cette personne crée
+10. Onglet **Rapports** : choisissez 7 / 30 / 90 jours, vérifiez que le CA du jour correspond
+    à vos tickets, puis **Exportez en CSV**.
+11. Onglet **Équipe** : invitez une adresse avec le rôle **Vendeur**. Si cette personne crée
     un compte avec cette adresse, l'entreprise apparaîtra chez elle dès sa connexion.
 
 ---
@@ -110,6 +115,7 @@ Deux façons de brancher le front à la base, sans changer un écran :
 | Produits, stock, mouvements | `apps/web/src/features/workspace/` |
 | Ventes, ticket, panier | `apps/web/src/features/sales/` |
 | Équipe, invitations, rôles | `apps/web/src/features/team/` |
+| Rapports, CSV | `apps/web/src/features/reports/` |
 | Les routes du serveur | `apps/api/src/*/‑controller.ts` |
 | Les règles métier du serveur | `apps/api/src/*/‑service.ts` |
 | Les tables et la sécurité | `supabase/migrations/*.sql` |
@@ -120,7 +126,7 @@ Deux façons de brancher le front à la base, sans changer un écran :
 
 ```bash
 pnpm install          # installer les dépendances
-pnpm test             # 116 tests (API + web)
+pnpm test             # 132 tests (API + web)
 pnpm typecheck        # vérification TypeScript
 pnpm lint             # qualité du code
 pnpm dev              # lancer l'interface (5173) et l'API (3001)
@@ -133,13 +139,13 @@ pnpm dev              # lancer l'interface (5173) et l'API (3001)
 
 ## 8. La prochaine étape recommandée
 
-**Les rapports.** Ventes et équipe sont en place : il reste à transformer les tickets en
-informations utiles — ce qui rapporte, ce qui dort, quelle marge.
+**La boutique publique.** Ventes, rapports et équipe sont en place : il reste à vendre
+**hors du magasin**, avec un lien à partager sur WhatsApp (le réflexe commercial local).
 
 Ordre proposé :
 
 1. ~~Ventes~~ ✅ — panier, ticket, encaissement, stock automatique, annulation.
-2. **Rapports** — chiffre d'affaires du jour / 7 / 30 / 90 jours, marge, top produits.
-3. **Boutique publique** — un lien à partager sur WhatsApp, avec le catalogue et les prix.
+2. ~~Rapports~~ ✅ — CA, marge, top produits, dormants, export CSV.
+3. **Boutique publique** — un lien à partager, catalogue, panier, commande reçue dans l'app.
 4. ~~Invitations d'équipe~~ ✅ — membres, rôles, invitations, acceptation automatique.
 5. **Abonnements** — offrir un plan gratuit limité, puis un plan payant.

@@ -497,3 +497,36 @@ describe('mode direct — équipe', () => {
     expect(result.accepted).toBe(2);
   });
 });
+
+describe('mode direct — rapports', () => {
+  it('reconnaît la route, avec ou sans période', () => {
+    expect(isDirectRoute(`/tenants/${TENANT_ID}/reports`)).toBe(true);
+    expect(isDirectRoute(`/tenants/${TENANT_ID}/reports?from=2026-11-01&to=2026-11-04`)).toBe(true);
+    expect(isDirectRoute(`/tenants/${TENANT_ID}/reports/extra`)).toBe(false);
+  });
+
+  it('transmet la période à report_summary', async () => {
+    const { client, rpcCalls } = makeClient({}, { totals: { sales: 2, revenue: 4800 } });
+
+    const report = await directApiFetch<{ totals: { sales: number } }>(
+      `/tenants/${TENANT_ID}/reports?from=2026-11-01&to=2026-11-04`,
+      undefined,
+      client,
+    );
+
+    expect(rpcCalls[0]).toEqual({
+      name: 'report_summary',
+      args: { p_tenant_id: TENANT_ID, p_from: '2026-11-01', p_to: '2026-11-04' },
+    });
+    expect(report.totals.sales).toBe(2);
+  });
+
+  it('refuse une période invalide sans interroger la base', async () => {
+    const { client, rpcCalls } = makeClient({}, {});
+
+    await expect(
+      directApiFetch(`/tenants/${TENANT_ID}/reports?from=hier&to=2026-11-04`, undefined, client),
+    ).rejects.toThrow(/Période de rapport invalide/);
+    expect(rpcCalls).toHaveLength(0);
+  });
+});

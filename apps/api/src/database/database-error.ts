@@ -40,6 +40,12 @@ export function toDatabaseHttpException(error: DatabaseError, fallback: string):
   if (error.code === '22023' && error.message?.includes('Unknown or inactive sale item')) {
     return new BadRequestException('Un produit de la vente n’existe plus ou a été désactivé.');
   }
+  if (error.code === '22023' && error.message?.includes('La date de début doit précéder la date de fin')) {
+    return new BadRequestException('La date de début doit précéder la date de fin.');
+  }
+  if (error.code === '22023' && error.message?.includes('La période ne peut pas dépasser')) {
+    return new BadRequestException('La période ne peut pas dépasser 400 jours.');
+  }
   if (error.code === '22023' && error.message?.includes('A sale requires at least one item')) {
     return new BadRequestException('Une vente doit contenir au moins un produit.');
   }

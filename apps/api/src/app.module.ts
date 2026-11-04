@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module.js';
 import { CatalogModule } from './catalog/catalog.module.js';
 import { HealthModule } from './health/health.module.js';
 import { InventoryModule } from './inventory/inventory.module.js';
+import { ReportsModule } from './reports/reports.module.js';
 import { SalesModule } from './sales/sales.module.js';
 import { TeamModule } from './team/team.module.js';
 import { TenantsModule } from './tenants/tenants.module.js';
@@ -32,6 +33,7 @@ import { TenantsModule } from './tenants/tenants.module.js';
     InventoryModule,
     SalesModule,
     TeamModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [

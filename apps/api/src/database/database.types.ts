@@ -330,6 +330,10 @@ export interface Database {
         Args: { target_tenant_id: string; target_permission: string };
         Returns: boolean;
       };
+      report_summary: {
+        Args: { p_tenant_id: string; p_from: string; p_to: string };
+        Returns: unknown;
+      };
       accept_my_invitations: {
         Args: Record<string, never>;
         Returns: { accepted?: number };

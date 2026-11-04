@@ -1,28 +1,29 @@
 # La suite du projet — feuille de route
 
-> État au dernier commit : **étapes 1 (ventes) et 4 (équipe) terminées** — la caisse
-> fonctionne (panier, ticket, encaissement, annulation, sortie de stock automatique) et
-> l'équipe se gère dans l'application (invitation par e-mail, rôles, retrait), en plus du
-> socle technique (authentification, entreprises, catalogue, stock, mouvements, sécurité).
+> État au dernier commit : **étapes 1 (ventes), 2 (rapports) et 4 (équipe) terminées** — la
+> caisse fonctionne (panier, ticket, encaissement, annulation, sortie de stock automatique),
+> les rapports répondent (CA, marge, top produits, produits dormants, export CSV) et l'équipe
+> se gère dans l'application (invitation par e-mail, rôles, retrait), en plus du socle
+> technique (authentification, entreprises, catalogue, stock, mouvements, sécurité).
 > Ce document décrit **ce qui reste**, dans l'ordre, avec le pourquoi de chaque étape.
 
 ---
 
 ## Où en est le produit, en une image
 
-Stokari sait aujourd'hui **ranger, compter, vendre et travailler à plusieurs** : produits,
-catégories, emplacements, stock, mouvements, caisse (ticket numéroté, stock qui baisse tout
-seul, annulation tracée) et gestion de l'équipe par rôles. C'est testé (116 tests) et isolé
-par entreprise.
+Stokari sait aujourd'hui **ranger, compter, vendre, mesurer et travailler à plusieurs** :
+produits, catégories, emplacements, stock, mouvements, caisse (ticket numéroté, stock qui
+baisse tout seul, annulation tracée), rapports (CA, marge, top produits, dormants, CSV) et
+gestion de l'équipe par rôles. C'est testé (132 tests) et isolé par entreprise.
 
-Ce qui manque maintenant, c'est **ce que la vente produit comme information** (les rapports),
-puis **la vente hors du magasin** (la boutique publique), et l'abonnement.
+Ce qui manque maintenant, c'est **la vente hors du magasin** (la boutique publique), puis
+l'abonnement.
 
 ```
-   [FAIT] Catalogue + Stock + Mouvements + Sécurité + VENTES + ÉQUIPE
+   [FAIT] Catalogue + Stock + Mouvements + Sécurité + VENTES + RAPPORTS + ÉQUIPE
               │
               ▼
-   [2] RAPPORTS ──► [3] BOUTIQUE PUBLIQUE ──► [5] ABONNEMENT
+   [3] BOUTIQUE PUBLIQUE ──► [5] ABONNEMENT
 ```
 
 ---
@@ -69,21 +70,45 @@ stock restauré, double annulation → refus.
 
 ---
 
-## Étape 2 — Les rapports
+## Étape 2 — Les rapports — ✅ TERMINÉE
 
 **Pourquoi :** savoir ce qui se vend, ce qui rapporte, ce qui dort. C'est ce qui fait revenir
 le commerçant chaque semaine.
 
-**Ce que l'utilisateur voit**
-- **Aujourd'hui** : CA du jour, nombre de ventes, panier moyen, marge.
-- **Période** (7 / 30 / 90 jours) : courbe du CA, top 10 produits, top catégories.
-- **Marge** par produit (prix de vente − coût) et marge totale.
-- **Rotation** : produits dormants (aucune vente récente), capital immobilisé.
+**Ce qui est livré** (`/workspace/rapports`)
 
-**Technique :** vues SQL (`sales_daily`, `product_performance`) + export CSV.
+- **Aujourd'hui** en tête : encaissé, nombre de ventes, marge du jour.
+- **Période 7 / 30 / 90 jours** : CA, marge, nombre de ventes, panier moyen.
+- **Graphique jour par jour** (jours sans vente inclus, donc pas de faux trou).
+- **Top 10 produits** : quantité, CA, marge — et **top 5 catégories** avec part du CA.
+- **Produits dormants** : du stock, aucune vente depuis 30 jours (ou jamais vendu) — c'est de
+  l'argent qui dort, avec sa valeur.
+- **Capital immobilisé** : somme de (quantité × prix d'achat) sur tout le stock.
+- **Export CSV** (séparateur `;`, compatible Excel/LibreOffice en français).
 
-**Critère de réussite :** après 10 ventes, les chiffres du tableau de bord correspondent
-exactement à la somme des tickets.
+**Technique**
+
+- Une fonction SQL `report_summary(tenant, du, au)` `security definer` : un seul appel, une
+  seule vérification de droit (`reports.read`), des montants arrondis côté base.
+- Les dates sont calculées dans le **fuseau de l'entreprise** (`Africa/Niamey` par défaut) :
+  une vente à 23 h 30 heure locale compte bien le bon jour.
+- Les **ventes annulées sont exclues partout** (CA, marge, top produits), mais le stock
+  remis ne fausse pas le capital immobilisé.
+- Garde-fous : période inversée refusée, période > 400 jours refusée, non-membre refusé
+  (`42501`).
+- Route identique en mode direct (`rpc report_summary`) et via l'API NestJS
+  (`GET /tenants/:id/reports?from=&to=`).
+
+**Critère de réussite (vérifié en base) :** vendre 2 articles + 1 article, annuler une 3ᵉ
+vente → le rapport compte **2 ventes**, et le CA/marge ajoutés correspondent **au centime**
+à la somme des tickets non annulés ; série de 8 jours pour une période de 7 jours ;
+top produit = 3 unités ; 10 dormants détectés.
+
+**Reste à faire sur cette étape (plus tard)**
+
+- Comparaison entre deux périodes (mois précédent).
+- Rapport « ventes par vendeur » et « ventes par moyen de paiement ».
+- Envoi du rapport par e-mail / WhatsApp (le CSV est prêt pour ça).
 
 ---
 
@@ -159,13 +184,13 @@ webhook de paiement, écran de facturation.
 | # | Étape | Effort | Valeur |
 | --- | --- | --- | --- |
 | 1 | **Ventes** ✅ | ⭐⭐⭐⭐ | transforme l'outil en caisse : indispensable |
-| 2 | **Rapports** | ⭐⭐⭐ | donne la raison de revenir chaque semaine |
+| 2 | **Rapports** ✅ | ⭐⭐⭐ | donne la raison de revenir chaque semaine |
 | 3 | **Boutique publique** | ⭐⭐⭐ | différencie sur le marché local |
 | 4 | **Équipe** ✅ | ⭐⭐ | débloque les boutiques à plusieurs vendeurs |
 | 5 | **Abonnement** | ⭐⭐ | transforme l'usage en revenus |
 
-**Recommandation :** l'étape 1 est faite — enchaîner sur **2 (rapports)**. À ce moment-là, le
-produit est utilisable tous les jours par un vrai commerce et peut être montré à un client.
+**Recommandation :** les étapes 1, 2 et 4 sont faites — enchaîner sur **3 (boutique publique)**,
+le différenciateur commercial sur ce marché.
 
 ---
 
@@ -181,11 +206,13 @@ produit est utilisable tous les jours par un vrai commerce et peut être montré
 
 ---
 
-## Découpage de l'étape 2 (les rapports)
+## Découpage de l'étape 3 (la boutique publique)
 
-1. Vues SQL `sales_daily` (CA, marge, panier moyen par jour) et `product_performance`
-   (quantités, CA, marge par produit / catégorie), avec tests SQL.
-2. Contrat front (`reports-api.ts`) + mode direct + route API, tests unitaires.
-3. Écran **Rapports** : aujourd'hui, 7 / 30 / 90 jours, top produits, produits dormants.
-4. Export CSV (ventes de la période, produits).
-5. Tests : les chiffres de l'écran doivent égaler la somme exacte des tickets.
+1. Table `storefront_settings` (slug public, nom affiché, WhatsApp) + politique RLS publique
+   en lecture seule sur les produits actifs et le stock disponible.
+2. Table `storefront_orders` (panier client, coordonnées, statut) + fonction
+   `place_storefront_order` (aucune donnée de coût exposée).
+3. Route publique `/b/:slug` côté front : catalogue, recherche, panier, envoi de commande.
+4. Écran commerçant « Commandes » : confirmer (réserve le stock), refuser, marquer livrée.
+5. Tests : une commande passée sans session ne crée que des données autorisées, et la
+   confirmation réserve le stock sans le vendre deux fois.

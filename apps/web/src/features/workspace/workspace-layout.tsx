@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeftRight, Building2, History, LoaderCircle, LogOut, MapPin, Package, Receipt, Tags, Users, Warehouse } from 'lucide-react';
+import { ArrowLeftRight, BarChart3, Building2, History, LoaderCircle, LogOut, MapPin, Package, Receipt, Tags, Users, Warehouse } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { NavLink, Navigate, Outlet, useNavigate } from 'react-router-dom';
 import { Brand } from '../../components/brand';
@@ -13,6 +13,7 @@ import { WorkspaceContext } from './workspace-context';
 
 const navigation = [
   { to: '/workspace/ventes', label: 'Ventes', icon: Receipt },
+  { to: '/workspace/rapports', label: 'Rapports', icon: BarChart3 },
   { to: '/workspace/produits', label: 'Produits', icon: Package },
   { to: '/workspace/categories', label: 'Catégories', icon: Tags },
   { to: '/workspace/emplacements', label: 'Emplacements', icon: MapPin },
