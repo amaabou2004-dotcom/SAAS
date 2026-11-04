@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Archive, ImagePlus, LoaderCircle, PackagePlus, Pencil, RotateCcw, Store, Trash2 } from 'lucide-react';
+import { Archive, ImagePlus, LoaderCircle, PackagePlus, Pencil, Plus, RotateCcw, Store, Trash2 } from 'lucide-react';
 import { useMemo, useState, type FormEvent } from 'react';
 import { Alert } from '../../components/ui/alert';
 import { Button } from '../../components/ui/button';
@@ -13,6 +13,7 @@ import {
   listLocations,
   listProducts,
   listStock,
+  postStockOperation,
   saveProduct,
   setProductActive,
   type Product,
@@ -29,6 +30,107 @@ function errorMessage(error: unknown) {
 function stockBadge(total: number) {
   if (total <= 0) return { label: 'Rupture de stock', tone: 'bg-amber-50 text-amber-700' };
   return { label: `${total} en stock`, tone: 'bg-emerald-50 text-emerald-700' };
+}
+
+/**
+ * Ajout rapide de stock depuis la fiche produit : la question « comment mettre
+ * du stock ? » ne doit pas obliger à changer d'écran. L'opération créée est une
+ * réception normale (`receipt`), donc visible et annulable dans « Mouvements ».
+ */
+function QuickStock({
+  product,
+  tenantId,
+  onDone,
+}: {
+  product: Product;
+  tenantId: string;
+  onDone: () => Promise<void>;
+}) {
+  const { accessToken } = useWorkspace();
+  const [quantity, setQuantity] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const locationsQuery = useQuery({
+    queryKey: ['inventory', 'locations', tenantId],
+    queryFn: () => listLocations(accessToken, tenantId),
+  });
+  const [locationId, setLocationId] = useState('');
+  const locations = (locationsQuery.data ?? []).filter((location) => location.active);
+  const chosen = locationId || locations[0]?.id || '';
+  const variant = product.variants[0];
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      if (!variant) throw new Error('Ce produit n’a pas de variante à réapprovisionner.');
+      if (!chosen) throw new Error('Aucun emplacement de stock disponible.');
+      const amount = quantity.trim();
+      if (!/^\d+(\.\d{1,4})?$/.test(amount) || Number(amount) <= 0) {
+        throw new Error('Indiquez une quantité supérieure à zéro.');
+      }
+      const key = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `stock-${Date.now()}`;
+      return postStockOperation(
+        accessToken,
+        tenantId,
+        {
+          operation_type: 'receipt',
+          reason: `Réapprovisionnement depuis la fiche ${product.name}`.slice(0, 500),
+          reference: null,
+          lines: [{ variant_id: variant.id, location_id: chosen, quantity_delta: amount }],
+        },
+        key,
+      );
+    },
+  });
+
+  const add = async () => {
+    setError(null);
+    try {
+      await mutation.mutateAsync();
+      setQuantity('');
+      await onDone();
+    } catch (caught) {
+      setError(errorMessage(caught));
+    }
+  };
+
+  return (
+    <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+      <div className="flex flex-wrap items-end gap-2">
+        <div className="min-w-24 flex-1">
+          <Label htmlFor={`quick-stock-${product.id}`} className="mb-1 block text-xs">Ajouter du stock</Label>
+          <input
+            id={`quick-stock-${product.id}`}
+            type="number"
+            min="1"
+            step="1"
+            inputMode="numeric"
+            className={`${inputClass} min-h-10`}
+            value={quantity}
+            onChange={(event) => setQuantity(event.target.value)}
+            placeholder="12"
+          />
+        </div>
+        {locations.length > 1 ? (
+          <div className="min-w-32 flex-1">
+            <Label htmlFor={`quick-location-${product.id}`} className="mb-1 block text-xs">Emplacement</Label>
+            <select
+              id={`quick-location-${product.id}`}
+              className={`${inputClass} min-h-10`}
+              value={chosen}
+              onChange={(event) => setLocationId(event.target.value)}
+            >
+              {locations.map((location) => (
+                <option key={location.id} value={location.id}>{location.name}</option>
+              ))}
+            </select>
+          </div>
+        ) : null}
+        <Button type="button" size="sm" variant="mint" loading={mutation.isPending} onClick={() => { void add(); }}>
+          <Plus className="size-4" aria-hidden="true" />Ajouter
+        </Button>
+      </div>
+      {error ? <p className="mt-2 text-xs font-semibold text-red-600" role="alert">{error}</p> : null}
+    </div>
+  );
 }
 
 export function ProductsPage() {
@@ -442,6 +544,15 @@ export function ProductsPage() {
                           : 'masqué de la boutique (produit désactivé)'}
                       </span>
                     </div>
+                    {product.active ? (
+                      <QuickStock
+                        product={product}
+                        tenantId={tenant.id}
+                        onDone={async () => {
+                          await queryClient.invalidateQueries({ queryKey: ['inventory', 'stock', tenant.id] });
+                        }}
+                      />
+                    ) : null}
                   </article>
                 );
               })}
