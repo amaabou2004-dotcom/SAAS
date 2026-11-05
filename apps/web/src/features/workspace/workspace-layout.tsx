@@ -1,6 +1,6 @@
 import { friendlyError } from '../../lib/friendly-error';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeftRight, BarChart3, Building2, ChevronDown, HandCoins, History, LayoutDashboard, LoaderCircle, LogOut, MapPin, Package, Receipt, Store, Tags, Users, Warehouse } from 'lucide-react';
+import { ArrowLeftRight, BarChart3, Building2, ChevronDown, HandCoins, History, LayoutDashboard, LoaderCircle, LogOut, MapPin, Package, Radar, Receipt, Store, Tags, Users, Warehouse } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Brand } from '../../components/brand';
@@ -11,6 +11,7 @@ import { useAuth } from '../auth/auth-context';
 import { signOut } from '../auth/auth-service';
 import { listTenants } from '../onboarding/tenant-api';
 import { acceptMyInvitations } from '../team/team-api';
+import { checkPlatformAdmin } from '../audience/audience-api';
 import { WorkspaceContext } from './workspace-context';
 
 /**
@@ -63,6 +64,27 @@ export function WorkspaceLayout() {
     retry: 1,
   });
   const tenants = tenantsQuery.data ?? [];
+
+  // Le menu « Audience » n'apparaît que pour l'administration de la plateforme :
+  // la base refuse de toute façon la lecture des chiffres à tout autre compte.
+  const platformAdminQuery = useQuery({
+    queryKey: ['platform-admin', user?.id],
+    queryFn: checkPlatformAdmin,
+    enabled: Boolean(accessToken),
+    retry: 0,
+    staleTime: 10 * 60 * 1000,
+  });
+  const moreEntries = platformAdminQuery.data
+    ? [
+        ...moreNavigation,
+        {
+          to: '/workspace/audience',
+          label: 'Audience',
+          icon: Radar,
+          hint: 'Qui visite les pages publiques',
+        },
+      ]
+    : moreNavigation;
   const tenant = tenants.find((item) => item.id === selectedTenantId) ?? tenants[0];
 
   useEffect(() => {
@@ -160,7 +182,7 @@ export function WorkspaceLayout() {
                   id="more-navigation"
                   className="absolute right-0 z-30 mt-1 w-64 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg"
                 >
-                  {moreNavigation.map(({ to, label, icon: Icon, hint }) => (
+                  {moreEntries.map(({ to, label, icon: Icon, hint }) => (
                     <NavLink
                       key={to}
                       to={to}

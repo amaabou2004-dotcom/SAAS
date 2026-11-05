@@ -29,6 +29,7 @@ import { StorefrontPage } from '../features/storefront/storefront-page';
 import { OrderTrackingPage } from '../features/storefront/order-tracking-page';
 import { PublicShopPage } from '../features/storefront/public-shop-page';
 import { TeamPage } from '../features/team/team-page';
+import { AudiencePage } from '../features/audience/audience-page';
 
 function FullPageLoader() {
   return (
@@ -128,6 +129,8 @@ export function App() {
           <Route path="mouvements" element={<MovementsPage />} />
           <Route path="equipe" element={<TeamPage />} />
           <Route path="commandes" element={<StorefrontPage />} />
+          {/* Réservé aux administrateurs de la plateforme : la base refuse les autres. */}
+          <Route path="audience" element={<AudiencePage />} />
         </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

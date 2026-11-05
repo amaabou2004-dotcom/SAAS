@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Brand } from '../../components/brand';
 import { SiteFooter } from '../../components/site-footer';
+import { usePageViewTracking } from '../audience/use-page-view';
 import { legalInfo } from './legal-info';
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -23,6 +24,9 @@ function LegalLayout({
   intro: string;
   children: ReactNode;
 }) {
+  // Les documents publics font partie des pages mesurées.
+  usePageViewTracking();
+
   return (
     <div className="flex min-h-screen flex-col bg-canvas">
       <header className="border-b border-slate-200 bg-white">
@@ -274,6 +278,16 @@ export function PrivacyPolicyPage() {
           {legalInfo.brand} n’utilise que des cookies strictement nécessaires : ils gardent votre
           session ouverte et mémorisent vos préférences d’affichage. Aucun cookie publicitaire,
           aucun traceur de réseau social et aucun outil de mesure d’audience tiers n’est installé.
+        </p>
+        <p>
+          Pour savoir combien de personnes consultent les pages publiques (accueil, boutiques
+          partagées, documents légaux), nous tenons un comptage interne, agrégé et anonyme. Il ne
+          dépose aucun cookie, ne conserve aucune adresse IP et ne construit aucun profil de
+          visiteur : une empreinte technique calculée pour la journée en cours permet simplement de
+          ne pas compter deux fois la même personne le même jour, puis elle change le lendemain.
+          Seuls des totaux (nombre de visiteurs et de pages vues par jour) sont conservés, et ces
+          chiffres ne sont visibles que par l’éditeur du service. Aucune donnée de ce comptage n’est
+          vendue ni transmise à un tiers.
         </p>
       </Section>
 

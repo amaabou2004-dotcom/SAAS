@@ -16,6 +16,7 @@ import type { LucideIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Brand } from '../../components/brand';
 import { SiteFooter } from '../../components/site-footer';
+import { usePageViewTracking } from '../audience/use-page-view';
 import { legalInfo } from '../legal/legal-info';
 
 interface Feature {
@@ -87,6 +88,9 @@ const trustPoints = [
  * directe vers l'écran de connexion ne décrivait nulle part ce qu'est Stokari.
  */
 export function LandingPage() {
+  // Une visite de l'accueil public = une ligne anonyme dans le compteur.
+  usePageViewTracking('/');
+
   return (
     <div className="flex min-h-screen flex-col bg-canvas">
       <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/90 backdrop-blur">
