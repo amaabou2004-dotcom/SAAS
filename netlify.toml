@@ -22,6 +22,8 @@
   VITE_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_-zxno-IY7ZlBHBM9L_cbNw_QJxtaD0q"
   VITE_DATA_MODE = "direct"
   VITE_GOOGLE_AUTH_ENABLED = "true"
+  # Adresse publique canonique : sert aux liens légaux, au partage et à Google.
+  VITE_APP_URL = "https://stokari.com"
 
 # Application monopage : toute route inconnue renvoie l'application.
 # Les fichiers réellement présents (JS, CSS, images) sont servis normalement.

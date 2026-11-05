@@ -112,10 +112,12 @@ Dans Google Cloud Console → *Credentials* → votre client OAuth :
 3. Créez l'entreprise → ajoutez un produit → saisissez du stock.
 4. Rechargez la page : session et données restent (elles vivent dans Supabase).
 
-### d. Plus tard : nom de domaine personnalisé
+### d. Nom de domaine officiel : `stokari.com`
 
-**Domain management → Add a domain** (ex. `stokari.shop`). Ensuite, ajoutez ce domaine dans
-**Supabase → Authentication → URL Configuration**. Aucun code à modifier.
+Le domaine retenu est **`https://stokari.com`** (pas encore acheté au 5 novembre 2026). Tout est
+décrit pas à pas dans [`DOMAINE-STOKARI.md`](./DOMAINE-STOKARI.md) : achat, DNS Netlify, HTTPS,
+puis mise à jour de Supabase et de Google. Aucun code à modifier : `VITE_APP_URL` (déjà présent
+dans `netlify.toml`) alimente l'adresse publique du site et des documents légaux.
 
 ---
 

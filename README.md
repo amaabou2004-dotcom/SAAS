@@ -40,6 +40,9 @@ Guide détaillé (nom du site, Google, Supabase, vérifications) :
 **Vercel (alternative)** : `vercel.json` reste valable, voir
 [`docs/DEPLOIEMENT-VERCEL.md`](./docs/DEPLOIEMENT-VERCEL.md).
 
+**Domaine officiel : `https://stokari.com`** (à acheter puis brancher sur Netlify — voir
+[`docs/DOMAINE-STOKARI.md`](./docs/DOMAINE-STOKARI.md)).
+
 ## Endpoints de service
 
 | Route | Rôle |

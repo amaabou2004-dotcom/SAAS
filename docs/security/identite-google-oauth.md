@@ -36,9 +36,9 @@ nécessaire — elle est **gratuite**.
 
 | Levier | Effet | Coût | Obligatoire ? |
 | --- | --- | --- | --- |
-| **A. Domaine propre** (ex. `stokari.app`) | Le site, les pages légales et la marque vivent sur un domaine que Google peut vérifier | ~8 000–15 000 F CFA / an | **oui**, sans domaine vérifiable la marque ne peut pas être validée |
+| **A. Domaine propre** — `stokari.com` | Le site, les pages légales et la marque vivent sur un domaine que Google peut vérifier | 6 000–9 000 F CFA / an | **oui**, sans domaine vérifiable la marque ne peut pas être validée |
 | **B. Vérification de marque Google** | Google affiche **« Stokari »** + le logo, et non plus l'adresse technique | 0 | **oui** pour que le nom apparaisse |
-| **C. Domaine personnalisé Supabase** (ex. `auth.stokari.app`) | Le retour de connexion ne passe plus par `*.supabase.co` : même l'adresse affichée devient la vôtre | offre Pro Supabase 25 $/mois + option domaine 10 $/mois, soit ≈ 35 $/mois | non, mais c'est le seul moyen de faire disparaître complètement `supabase.co` |
+| **C. Domaine personnalisé Supabase** (ex. `auth.stokari.com`) | Le retour de connexion ne passe plus par `*.supabase.co` : même l'adresse affichée devient la vôtre | offre Pro Supabase 25 $/mois + option domaine 10 $/mois, soit ≈ 35 $/mois | non, mais c'est le seul moyen de faire disparaître complètement `supabase.co` |
 
 Ordre recommandé : **A → B** (gratuit, règle le problème principal), puis **C** plus tard si le
 budget le permet.
@@ -50,19 +50,23 @@ budget le permet.
 C'est le prérequis de tout le reste : Google demande de prouver que vous possédez le domaine
 (Search Console), ce qui est **impossible avec `…netlify.app`** (domaine de Netlify, pas le vôtre).
 
-1. Achetez un domaine (ex. `stokari.app`, `stokari.shop`, `stokari.ne`). Un `.app` coûte une
-   dizaine de milliers de francs CFA par an ; les extensions locales varient.
+1. Le domaine retenu est **`stokari.com`** — achat, DNS et branchement Netlify détaillés dans
+   [`../DOMAINE-STOKARI.md`](../DOMAINE-STOKARI.md) (6 000 à 9 000 F CFA par an).
 2. Netlify → **Domain management → Add a domain** → suivez les enregistrements DNS indiqués
    (CNAME vers votre site, ou serveurs DNS Netlify). Laissez Netlify gérer le HTTPS.
 3. Dans Supabase → **Authentication → URL Configuration** :
-   - **Site URL** : `https://<votre-domaine>`
-   - **Redirect URLs** : `https://<votre-domaine>/**` (+ `http://localhost:5173/**` pour le
+   - **Site URL** : `https://stokari.com`
+   - **Redirect URLs** : `https://stokari.com/**` (+ `http://localhost:5173/**` pour le
      développement).
 4. Mettez à jour le dépôt là où l'adresse apparaît :
-   - `netlify.toml` / variables Netlify : `VITE_APP_URL=https://<votre-domaine>` ;
+   - `netlify.toml` / variables Netlify : `VITE_APP_URL=https://stokari.com` ;
    - `apps/web/src/features/legal/legal-info.ts` → `siteUrl` ;
    - dans Google Cloud → **Clients** → votre client OAuth → **Authorized JavaScript origins** :
-     ajoutez `https://<votre-domaine>`.
+     ajoutez `https://stokari.com`.
+
+> **État au 5 novembre 2026** : `stokari.com` n'est pas encore acheté. Tant qu'il ne l'est pas,
+> Google continuera d'afficher l'adresse technique de Supabase. Guide d'achat et de branchement :
+> [`../DOMAINE-STOKARI.md`](../DOMAINE-STOKARI.md).
 
 > **Note** : le site fonctionne déjà sur son adresse Netlify actuelle. Le domaine propre ne casse
 > rien : ajoutez-le d'abord, vérifiez qu'il affiche bien Stokari, puis changez les URL ci-dessus.
@@ -81,10 +85,10 @@ client OAuth de Supabase).
 | **App name** | `Stokari` (exactement, sans « Niger », sans tiret) |
 | **User support email** | votre adresse de contact réelle (elle est visible des utilisateurs) |
 | **App logo** | `apps/web/public/oauth-logo-120.png` — carré, exactement 120 × 120 px, < 1 Mo |
-| **Application home page** | `https://<votre-domaine>/` |
-| **Application privacy policy link** | `https://<votre-domaine>/confidentialite` |
-| **Application terms of service link** | `https://<votre-domaine>/conditions` |
-| **Authorized domains** | `<votre-domaine>` |
+| **Application home page** | `https://stokari.com/` |
+| **Application privacy policy link** | `https://stokari.com/confidentialite` |
+| **Application terms of service link** | `https://stokari.com/conditions` |
+| **Authorized domains** | `stokari.com` |
 | **Developer contact email** | votre adresse (reçoit les messages de l'équipe Trust & Safety) |
 
 Côté application, **rien n'est à créer** : la page d'accueil publique
@@ -117,7 +121,7 @@ durée, retrait de l'accès), ce que la vérification exige explicitement.
 
 ### 4.4 Vérifier le résultat
 
-En navigation privée, cliquez sur **Continuer avec Google** depuis `https://<votre-domaine>` :
+En navigation privée, cliquez sur **Continuer avec Google** depuis `https://stokari.com` :
 
 - l'écran Google doit afficher **Stokari** et le logo carré ;
 - plus aucune mention « application non vérifiée » ;
@@ -131,15 +135,15 @@ attendez la fin de la vérification.
 ## 5. Étape C — Domaine personnalisé Supabase (facultatif, payant)
 
 Objectif : que l'adresse de retour ne soit plus `https://<projet>.supabase.co/auth/v1/callback`
-mais `https://auth.<votre-domaine>/auth/v1/callback`.
+mais `https://auth.stokari.com/auth/v1/callback`.
 
-1. Supabase → **Project Settings → Custom Domains** → ajouter `auth.<votre-domaine>`
+1. Supabase → **Project Settings → Custom Domains** → ajouter `auth.stokari.com`
    (nécessite l'offre **Pro** à 25 $/mois, plus l'option domaine à **10 $/mois**).
 2. **Avant d'activer**, ajoutez dans Google Cloud → *Clients* → votre client OAuth :
-   `https://auth.<votre-domaine>/auth/v1/callback` dans **Authorized redirect URIs**.
+   `https://auth.stokari.com/auth/v1/callback` dans **Authorized redirect URIs**.
 3. Créez les enregistrements DNS demandés par Supabase, puis activez le domaine.
 4. Mettez à jour `VITE_SUPABASE_URL` (Netlify, Vercel, `.env.local`) :
-   `https://auth.<votre-domaine>`. Rien d'autre ne change dans le code : le client Supabase lit
+   `https://auth.stokari.com`. Rien d'autre ne change dans le code : le client Supabase lit
    cette variable.
 5. Vérifiez la connexion Google, l'inscription par e-mail et la réinitialisation de mot de passe.
 
@@ -155,8 +159,8 @@ professionnel » visible par vos utilisateurs, et il est **gratuit** à corriger
 
 1. Créez un compte chez un service d'envoi (Brevo : 300 e-mails/jour gratuits ; Resend :
    3 000 e-mails/mois gratuits).
-2. Ajoutez et validez votre domaine (`stokari.app`) chez ce prestataire.
-3. Créez l'adresse expéditrice `no-reply@<votre-domaine>` (ou `bonjour@…`).
+2. Ajoutez et validez votre domaine (`stokari.com`) chez ce prestataire.
+3. Créez l'adresse expéditrice `no-reply@stokari.com` (ou `bonjour@…`).
 
 ### 6.2 Les enregistrements DNS qui évitent les indésirables
 
@@ -164,7 +168,7 @@ professionnel » visible par vos utilisateurs, et il est **gratuit** à corriger
 | --- | --- | --- |
 | TXT | `@` | `v=spf1 include:spf.brevo.com -all` |
 | TXT (DKIM) | `mail._domainkey` | la clé fournie par le prestataire |
-| TXT | `_dmarc` | `v=DMARC1; p=none; rua=mailto:dmarc@<votre-domaine>` |
+| TXT | `_dmarc` | `v=DMARC1; p=none; rua=mailto:dmarc@stokari.com` |
 | CNAME | `mail` (ou celui indiqué) | la cible fournie pour les liens de suivi |
 
 Passez `p=none` → `p=quarantine` une fois quelques semaines d'envoi sans erreur.
@@ -173,7 +177,7 @@ Passez `p=none` → `p=quarantine` une fois quelques semaines d'envoi sans erreu
 
 Supabase → **Authentication → Emails / SMTP Settings** :
 
-- **Sender email** : `no-reply@<votre-domaine>` — **Sender name** : `Stokari`
+- **Sender email** : `no-reply@stokari.com` — **Sender name** : `Stokari`
 - hôte, port `587`, utilisateur et mot de passe SMTP du prestataire
 - puis **Envoyez un e-mail de test** et vérifiez le score sur <https://www.mail-tester.com>
   (viser 9/10 ou plus).
@@ -204,7 +208,7 @@ leur contenu dans Supabase → **Authentication → Emails → Templates** (mêm
 | --- | --- |
 | « … avec `suuchdahpftxwbvwhbyq.supabase.co` » | « … avec **Stokari** » |
 | Écran Google sans marque | Logo + nom **Stokari** |
-| Adresse de retour `*.supabase.co` | `auth.stokari.app` (étape C) |
+| Adresse de retour `*.supabase.co` | `auth.stokari.com` (étape C) |
 | E-mails depuis `@mail.app.supabase.io` | E-mails « Stokari » depuis `no-reply@stokari.app` |
 | Page d'accueil = formulaire de connexion | Page de présentation + pages légales complètes |
 

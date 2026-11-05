@@ -7,3 +7,5 @@ Allow: /conditions
 Disallow: /workspace
 Disallow: /auth
 Disallow: /onboarding
+
+Sitemap: https://stokari.com/sitemap.xml
