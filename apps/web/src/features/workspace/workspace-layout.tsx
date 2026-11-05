@@ -1,6 +1,6 @@
 import { friendlyError } from '../../lib/friendly-error';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeftRight, BarChart3, Building2, ChevronDown, HandCoins, History, LayoutDashboard, LoaderCircle, LogOut, MapPin, Package, Radar, Receipt, Store, Tags, Users, Warehouse } from 'lucide-react';
+import { ArrowLeftRight, BarChart3, Building2, ChevronDown, HandCoins, History, LayoutDashboard, LoaderCircle, LogOut, MapPin, Package, Radar, Receipt, ShieldCheck, Store, Tags, Users, Warehouse } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Brand } from '../../components/brand';
@@ -77,6 +77,12 @@ export function WorkspaceLayout() {
   const moreEntries = platformAdminQuery.data
     ? [
         ...moreNavigation,
+        {
+          to: '/workspace/administration',
+          label: 'Administration',
+          icon: ShieldCheck,
+          hint: 'Comptes et entreprises',
+        },
         {
           to: '/workspace/audience',
           label: 'Audience',

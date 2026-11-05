@@ -30,6 +30,7 @@ import { OrderTrackingPage } from '../features/storefront/order-tracking-page';
 import { PublicShopPage } from '../features/storefront/public-shop-page';
 import { TeamPage } from '../features/team/team-page';
 import { AudiencePage } from '../features/audience/audience-page';
+import { AdministrationPage } from '../features/administration/administration-page';
 
 function FullPageLoader() {
   return (
@@ -131,6 +132,7 @@ export function App() {
           <Route path="commandes" element={<StorefrontPage />} />
           {/* Réservé aux administrateurs de la plateforme : la base refuse les autres. */}
           <Route path="audience" element={<AudiencePage />} />
+          <Route path="administration" element={<AdministrationPage />} />
         </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

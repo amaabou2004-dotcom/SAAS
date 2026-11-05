@@ -38,7 +38,9 @@ Les chiffres sont des **totaux agrégés** : ni nom, ni e-mail, ni adresse, ni i
 1. **Appliquer la migration** : `supabase db push` (projet hébergé) ou `supabase db reset` (local).
    Elle crée `page_views`, `platform_admins`, `track_page_view()`, `audience_summary()` et
    `is_platform_admin()`.
-2. **Vous nommer administrateur**, dans Supabase → **SQL Editor** :
+2. **Vérifier votre accès administrateur.** L'adresse `amaabou2004@gmail.com` est nommée
+   administratrice **automatiquement** (migration `202611050002_platform_admin.sql`). Pour une
+   autre personne, dans Supabase → **SQL Editor** :
 
 ```sql
 insert into public.platform_admins (user_id)

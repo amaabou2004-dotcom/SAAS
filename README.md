@@ -221,6 +221,9 @@ docs/                  Décisions et consignes de sécurité
 - Depuis la migration `202611020010_security_hardening.sql`, `anon` ne peut exécuter **que** les trois
   RPC de la boutique publique ; le pipeline e-mail et les générateurs de démonstration sont réservés
   au service, et les nouveaux objets du schéma `public` sont fermés par défaut.
+- Administration de la plateforme (comptes, entreprises, chiffres d'ensemble) réservée à
+  l'éditeur : **Espace de travail → Plus → Administration** — voir
+  [`docs/ADMINISTRATION.md`](./docs/ADMINISTRATION.md).
 - Comptage de fréquentation **interne et anonyme** (aucun cookie, aucune IP conservée, aucun outil
   tiers) : écran **Espace de travail → Plus → Audience**, réservé à l'éditeur — voir
   [`docs/AUDIENCE.md`](./docs/AUDIENCE.md).
