@@ -15,6 +15,7 @@
 - [ ] Rotation des refresh tokens activée.
 - [ ] Notifications de sécurité activées.
 - [ ] Client Google OAuth limité à `openid`, `email` et `profile`.
+- [ ] Marque Google vérifiée (nom « Stokari », logo 120 × 120, domaine vérifié) — sinon Google affiche `…supabase.co`, voir [`identite-google-oauth.md`](./identite-google-oauth.md).
 - [ ] Secret Google enregistré uniquement dans Supabase Auth.
 - [ ] Callback applicatif `/auth/callback` limité aux origines connues.
 - [x] Aucun contournement manuel de la confirmation e-mail pour OAuth.

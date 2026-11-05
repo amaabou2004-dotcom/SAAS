@@ -100,6 +100,11 @@ Dans Google Cloud Console → *Credentials* → votre client OAuth :
 - **Authorized redirect URIs** : `https://suuchdahpftxwbvwhbyq.supabase.co/auth/v1/callback`
   (déjà présente)
 
+> **Nom affiché par Google.** Sans domaine propre et sans vérification de marque, Google écrit
+> `suuchdahpftxwbvwhbyq.supabase.co` dans l'écran de consentement et dans son e-mail de sécurité.
+> La marche à suivre complète (domaine, logo, Search Console, vérification, domaine Supabase) est
+> dans [`docs/security/identite-google-oauth.md`](./security/identite-google-oauth.md).
+
 ### c. Vérifier en 4 clics
 
 1. Ouvrez l'URL Netlify.

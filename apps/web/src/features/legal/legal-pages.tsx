@@ -174,6 +174,10 @@ export function PrivacyPolicyPage() {
             chiffrée, jamais lisible par nous), date de création.
           </li>
           <li>
+            <strong>Si vous utilisez Google pour vous connecter</strong> : adresse e-mail, nom,
+            photo de profil et identifiant technique du compte Google — voir la section 3.
+          </li>
+          <li>
             <strong>Votre entreprise</strong> : nom, adresse de boutique, devise, fuseau horaire,
             coordonnées de contact.
           </li>
@@ -196,7 +200,31 @@ export function PrivacyPolicyPage() {
         </p>
       </Section>
 
-      <Section title="3. Pourquoi nous les utilisons">
+      <Section title="3. Connexion avec un compte Google">
+        <p>
+          Vous pouvez créer votre compte ou vous connecter avec votre compte Google, sans mot de
+          passe à retenir. Dans ce cas, Google nous transmet uniquement votre adresse e-mail, votre
+          nom, l’adresse de votre photo de profil et un identifiant technique de votre compte
+          Google. Nous n’accédons ni à vos messages Gmail, ni à vos fichiers Drive, ni à vos
+          contacts, ni à aucune autre donnée Google.
+        </p>
+        <p>
+          Ces informations servent seulement à créer et sécuriser votre compte : elles ne sont ni
+          analysées à des fins publicitaires, ni revendues, ni transmises à d’autres personnes.
+          L’identifiant Google et la photo de profil ne sont utilisés que pour vous reconnaître à la
+          connexion et afficher vos initiales, et sont conservés tant que votre compte existe. Si
+          vous préférez ne pas passer par Google, l’inscription par e-mail et mot de passe donne
+          exactement les mêmes fonctions.
+        </p>
+        <p>
+          Vous pouvez retirer l’accès de {legalInfo.brand} à votre compte Google à tout moment
+          depuis la page « Applications tierces » de votre compte Google, ou en nous demandant la
+          suppression de votre compte : l’accès est alors supprimé et les informations de connexion
+          associées sont effacées.
+        </p>
+      </Section>
+
+      <Section title="4. Pourquoi nous les utilisons">
         <ul className="list-disc space-y-1.5 pl-5">
           <li>créer et sécuriser votre compte, vous connecter et vous reconnaître ;</li>
           <li>faire fonctionner votre stock, vos ventes, vos rapports et votre boutique ;</li>
@@ -210,7 +238,7 @@ export function PrivacyPolicyPage() {
         </p>
       </Section>
 
-      <Section title="4. Qui peut les voir">
+      <Section title="5. Qui peut les voir">
         <p>
           Vos données sont visibles par vous et par les personnes que vous invitez dans votre
           entreprise, selon le rôle que vous leur donnez. Chaque entreprise est isolée : aucun
@@ -229,7 +257,7 @@ export function PrivacyPolicyPage() {
         </p>
       </Section>
 
-      <Section title="5. Combien de temps nous les gardons">
+      <Section title="6. Combien de temps nous les gardons">
         <p>
           Les données de votre entreprise sont conservées tant que votre compte existe. Si vous
           supprimez votre compte, elles sont effacées dans un délai de 30 jours, à l’exception de ce
@@ -241,7 +269,7 @@ export function PrivacyPolicyPage() {
         </p>
       </Section>
 
-      <Section title="6. Cookies et mesure d’audience">
+      <Section title="7. Cookies et mesure d’audience">
         <p>
           {legalInfo.brand} n’utilise que des cookies strictement nécessaires : ils gardent votre
           session ouverte et mémorisent vos préférences d’affichage. Aucun cookie publicitaire,
@@ -249,7 +277,7 @@ export function PrivacyPolicyPage() {
         </p>
       </Section>
 
-      <Section title="7. Sécurité">
+      <Section title="8. Sécurité">
         <p>
           Les échanges sont chiffrés (HTTPS). L’accès aux données est contrôlé entreprise par
           entreprise et rôle par rôle, directement côté serveur. Les mots de passe ne sont jamais
@@ -258,7 +286,7 @@ export function PrivacyPolicyPage() {
         </p>
       </Section>
 
-      <Section title="8. Vos droits">
+      <Section title="9. Vos droits">
         <p>
           Vous pouvez à tout moment demander à consulter, corriger, exporter ou supprimer vos
           données, et vous opposer à un traitement. Écrivez-nous au{' '}
@@ -278,14 +306,14 @@ export function PrivacyPolicyPage() {
         </p>
       </Section>
 
-      <Section title="9. Enfants">
+      <Section title="10. Enfants">
         <p>
           Le service est destiné à des personnes majeures exerçant une activité commerciale. Il
           n’est pas conçu pour les enfants et nous ne collectons pas sciemment leurs données.
         </p>
       </Section>
 
-      <Section title="10. Modifications">
+      <Section title="11. Modifications">
         <p>
           Si cette politique évolue, la nouvelle version est publiée sur cette page avec sa date de
           mise à jour. Les changements importants sont signalés dans l’application.
@@ -294,6 +322,7 @@ export function PrivacyPolicyPage() {
     </LegalLayout>
   );
 }
+
 
 export function TermsPage() {
   return (

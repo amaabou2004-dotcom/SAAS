@@ -21,7 +21,7 @@ export const legalInfo = {
   /** Renseignez cette adresse pour afficher aussi un contact e-mail. */
   email: '',
   /** Date de dernière mise à jour des documents légaux. */
-  updatedAt: '4 novembre 2026',
+  updatedAt: '5 novembre 2026',
   tagline: 'Gestion de stock, ventes et boutique en ligne pour les commerçants.',
   siteUrl: 'https://euphonious-platypus-d21181.netlify.app',
 } as const;

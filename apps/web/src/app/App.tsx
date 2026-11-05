@@ -11,6 +11,7 @@ import { SignInPage } from '../features/auth/sign-in-page';
 import { SignUpPage } from '../features/auth/sign-up-page';
 import { VerifyEmailPage } from '../features/auth/verify-email-page';
 import { LegalNoticePage, PrivacyPolicyPage, TermsPage } from '../features/legal/legal-pages';
+import { LandingPage } from '../features/marketing/landing-page';
 import { OnboardingPage } from '../features/onboarding/onboarding-page';
 import { CategoriesPage } from '../features/workspace/categories-page';
 import { LocationsPage } from '../features/workspace/locations-page';
@@ -37,10 +38,20 @@ function FullPageLoader() {
   );
 }
 
-function HomeRedirect() {
+/**
+ * Accueil : la page de présentation pour les visiteurs, l'espace de travail pour
+ * les personnes déjà connectées.
+ *
+ * Un visiteur non connecté voit donc une vraie page publique qui décrit le
+ * service (utile aux clients comme aux moteurs de recherche et à la
+ * vérification Google), au lieu d'être renvoyé directement au formulaire de
+ * connexion.
+ */
+function HomePage() {
   const { session, loading } = useAuth();
   if (loading) return <FullPageLoader />;
-  return <Navigate to={session ? '/workspace' : '/auth/connexion'} replace />;
+  if (session) return <Navigate to="/workspace" replace />;
+  return <LandingPage />;
 }
 
 function RequireVerifiedUser({ children }: { children: ReactNode }) {
@@ -73,7 +84,7 @@ export function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<HomeRedirect />} />
+        <Route path="/" element={<HomePage />} />
         <Route path="/auth/connexion" element={<SignInPage />} />
         <Route path="/auth/inscription" element={<SignUpPage />} />
         <Route path="/auth/verification" element={<VerifyEmailPage />} />

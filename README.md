@@ -140,7 +140,7 @@ SUPABASE_PUBLISHABLE_KEY=...
 
 Ne placez jamais une clé `service_role`, une clé secrète, un client secret Google ou une clé Resend dans une variable `VITE_`.
 
-Pour activer la connexion Google, suivez [le guide OAuth sécurisé](./docs/security/google-oauth.md), puis définissez `VITE_GOOGLE_AUTH_ENABLED=true` uniquement après activation du fournisseur Supabase.
+Pour activer la connexion Google, suivez [le guide OAuth sécurisé](./docs/security/google-oauth.md), puis définissez `VITE_GOOGLE_AUTH_ENABLED=true` uniquement après activation du fournisseur Supabase. Pour que Google affiche **« Stokari »** au lieu de `…supabase.co`, suivez [le guide d'identité](./docs/security/identite-google-oauth.md).
 
 ## Développement
 
