@@ -21,10 +21,29 @@ export const legalInfo = {
   /** Renseignez cette adresse pour afficher aussi un contact e-mail. */
   email: '',
   /** Date de dernière mise à jour des documents légaux. */
-  updatedAt: '4 novembre 2026',
+  updatedAt: '5 novembre 2026',
   tagline: 'Gestion de stock, ventes et boutique en ligne pour les commerçants.',
-  siteUrl: 'https://euphonious-platypus-d21181.netlify.app',
+  /**
+   * Adresse publique canonique du service.
+   *
+   * Elle vient de `VITE_APP_URL` (déjà renseignée dans `netlify.toml` et dans
+   * les variables Netlify/Vercel) afin qu'un changement de domaine ne demande
+   * aucune modification de code. Le repli correspond au domaine officiel :
+   * `https://stokari.com`.
+   */
+  siteUrl: publicSiteUrl(),
 } as const;
+
+/**
+ * Adresse publique du site, sans barre oblique finale.
+ *
+ * `VITE_APP_URL` a la priorité ; à défaut on retombe sur le domaine officiel.
+ * En développement, la variable vaut `http://localhost:5173`.
+ */
+export function publicSiteUrl(): string {
+  const configured = (import.meta.env.VITE_APP_URL ?? '').trim().replace(/\/+$/, '');
+  return configured || 'https://stokari.com';
+}
 
 export const legalLinks = [
   { to: '/mentions-legales', label: 'Mentions légales' },

@@ -40,6 +40,9 @@ Guide détaillé (nom du site, Google, Supabase, vérifications) :
 **Vercel (alternative)** : `vercel.json` reste valable, voir
 [`docs/DEPLOIEMENT-VERCEL.md`](./docs/DEPLOIEMENT-VERCEL.md).
 
+**Domaine officiel : `https://stokari.com`** (à acheter puis brancher sur Netlify — voir
+[`docs/DOMAINE-STOKARI.md`](./docs/DOMAINE-STOKARI.md)).
+
 ## Endpoints de service
 
 | Route | Rôle |
@@ -140,7 +143,7 @@ SUPABASE_PUBLISHABLE_KEY=...
 
 Ne placez jamais une clé `service_role`, une clé secrète, un client secret Google ou une clé Resend dans une variable `VITE_`.
 
-Pour activer la connexion Google, suivez [le guide OAuth sécurisé](./docs/security/google-oauth.md), puis définissez `VITE_GOOGLE_AUTH_ENABLED=true` uniquement après activation du fournisseur Supabase.
+Pour activer la connexion Google, suivez [le guide OAuth sécurisé](./docs/security/google-oauth.md), puis définissez `VITE_GOOGLE_AUTH_ENABLED=true` uniquement après activation du fournisseur Supabase. Pour que Google affiche **« Stokari »** au lieu de `…supabase.co`, suivez [le guide d'identité](./docs/security/identite-google-oauth.md).
 
 ## Développement
 
@@ -218,6 +221,12 @@ docs/                  Décisions et consignes de sécurité
 - Depuis la migration `202611020010_security_hardening.sql`, `anon` ne peut exécuter **que** les trois
   RPC de la boutique publique ; le pipeline e-mail et les générateurs de démonstration sont réservés
   au service, et les nouveaux objets du schéma `public` sont fermés par défaut.
+- Administration de la plateforme (comptes, entreprises, chiffres d'ensemble) réservée à
+  l'éditeur : **Espace de travail → Plus → Administration** — voir
+  [`docs/ADMINISTRATION.md`](./docs/ADMINISTRATION.md).
+- Comptage de fréquentation **interne et anonyme** (aucun cookie, aucune IP conservée, aucun outil
+  tiers) : écran **Espace de travail → Plus → Audience**, réservé à l'éditeur — voir
+  [`docs/AUDIENCE.md`](./docs/AUDIENCE.md).
 - Audit complet (constats, corrections, reste à faire) : [`docs/AUDIT.md`](./docs/AUDIT.md).
 
 ## Avant la production

@@ -9,6 +9,7 @@ import { SiteFooter } from '../../components/site-footer';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
+import { usePageViewTracking } from '../audience/use-page-view';
 import { formatMoney } from '../workspace/workspace-format';
 import {
   getShopCatalog,
@@ -55,6 +56,9 @@ function formatPrice(value: number, currency: string) {
 export function PublicShopPage() {
   const { slug = '' } = useParams<{ slug: string }>();
   const validSlug = isValidSlug(slug);
+
+  // Visite d'une boutique partagée : comptée anonymement, sans cookie.
+  usePageViewTracking(validSlug ? `/b/${slug}` : '');
 
   const infoQuery = useQuery({
     queryKey: ['shop', slug, 'info'],

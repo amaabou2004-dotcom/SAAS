@@ -1,5 +1,11 @@
 # Connexion Google avec Supabase OAuth
 
+> **Nom affiché par Google** : tant que la marque n’est pas vérifiée, Google affiche
+> `…supabase.co` au lieu de « Stokari » (et le même libellé apparaît dans l’e-mail de sécurité
+> de Google). La procédure complète — domaine propre, logo 120 × 120, vérification de marque et
+> domaine personnalisé Supabase — est décrite dans
+> [`identite-google-oauth.md`](./identite-google-oauth.md).
+
 La connexion Google utilise le serveur d’autorisation de Google puis Supabase Auth. Elle ne demande pas de code OTP par e-mail. L’application ne doit jamais confirmer manuellement une adresse ni désactiver les contrôles de nonce ou de session.
 
 ## 1. Créer le client Google OAuth
